@@ -28,6 +28,8 @@ package crush.telescope;
 
 import crush.CRUSH;
 import crush.Integration;
+import crush.motion.Chopper;
+import crush.motion.Chopping;
 import jnum.Util;
 import jnum.math.Vector2D;
 

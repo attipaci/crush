@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.telescope;
+package crush.motion;
 
 import java.io.Serializable;
 import jnum.text.TableFormatter;

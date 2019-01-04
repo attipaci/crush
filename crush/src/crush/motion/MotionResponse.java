@@ -20,28 +20,36 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.telescope;
+package crush.motion;
+
+import java.util.StringTokenizer;
 
 import crush.Integration;
 import crush.Signal;
+import crush.instrument.Response;
 
-public class PositionResponse extends MotionResponse {
+
+public abstract class MotionResponse extends Response {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8122571998749162314L;
-	int type;
+	private static final long serialVersionUID = 7298231042057007209L;
+
+	public MotionResponse() {
+		super();
+	}
 	
-	public PositionResponse(int type) {
-		setType(type);
+	public abstract Signal getSignal(Integration<?> integration, Motion direction);
+
+	@Override
+	public Signal getSignal(Integration<?> integration) {
+		StringTokenizer tokens = new StringTokenizer(name, "-:");
+		tokens.nextToken();
+		String type = tokens.nextToken();
+		
+		Motion direction = Motion.forName(type);
+		return getSignal(integration, direction);
 	}
 
-	public void setType(int type) {
-		this.type = type;
-	}
-	
-	@Override
-	public Signal getSignal(Integration<?> integration, Motion direction) {
-		return integration.getPositionSignal(this, type, direction);
-	}	
 }

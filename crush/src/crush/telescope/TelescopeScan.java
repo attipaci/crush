@@ -293,6 +293,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         
     }
     
+   
+    
     @Override
     public void editScanHeader(Header header) throws HeaderCardException {
         super.editScanHeader(header);
@@ -324,6 +326,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         pointing.editHeader(header, getInstrument().getSizeUnit());
         
     }
+    
+    
     
     
     @Override

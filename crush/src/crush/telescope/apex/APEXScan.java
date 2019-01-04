@@ -25,7 +25,7 @@
 package crush.telescope.apex;
 
 import crush.*;
-import crush.telescope.Chopper;
+import crush.motion.Chopper;
 import crush.telescope.GroundBasedScan;
 import crush.telescope.TelescopeFrame;
 import jnum.NonConformingException;

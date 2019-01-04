@@ -20,25 +20,17 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.telescope;
+package crush.motion;
 
-import crush.Integration;
-import crush.Signal;
-
-public class AccelerationResponse extends MotionResponse {
+public class ChopperResponse extends PositionResponse {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6674558238592018995L;
+	private static final long serialVersionUID = -4523907214569680646L;
 
-	public AccelerationResponse() {
-		super();
-		// TODO Auto-generated constructor stub
+	public ChopperResponse() {
+		super(Motion.CHOPPER);
 	}
 
-	@Override
-	public Signal getSignal(Integration<?> integration, Motion direction) {
-		return integration.getAccelerationSignal(this, direction);
-	}	
 }

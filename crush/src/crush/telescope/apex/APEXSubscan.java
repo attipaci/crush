@@ -29,8 +29,8 @@ import nom.tam.fits.*;
 import java.io.*;
 
 import crush.fits.HDUReader;
-import crush.telescope.Chopper;
-import crush.telescope.Chopping;
+import crush.motion.Chopper;
+import crush.motion.Chopping;
 import crush.telescope.GroundBasedIntegration;
 import crush.telescope.TelescopeFrame;
 import jnum.LockedException;

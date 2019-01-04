@@ -1,6 +1,5 @@
 >> AstroModel2D.findOutliers()
 >> AstroModel2D.findSlewing()
->> getInstrument().getOptions() -> getOptions() : Integration / SourceModel.
 >> HAWC+/HIRMES validate(scans) -> SofiaInstrument
 
 
@@ -19,10 +18,20 @@
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
 
+	[API] Eliminate extraneous Instrument generic typing from Scan and
+	Integration. At the same time getInstrument() and getScan() overrides
+	eliminate the need for explicit casting. The result is much cleaner,
+	easier to follow, code.
+
+	[API] New package 'crush.motion' to contain motion related classes.
+
 	[API] Lots of refactoring across packages, especially from crush to
 	crush.instrument and crush.telescope.
 
 	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
+
+	[CODE] Convenience methods for getting setting options for Scan / 
+	Integration.
 	
 	[CODE] {HAWC+} {HIRMES} Pixel position related code moved to 
 	specific PixelLayout derivative class for better separation and

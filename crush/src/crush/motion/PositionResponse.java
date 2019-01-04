@@ -20,18 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.telescope;
+package crush.motion;
 
-public class PointingResponse extends PositionResponse {
+import crush.Integration;
+import crush.Signal;
 
+public class PositionResponse extends MotionResponse {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 19228371167607910L;
-
-	public PointingResponse() {
-		super(Motion.TELESCOPE);
+	private static final long serialVersionUID = -8122571998749162314L;
+	int type;
+	
+	public PositionResponse(int type) {
+		setType(type);
 	}
 
-
+	public void setType(int type) {
+		this.type = type;
+	}
+	
+	@Override
+	public Signal getSignal(Integration<?> integration, Motion direction) {
+		return integration.getPositionSignal(this, type, direction);
+	}	
 }

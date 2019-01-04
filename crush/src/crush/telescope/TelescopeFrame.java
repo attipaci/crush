@@ -26,6 +26,7 @@ package crush.telescope;
 import crush.Frame;
 import crush.Integration;
 import crush.Signal;
+import crush.motion.Motion;
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.SphericalCoordinates;

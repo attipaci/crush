@@ -25,10 +25,8 @@ package crush;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
-
+import crush.instrument.InstantFocus;
 import crush.sourcemodel.*;
-import crush.telescope.InstantFocus;
-
 
 import java.io.*;
 import java.util.*;
