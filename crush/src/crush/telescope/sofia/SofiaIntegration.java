@@ -94,7 +94,7 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
         
         if(!hasOption("tau.pwv")) {
-            try { getInstrument().getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
+            try { getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }  
     }
@@ -113,7 +113,7 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
     
     
     public void setVaccaTau() throws Exception {
-        AtranModel model = new AtranModel(getInstrument().getOptions());
+        AtranModel model = new AtranModel(getOptions());
         double altitude = getScan().aircraft.altitude.midPoint();
         double elevation = 0.5 * (getFirstFrame().horizontal.EL() + getLastFrame().horizontal.EL());
         
@@ -129,7 +129,7 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
         
         info("Using PWV model to correct fluxes: PWV = " + Util.f1.format(pwv));  
         
-        try { getInstrument().getOptions().process("tau.pwv", Double.toString(pwv)); }
+        try { getOptions().process("tau.pwv", Double.toString(pwv)); }
         catch(LockedException e) {}
         
         this.setTau("pwv", pwv);

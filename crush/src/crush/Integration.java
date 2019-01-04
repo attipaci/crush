@@ -144,6 +144,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     
     public Instrument<?> getInstrument() { return instrument; }
     
+    public Configurator getOptions() { return instrument.getOptions(); }
+    
+    public void setOptions(Configurator options) { instrument.setOptions(options); }
     
     public void reindex() {
         for(int k=size(); --k >= 0; ) {

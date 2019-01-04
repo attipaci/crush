@@ -244,7 +244,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 					if(files == null) throw new FileNotFoundException("Not a directory or other I/O error.");
 					
 					for(int i=0; i<files.length; i++) if(files[i].startsWith(prefix)) if(files[i].substring(3).startsWith(scanID)) {
-						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], getInstrument().getOptions())); }
+						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], getOptions())); }
 						catch(IllegalStateException e) { 
 							// there is a FITS alternative already...
 						}
@@ -273,7 +273,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 				if(!scanFile.exists()) throw new FileNotFoundException("Could not find scan " + scanDescriptor);
 			} 	
 			
-			try { scanFiles.add(new Scuba2Fits(scanFile.getPath(), getInstrument().getOptions())); }
+			try { scanFiles.add(new Scuba2Fits(scanFile.getPath(), getOptions())); }
 			catch(IllegalStateException e2) {
 				// There is a FITS alternative already...
 			}
@@ -294,7 +294,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		
 		// Scan Info
 		setSerial(header.getIntValue("OBSNUM"));
-		if(getInstrument().getOptions().containsKey("serial")) getInstrument().setSerialOptions(getSerial());
+		if(getOptions().containsKey("serial")) getInstrument().setSerialOptions(getSerial());
 	
 		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
 		creator = header.getStringValue("ORIGIN");

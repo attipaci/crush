@@ -170,7 +170,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		File file = new File(source + File.separator + spec + ".dat");
 		if(!file.exists()) {
 			warning("No tau table found for " + date + ". Using default tau.");
-			getInstrument().getOptions().remove("tau");
+			getOptions().remove("tau");
 			setTau();
 			return;
 		}

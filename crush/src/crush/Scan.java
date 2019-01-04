@@ -98,6 +98,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
     public Configurator getOptions() { return instrument.getOptions(); }
     
+    public void setOptions(Configurator options) { instrument.setOptions(options); }
+    
     @Override
     public int compareTo(Scan<?> other) {
         return Double.compare(getMJD(), other.getMJD());

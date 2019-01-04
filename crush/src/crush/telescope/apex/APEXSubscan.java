@@ -564,7 +564,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	    pwv = sum / N; 
 	    
 	    if(!hasOption("tau.pwv")) {
-            try { getInstrument().getOptions().process("tau.pwv", pwv + ""); } 
+            try { getOptions().process("tau.pwv", pwv + ""); } 
             catch (LockedException e) {}
 	    }
 	    

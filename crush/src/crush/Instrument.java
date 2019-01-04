@@ -503,12 +503,12 @@ implements TableFormatter.Entries, BasicMessaging {
         return options.option(name);
     }
 
-    public void setOption(String line) {
-        options.setOption(line);
+    public boolean setOption(String line) {
+        return options.setOption(line);
     }
 
-    public void forget(String key) {
-        options.forgetSilent(key);
+    public boolean forget(String key) {
+        return options.forgetSilent(key);
     }
 
     public Scan<?> readScan(String descriptor) throws Exception {
