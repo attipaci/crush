@@ -36,7 +36,7 @@ import jnum.astro.*;
 import jnum.math.Vector2D;
 
 // TODO Split nod-phases into integrations...
-public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
+public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 	/**
 	 * 
 	 */
@@ -49,20 +49,26 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	}
 
 	@Override
+    public Sharc2Scan getScan() { return (Sharc2Scan) super.getScan(); }
+	
+	@Override
+    public Sharc2 getInstrument() { return (Sharc2) super.getInstrument(); }
+	
+	@Override
 	public void validate() {	
 	  
 		// Tau is set here...
 		super.validate();	
 	
 		if(hasOption("tau")) if(!option("tau").is("direct")) {		
-			double measuredLoad = instrument.getLoadTemperature(); 
-			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientKelvins();
+			double measuredLoad = getInstrument().getLoadTemperature(); 
+			double eps = (measuredLoad - getInstrument().excessLoad) / getScan().getAmbientKelvins();
 			double tauLOS = -Math.log(1.0-eps);
 			info("Tau from bolometers (not used):");
 			printEquivalentTaus(tauLOS * getScan().horizontal.sinLat());
 			
-			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
-			info("Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
+			if(!hasOption("excessload")) getInstrument().excessLoad = measuredLoad - getSkyLoadTemperature();
+			info("Excess optical load on bolometers is " + Util.f1.format(getInstrument().excessLoad) + " K. (not used)");		
 		}
 		
 	}
@@ -80,8 +86,8 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		
 		// Needs 'excessload'
 		if(hasOption("response.calc")) {
-			instrument.calcGainCoefficients(getSkyLoadTemperature());
-			try { instrument.writeGainCoefficients(instrument.getOutputPath() + File.separator + "response-" + getFileID() + ".dat", getASCIIHeader()); }
+			getInstrument().calcGainCoefficients(getSkyLoadTemperature());
+			try { getInstrument().writeGainCoefficients(getInstrument().getOutputPath() + File.separator + "response-" + getFileID() + ".dat", getASCIIHeader()); }
 			catch(IOException e) { warning("Could not write nonlinearity coefficients: " + e.getMessage()); }
 		}
 	}
@@ -98,10 +104,10 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 			Sharc2Frame exposure = get(t);
 			if(exposure != null) {
 				int dN = (t - first.index);
-				if(exposure.MJD > first.MJD + (dN + 1) * instrument.samplingInterval) break;
+				if(exposure.MJD > first.MJD + (dN + 1) * getInstrument().samplingInterval) break;
 				if(hasExtraTimingInfo) {
 					if(exposure.frameNumber > first.frameNumber + (dN + 1)) break;
-					if(exposure.dspTime > first.dspTime + (dN + 1) * instrument.samplingInterval) break;
+					if(exposure.dspTime > first.dspTime + (dN + 1) * getInstrument().samplingInterval) break;
 				}
 			}
 		}
@@ -115,7 +121,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	
 	@Override
 	public Sharc2Frame getFrameInstance() {
-		return new Sharc2Frame((Sharc2Scan) scan);
+		return new Sharc2Frame(getScan());
 	}
 	
 	
@@ -125,11 +131,11 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
 
-		scan.info("Processing scan data:");
+		getScan().info("Processing scan data:");
 		
 		info(nDataHDUs + " HDUs,  " + records + " x " +
-				(int)(instrument.integrationTime/Unit.ms) + "ms frames" + " -> " + 
-				Util.f1.format(records*instrument.integrationTime/Unit.min) + " minutes total."); 
+				(int)(getInstrument().integrationTime/Unit.ms) + "ms frames" + " -> " + 
+				Util.f1.format(records * getInstrument().integrationTime/Unit.min) + " minutes total."); 
 	
 			
 		clear();
@@ -155,7 +161,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		private int channels;
 		private boolean isLab;
 		
-		private final Sharc2Scan sharcscan = (Sharc2Scan) scan;
+		private final Sharc2Scan sharcscan = getScan();
 		
 		public Sharc2Reader(TableHDU<?> hdu, int offset) throws FitsException {
 			super(hdu);
@@ -383,6 +389,6 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	
 	@Override
 	public String getFullID(String separator) {
-		return scan.getID();
+		return getScan().getID();
 	}
 }

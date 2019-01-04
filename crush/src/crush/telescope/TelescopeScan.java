@@ -47,8 +47,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public abstract class TelescopeScan<InstrumentType extends TelescopeInstrument<?>, IntegrationType extends Integration<InstrumentType, ? extends TelescopeFrame>> 
-extends Scan<InstrumentType, IntegrationType> {
+public abstract class TelescopeScan<IntegrationType extends Integration<? extends TelescopeFrame>> extends Scan<IntegrationType> {
     
     /**
      * 
@@ -59,10 +58,12 @@ extends Scan<InstrumentType, IntegrationType> {
     public EquatorialCoordinates equatorial, apparent;
     public Precession fromApparent, toApparent;
     
-    public TelescopeScan(InstrumentType instrument) {
+    public TelescopeScan(TelescopeInstrument<?> instrument) {
         super(instrument);
     }
     
+    @Override
+    public TelescopeInstrument<?> getInstrument() { return (TelescopeInstrument<?>) super.getInstrument(); }
 
     @Override
     public SphericalCoordinates getNativeCoordinates() { return equatorial; }
@@ -91,7 +92,7 @@ extends Scan<InstrumentType, IntegrationType> {
     public void precess(CoordinateEpoch epoch) {
         Precession toEpoch = new Precession(equatorial.epoch, epoch);
         toEpoch.precess(equatorial);
-        for(Integration<?,? extends TelescopeFrame> integration : this) for(TelescopeFrame frame : integration) 
+        for(Integration<? extends TelescopeFrame> integration : this) for(TelescopeFrame frame : integration) 
             if(frame != null) if(frame.equatorial != null) toEpoch.precess(frame.equatorial);   
         calcPrecessions(epoch);
     }
@@ -220,7 +221,7 @@ extends Scan<InstrumentType, IntegrationType> {
         if(!pointing.getCoordinateClass().equals(coords.getClass())) 
             throw new IllegalArgumentException("non-native pointing offset."); 
         
-        double sinA = instrument.mount == Mount.LEFT_NASMYTH ? -coords.sinLat() : coords.sinLat();
+        double sinA = getInstrument().mount == Mount.LEFT_NASMYTH ? -coords.sinLat() : coords.sinLat();
         double cosA = coords.cosLat();
         
         
@@ -254,10 +255,10 @@ extends Scan<InstrumentType, IntegrationType> {
         DataTable data = super.getPointingData();
         
         // Also print Nasmyth offsets if applicable...
-        if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
+        if(getInstrument().mount == Mount.LEFT_NASMYTH || getInstrument().mount == Mount.RIGHT_NASMYTH) {
             Offset2D relative = getNativePointingIncrement(pointing);
             Offset2D absolute = getNativePointing(pointing);
-            Unit sizeUnit = instrument.getSizeUnit();
+            Unit sizeUnit = getInstrument().getSizeUnit();
             
             Vector2D nasmyth = getNasmythOffset(relative);
             
@@ -279,9 +280,9 @@ extends Scan<InstrumentType, IntegrationType> {
         
         
         // Also print Nasmyth offsets if applicable...
-        if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
+        if(getInstrument().mount == Mount.LEFT_NASMYTH || getInstrument().mount == Mount.RIGHT_NASMYTH) {
             Vector2D nasmyth = getNasmythOffset(nativePointing);
-            Unit sizeUnit = instrument.getSizeUnit();
+            Unit sizeUnit = getInstrument().getSizeUnit();
             
             text += "\n  Offset: ";     
             text += Util.f1.format(nasmyth.x() / sizeUnit.value()) + ", " + Util.f1.format(nasmyth.y() / sizeUnit.value()) + " " 
@@ -315,12 +316,12 @@ extends Scan<InstrumentType, IntegrationType> {
         c.add(new HeaderCard("COMMENT", "<------ Fitted Pointing / Calibration Info ------>", false));
         
         Offset2D relative = getNativePointingIncrement(pointing);
-        Unit sizeUnit = instrument.getSizeUnit();
+        Unit sizeUnit = getInstrument().getSizeUnit();
         
         c.add(new HeaderCard("PNT_DX", relative.x() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native X."));
         c.add(new HeaderCard("PNT_DY", relative.y() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native Y."));
         
-        pointing.editHeader(header, instrument.getSizeUnit());
+        pointing.editHeader(header, getInstrument().getSizeUnit());
         
     }
     

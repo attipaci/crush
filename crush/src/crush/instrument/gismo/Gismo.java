@@ -132,7 +132,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	}
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
+	public Scan<?> getScanInstance() {
 		return new GismoScan(this);
 	}
 
@@ -396,7 +396,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	
 	
 	@Override
-	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+	public void validate(Vector<Scan<?>> scans) throws Exception {
 		
 		final GismoScan firstScan = (GismoScan) scans.get(0);
 			

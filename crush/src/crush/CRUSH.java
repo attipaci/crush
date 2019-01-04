@@ -61,14 +61,14 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.6";
+    private final static String revision = "devel.7";
 
     public static String home = ".";
     public static boolean debug = false;
 
     
     public Instrument<?> instrument;
-    public Vector<Scan<?,?>> scans = new Vector<Scan<?,?>>();
+    public Vector<Scan<?>> scans = new Vector<Scan<?>>();
     public SourceModel source;
     public String[] commandLine;
     
@@ -80,7 +80,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public int parallelTasks = 1;
 
     private ArrayList<Pipeline> pipelines;
-    private Vector<Integration<?, ?>> queue = new Vector<Integration<?, ?>>();
+    private Vector<Integration<?>> queue = new Vector<Integration<?>>();
 
     private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
@@ -326,11 +326,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
         // Make the global options derive from those of the first scan...
         // This way any options that were activated conditionally for that scan become 'global' starters as well...
-        instrument = scans.get(0).instrument.copy();
+        instrument = scans.get(0).getInstrument().copy();
         instrument.setOptions(this);
         
         // Keep only the non-specific global options here...
-        for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
+        for(Scan<?> scan : scans) instrument.getOptions().intersect(scan.getOptions()); 		
         for(int i=scans.size(); --i >=0; ) if(scans.get(i).isEmpty()) scans.remove(i);
         
         System.gc();
@@ -368,12 +368,12 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
     
     public void parseAllScans(Vector<String> options) {
-        for(Scan<?, ?> scan : scans) scan.instrument.getOptions().parseAll(options);
+        for(Scan<?> scan : scans) scan.getOptions().parseAll(options);
     }
 
     public double getTotalObservingTime() {
         double exposure = 0.0;
-        for(Scan<?,?> scan : scans) exposure += scan.getObservingTime();
+        for(Scan<?> scan : scans) exposure += scan.getObservingTime();
         return exposure;
     }
 
@@ -382,7 +382,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private void initSourceModel() throws Exception {
         consoleReporter.addLine();
 
-        source = scans.get(0).instrument.getSourceModelInstance(scans);
+        source = scans.get(0).getInstrument().getSourceModelInstance(scans);
         
         if(source != null) {
             source.createFrom(scans);
@@ -428,9 +428,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
         for(int i=0; i<scans.size(); i++) {
-            Scan<?,?> scan = scans.get(i);	
+            Scan<?> scan = scans.get(i);	
             pipelines.get(i % parallelScans).scans.add(scan);
-            for(Integration<?,?> integration : scan) integration.setThreadCount(parallelTasks); 
+            for(Integration<?> integration : scan) integration.setThreadCount(parallelTasks); 
         }		
     }
 
@@ -534,7 +534,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(hasOption("leapseconds")) LeapSeconds.dataFile = option("leapseconds").getPath();
 
         try {
-            Scan<?,?> scan = null;
+            Scan<?> scan = null;
             if(hasOption("obslog")) {
                 scan = instrument.readScan(scanID, false);
                 scan.writeLog(option("obslog"),  instrument.getOutputPath() + File.separator + instrument.getName() + ".obs.log");
@@ -657,7 +657,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             else warning("The reduction did not result in a source model.");
         }
 
-        for(Scan<?,?> scan : scans) scan.writeProducts();   
+        for(Scan<?> scan : scans) scan.writeProducts();   
     }
 
     public void iterate() throws Exception {
@@ -684,7 +684,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         consoleReporter.addLine();
 
         queue.clear();
-        for(Scan<?,?> scan : scans) queue.addAll(scan);
+        for(Scan<?> scan : scans) queue.addAll(scan);
 
         if(solveSource()) if(tasks.contains("source")) source.renew();
 
@@ -709,7 +709,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
 
-    public synchronized void checkout(Integration<?,?> integration) {
+    public synchronized void checkout(Integration<?> integration) {
         queue.remove(integration);
         notifyAll();
     }
@@ -719,21 +719,21 @@ public class CRUSH extends Configurator implements BasicMessaging {
         // If next one disappears from queue then print summary
         // else wait();
 
-        for(Scan<?, ?> scan : scans) for(Integration<?,?> integration : scan) {
+        for(Scan<?> scan : scans) for(Integration<?> integration : scan) {
             while(queue.contains(integration)) wait();
             summarize(integration);
             notifyAll();
         }	
     }
 
-    public void summarize(Integration<?,?> integration) {
+    public void summarize(Integration<?> integration) {
         info(" [" + integration.getDisplayID() + "] " + integration.comments);
         integration.comments = new StringBuffer();
     }	
 
     public final void setIteration(int i, int rounds) {	
         setIteration(this, i, rounds);
-        for(Scan<?,?> scan : scans) scan.setIteration(i, rounds);   
+        for(Scan<?> scan : scans) scan.setIteration(i, rounds);   
     }
 
     public void setObjectOptions(String sourceName) {

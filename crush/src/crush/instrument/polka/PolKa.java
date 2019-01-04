@@ -83,11 +83,11 @@ public class PolKa extends Laboca implements Oscillating {
 	}
 
 	@Override
-	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+	public void validate(Vector<Scan<?>> scans) throws Exception {
 		super.validate(scans);
 		
 		final PolKaScan firstScan = (PolKaScan) scans.get(0);
-		final PolKa polka = (PolKa) firstScan.instrument;
+		final PolKa polka = firstScan.getInstrument();
 		
 		if(polka.hasAnalyzer()) info("Polarized reduction mode (H or V analyzer).");
 		else info("Total-power reduction mode (no analyzer grid).");
@@ -95,7 +95,7 @@ public class PolKa extends Laboca implements Oscillating {
 		// Make sure the rest of the list conform to the first scan...
 		for(int i=scans.size(); --i > 0; ) {
 			PolKaScan scan = (PolKaScan) scans.get(i);
-			if(((PolKa) scan.instrument).hasAnalyzer() != polka.hasAnalyzer()) {
+			if(scan.getInstrument().hasAnalyzer() != polka.hasAnalyzer()) {
 				warning("Scan " + scan.getID() + " is " 
 						+ (polka.hasAnalyzer() ? "total-power (no analyzer)" : "is polarized")
 						+ ". Dropping from dataset.");
@@ -106,7 +106,7 @@ public class PolKa extends Laboca implements Oscillating {
 	
 	
 	@Override
-	public void validate(Scan<?,?> scan) {
+	public void validate(Scan<?> scan) {
 		info("Parsing waveplate settings: ");
 		
 		if(hasOption("waveplate.frequency")) waveplateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
@@ -198,7 +198,7 @@ public class PolKa extends Laboca implements Oscillating {
 	}
 	
 	@Override
-	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+	public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
 		if(!hasAnalyzer()) return super.getSourceModelInstance(scans);
 		return new PolarMap(this);
 	}

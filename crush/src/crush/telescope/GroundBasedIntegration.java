@@ -27,14 +27,12 @@ package crush.telescope;
 
 
 import crush.CRUSH;
-import crush.Channel;
 import crush.Integration;
 import jnum.Util;
 import jnum.math.Vector2D;
 
 
-public abstract class GroundBasedIntegration<InstrumentType extends TelescopeInstrument<? extends Channel>, FrameType extends HorizontalFrame>
-extends Integration<InstrumentType, FrameType> {
+public abstract class GroundBasedIntegration<FrameType extends HorizontalFrame> extends Integration<FrameType> {
 
 
     /**
@@ -44,17 +42,19 @@ extends Integration<InstrumentType, FrameType> {
     public double zenithTau = 0.0;
     
     
-    public GroundBasedIntegration(GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, ? extends FrameType>> parent) {
+    public GroundBasedIntegration(GroundBasedScan<? extends GroundBasedIntegration<? extends FrameType>> parent) {
         super(parent);
     }
   
     
     @SuppressWarnings("unchecked")
     @Override
-    public GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, FrameType>> getScan() { 
-        return (GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    public GroundBasedScan<? extends GroundBasedIntegration<? extends FrameType>> getScan() { 
+        return (GroundBasedScan<? extends GroundBasedIntegration<? extends FrameType>>) super.getScan(); 
     }
    
+    @Override
+    public TelescopeInstrument<?> getInstrument() { return (TelescopeInstrument<?>) super.getInstrument(); }
     
     
     @Override
@@ -89,7 +89,7 @@ extends Integration<InstrumentType, FrameType> {
 
     public void setTau(String id, double value) {
         Vector2D t = getTauCoefficients(id);
-        Vector2D inband = getTauCoefficients(instrument.getName());
+        Vector2D inband = getTauCoefficients(getInstrument().getName());
         try { setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y()); }
         catch(Exception e) { 
             warning("Could not set zenith tau: " + e.getMessage()); 
@@ -99,7 +99,7 @@ extends Integration<InstrumentType, FrameType> {
 
     public double getTau(String id, double value) {
         Vector2D t = getTauCoefficients(id);
-        Vector2D inband = getTauCoefficients(instrument.getName());
+        Vector2D inband = getTauCoefficients(getInstrument().getName());
         return t.x() / inband.x() * (value - inband.y()) + t.y();
     }
 

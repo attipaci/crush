@@ -138,7 +138,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public final int getFlags() { return flag; }
 	
-	public double getFiltering(Integration<?,?> integration) {
+	public double getFiltering(Integration<?> integration) {
 		final double nDrifts = Math.ceil(integration.getDuration() / filterTimeScale);
 		return directFiltering * (1.0 - nDrifts / integration.size());
 	}

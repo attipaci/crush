@@ -102,7 +102,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	}
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
+	public Scan<?> getScanInstance() {
 		return new Sharc2Scan(this);
 	}
 	

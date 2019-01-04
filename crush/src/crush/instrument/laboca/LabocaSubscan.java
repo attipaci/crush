@@ -39,7 +39,7 @@ import java.util.*;
 
 import nom.tam.fits.*;
 
-public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
+public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	/**
 	 * 
 	 */
@@ -49,9 +49,15 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	double blindTimeScale = 0.3 * Unit.sec;
 	double rmsHe3 = 0.0;
 	
-	public LabocaSubscan(APEXScan<Laboca, LabocaSubscan> parent) {
+	public LabocaSubscan(APEXScan<LabocaSubscan> parent) {
 		super(parent);
 	}
+	
+	@Override
+    public LabocaScan getScan() { return (LabocaScan) super.getScan(); }
+	
+	@Override
+    public Laboca getInstrument() { return (Laboca) super.getInstrument(); }
 
 	
 	@Override
@@ -63,14 +69,14 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			if(he3.is("blinds")) setBlindTemperatures();
 			
 			if(he3.is("gains")) {
-				for(LabocaPixel pixel : instrument) pixel.temperatureGain = 0.0;
+				for(LabocaPixel pixel : getInstrument()) pixel.temperatureGain = 0.0;
 			}
 			else temperatureCorrect();
 			
 			if(he3.containsKey("maxrms")) {
 				double maxrms = he3.option("maxrms").getDouble() * Unit.mK;
 				if(rmsHe3 > maxrms) {
-					warning("Scan " + scan.getID() + " temperature fluctuations exceed limit. Removing from dataset.");
+					warning("Scan " + getScan().getID() + " temperature fluctuations exceed limit. Removing from dataset.");
 					clear();
 				}
 			}
@@ -90,7 +96,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	public void temperatureCorrect() {
 		info("Correcting for He3 temperature drifts.");
 		
-		Response mode = (Response) instrument.modalities.get("temperature").get(0);
+		Response mode = (Response) getInstrument().modalities.get("temperature").get(0);
 		Signal signal = getSignal(mode);
 		
 		if(signal == null) {
@@ -99,7 +105,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		}
 		
 		rmsHe3 = signal.getRMS();
-		info("RMS He3 temperature drift is " + Util.f3.format(1000.0 * rmsHe3 * instrument.gain) + " uK.");
+		info("RMS He3 temperature drift is " + Util.f3.format(1000.0 * rmsHe3 * getInstrument().gain) + " uK.");
 		
 		final Signal temperatureSignal = signal;
 	
@@ -107,7 +113,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			@Override
 			protected void process(LabocaFrame exposure) {
 				final double dT = temperatureSignal.valueAt(exposure);
-				if(!Double.isNaN(dT)) for(LabocaPixel pixel : instrument) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
+				if(!Double.isNaN(dT)) for(LabocaPixel pixel : getInstrument()) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
 			}			
 		}.process();
 		
@@ -115,22 +121,22 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	
 	public void writeTemperatureGains(String path) throws IOException {
 		// Now write to a file
-		String fileName = path + File.separator + "he3-gains-" + scan.getID() + ".dat";
-		instrument.writeTemperatureGains(fileName, getASCIIHeader());
+		String fileName = path + File.separator + "he3-gains-" + getScan().getID() + ".dat";
+		getInstrument().writeTemperatureGains(fileName, getASCIIHeader());
 	}
 
 	@Override
 	public void writeProducts() {
 		super.writeProducts();
 		if(hasOption("he3")) if(option("he3").is("gains")) {
-			try { writeTemperatureGains(instrument.getOutputPath()); }
+			try { writeTemperatureGains(getInstrument().getOutputPath()); }
 			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
 	}
 	
 	public void setBlindTemperatures() {
 	     
-		ChannelGroup<LabocaPixel> blindChannels = instrument.getBlindChannels();
+		ChannelGroup<LabocaPixel> blindChannels = getInstrument().getBlindChannels();
 		if(blindChannels.size() < 1) {
 			warning("No blind channels for temperature correction.");
 			return;
@@ -139,7 +145,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		// Remove DC offsets now, if has not been done already...
 		if(!hasOption("level")) removeChannelDrifts(blindChannels, size(), false);
 		
-		CorrelatedMode blindMode = (CorrelatedMode) instrument.modalities.get("blinds").get(0);
+		CorrelatedMode blindMode = (CorrelatedMode) getInstrument().modalities.get("blinds").get(0);
 		try { blindMode.setGainProvider(new FieldGainProvider(LabocaPixel.class.getField("temperatureGain"))); }
 		catch(NoSuchFieldException e) { return; }
 		
@@ -243,7 +249,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	
 	@Override
 	public LabocaFrame getFrameInstance() {
-		return new LabocaFrame((LabocaScan) scan);
+		return new LabocaFrame(getScan());
 	}
 	
 	@Override

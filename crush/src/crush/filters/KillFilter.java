@@ -36,11 +36,11 @@ public class KillFilter extends FixedFilter {
 	
 	protected boolean[] reject;
 		
-	public KillFilter(Integration<?,?> integration) {
+	public KillFilter(Integration<?> integration) {
 		super(integration);
 	}
 	
-	public KillFilter(Integration<?,?> integration, float[] data) {
+	public KillFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 	
@@ -49,7 +49,7 @@ public class KillFilter extends FixedFilter {
 	public void setRejectMask(boolean[] mask) { reject = mask; }
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
 		reject = new boolean[nf+1];
 	}

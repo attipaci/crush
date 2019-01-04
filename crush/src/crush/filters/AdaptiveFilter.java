@@ -42,7 +42,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	
 	private float[] profile;
 		
-	public AdaptiveFilter(Integration<?, ?> integration) {
+	public AdaptiveFilter(Integration<?> integration) {
 		super(integration);
 	}
 
@@ -53,23 +53,23 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		return clone;
 	}
 	
-	public AdaptiveFilter(Integration<?,?> integration, float[] data) {
+	public AdaptiveFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 	
 	public float[] getProfile() { return profile; }
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
-		channelProfiles = new float[integration.instrument.size()][];		
+		channelProfiles = new float[getInstrument().size()][];		
 	}
 
 	protected void setSize(int nF) {
 		if(profile == null) profile = new float[nF];
 		else if(profile.length != nF) profile = new float[nF];
 		
-		dF = 0.5 / (nF * integration.instrument.samplingInterval);	
+		dF = 0.5 / (nF * getInstrument().samplingInterval);	
 		
 		updateSourceProfile();
 		

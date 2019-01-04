@@ -70,10 +70,10 @@ public class PixelMap extends SourceModel2D {
 	}
 
 	@Override
-	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+	public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
 		// Set all pixel positions to zero...
-		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) {
-		    final Instrument<?> instrument = integration.instrument;
+		for(Scan<?> scan : collection) for(Integration<?> integration : scan) {
+		    final Instrument<?> instrument = integration.getInstrument();
 			for(Pixel pixel : instrument.getMappingPixels(~instrument.sourcelessChannelFlags())) {
 				pixel.getPosition().zero();
 				pixel.setIndependent(true);
@@ -116,7 +116,7 @@ public class PixelMap extends SourceModel2D {
 	}
 
 	@Override
-	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
+	protected int add(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
 		return addForkPixels(integration, pixels, sourceGain, signalMode);
 	}
 	
@@ -137,7 +137,7 @@ public class PixelMap extends SourceModel2D {
 
 
 	@Override
-	protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, double[] syncGain) {
+	protected void calcCoupling(Integration<?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, double[] syncGain) {
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class PixelMap extends SourceModel2D {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
+	public void process(Scan<?> scan) {
 		for(IntensityMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
@@ -232,7 +232,7 @@ public class PixelMap extends SourceModel2D {
 		
 		int k = 0;
 		
-		for(Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
+		for(Pixel pixel : getFirstScan().getInstrument().getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
 			IntensityMap beamMap = pixelMap[i];
 			
@@ -260,7 +260,7 @@ public class PixelMap extends SourceModel2D {
 		
 		final double mean = Statistics.Inplace.median(peaks, 0, k);
 		
-		for(final Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
+		for(final Pixel pixel : getFirstScan().getInstrument().getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
 			IntensityMap map = pixelMap[i];
 			if(map != null) {
@@ -273,12 +273,12 @@ public class PixelMap extends SourceModel2D {
 	
 	public void writePixelData(String path) throws IOException {
 		
-		double[] sourceGain = getFirstScan().instrument.getSourceGains(false);
+		double[] sourceGain = getFirstScan().getInstrument().getSourceGains(false);
 		
 		String fileName = path + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
-		Instrument<?> instrument = getFirstScan().instrument;
+		Instrument<?> instrument = getFirstScan().getInstrument();
 		for(Channel channel : instrument) channel.coupling = sourceGain[channel.index] / channel.gain;
 	
 		instrument.printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());

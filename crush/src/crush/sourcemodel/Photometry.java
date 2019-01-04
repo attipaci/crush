@@ -47,7 +47,7 @@ public abstract class Photometry extends SourceModel {
     public DataPoint[] flux;
     public DataPoint sourceFlux = new DataPoint();
 
-    protected Hashtable<Scan<?,?>, DataPoint> scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
+    protected Hashtable<Scan<?>, DataPoint> scanFluxes = new Hashtable<Scan<?>, DataPoint>();
 
     public Photometry(Instrument<?> instrument) {
         super(instrument);
@@ -63,16 +63,16 @@ public abstract class Photometry extends SourceModel {
             copy.flux = new DataPoint[flux.length];
             if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = flux[i].copy();
         }
-        copy.scanFluxes = new Hashtable<Scan<?,?>, DataPoint>(scanFluxes.size());
+        copy.scanFluxes = new Hashtable<Scan<?>, DataPoint>(scanFluxes.size());
         copy.scanFluxes.putAll(scanFluxes);
         return copy;
     }
 
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         super.createFrom(collection);
-        Scan<?,?> firstScan = getFirstScan();
+        Scan<?> firstScan = getFirstScan();
         sourceName = firstScan.getSourceName();
     }
 
@@ -97,11 +97,11 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void add(Integration<?, ?> integration) {
+    public void add(Integration<?> integration) {
         if(!integration.isPhaseModulated()) return;
 
         integration.comments.append("[Phot]");
-        Instrument<?> instrument = integration.instrument;
+        Instrument<?> instrument = integration.getInstrument();
         final PhaseSet phases = ((PhaseModulated) integration).getPhases();
 
         int frames = 0;
@@ -122,7 +122,7 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void sync(Integration<?, ?> integration) {	
+    public void sync(Integration<?> integration) {	
         // Nothing to do here...
     }
 
@@ -149,7 +149,7 @@ public abstract class Photometry extends SourceModel {
         double mean = sourceFlux.value() / getInstrument().janskyPerBeam();
         double chi2 = 0.0;
 
-        for(Scan<?,?> scan : getScans()) {
+        for(Scan<?> scan : getScans()) {
             DataPoint F = scanFluxes.get(scan);		
             if(F == null) continue;
             double dev = (F.value() - mean) / F.rms();
@@ -246,7 +246,7 @@ public abstract class Photometry extends SourceModel {
             out.println("# Photometry breakdown by scan:");
             out.println("# =============================================================================");
             for(int i=0; i<numberOfScans(); i++) {
-                Scan<?,?> scan = getScan(i);
+                Scan<?> scan = getScan(i);
                 DataPoint flux = scanFluxes.get(scan);	
                 if(flux == null) continue;
                 out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));

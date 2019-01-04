@@ -162,11 +162,11 @@ implements TableFormatter.Entries, BasicMessaging {
     public Grid2D<?> getGridInstance() { return new FlatGrid2D(); }
     
     // TODO check for incompatible scans
-    public void validate(Vector<Scan<?,?>> scans) throws Exception {
+    public void validate(Vector<Scan<?>> scans) throws Exception {
         if(hasOption("jackknife.alternate")) {
             notify("JACKKNIFE! Alternating scans.");
             for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
-                for(Integration<?,?> subscan : scans.get(i)) subscan.gain *= -1.0;
+                for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
         }  
     }
 
@@ -207,7 +207,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
 
-    public void validate(Scan<?,?> scan) {
+    public void validate(Scan<?> scan) {
         startupOptions = options.copy();
 
         reindex();
@@ -511,8 +511,8 @@ implements TableFormatter.Entries, BasicMessaging {
         options.forgetSilent(key);
     }
 
-    public Scan<?, ?> readScan(String descriptor) throws Exception {
-        Scan<?, ?> scan = getScanInstance();
+    public Scan<?> readScan(String descriptor) throws Exception {
+        Scan<?> scan = getScanInstance();
         scan.read(descriptor, true);
         return scan;
     }
@@ -1071,11 +1071,11 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public abstract int maxPixels();
     
-    protected void setPointing(Scan<?,?> scan) {
+    protected void setPointing(Scan<?> scan) {
         if(hasOption("point")) return;
         info("Setting 'point' option to obtain pointing/calibration data.");
         setOption("point");
-        scan.instrument.setOption("point");     
+        scan.getInstrument().setOption("point");     
     }
     
     
@@ -1097,20 +1097,20 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public abstract ChannelType getChannelInstance(int backendIndex);
 
-    public abstract Scan<?, ?> getScanInstance();
+    public abstract Scan<?> getScanInstance();
 
     public void populate(int channels) {
         clear();
         for(int i=0; i<channels; i++) add(getChannelInstance(i));
     }
 
-    public Scan<?, ?> readScan(String descriptor, boolean readFully) throws Exception {
-        Scan<?, ?> scan = getScanInstance();
+    public Scan<?> readScan(String descriptor, boolean readFully) throws Exception {
+        Scan<?> scan = getScanInstance();
         scan.read(descriptor, readFully);
         return scan;
     }
 
-    public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+    public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		
@@ -1496,7 +1496,7 @@ implements TableFormatter.Entries, BasicMessaging {
         setResolution(header.getDoubleValue("BEAM", getResolution() / Unit.arcsec) * Unit.arcsec);        
     }
 
-    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+    public void editImageHeader(List<Scan<?>> scans, Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
         c.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
@@ -1509,7 +1509,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("write.scandata.details")) Channel.flagSpace.editHeader(header, 'C');
     }
 
-    public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {}
+    public void addHistory(Header header, List<Scan<?>> scans) throws HeaderCardException {}
 
     // Sequential, because it is usually called from a parallel environment
     public void calcOverlap(final double pointSize) {

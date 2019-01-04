@@ -42,11 +42,11 @@ public abstract class VariedFilter extends Filter {
 	protected double sourceNorm;
 	
 	
-	public VariedFilter(Integration<?, ?> integration) {
+	public VariedFilter(Integration<?> integration) {
 		super(integration);
 	}
 
-	public VariedFilter(Integration<?,?> integration, float[] data) {
+	public VariedFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 	
@@ -54,10 +54,10 @@ public abstract class VariedFilter extends Filter {
 	public float[] getSourceProfile() { return sourceProfile; }
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
 		
-		pointResponse = new float[integration.instrument.size()];
+		pointResponse = new float[getInstrument().size()];
 		Arrays.fill(pointResponse, 1.0F);
 		
 		updateSourceProfile();

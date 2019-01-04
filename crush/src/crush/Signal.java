@@ -43,7 +43,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	 */
 	private static final long serialVersionUID = 1918817167111994832L;
 	private Mode mode;
-	Integration<?, ?> integration;
+	Integration<?> integration;
 	public float[] value, drifts;
 	public float[] syncGains;
 	int resolution;
@@ -51,7 +51,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	boolean isFloating = false;
 	
 	
-	public Signal(Mode mode, Integration<?, ?> integration) {
+	public Signal(Mode mode, Integration<?> integration) {
 		this.mode = mode;
 		this.integration = integration;
 		
@@ -61,7 +61,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		}
 	}
 	
-	public Signal(Mode mode, Integration<?, ?> integration, float[] values, boolean isFloating) {
+	public Signal(Mode mode, Integration<?> integration, float[] values, boolean isFloating) {
 		this(mode, integration);
 		resolution = ExtraMath.roundupRatio(integration.size(), values.length);
 		this.value = values;
@@ -222,7 +222,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	// f[1] = f[0] + h f'[0]
 	// f[n] = f[n-1] + h f'[n]
 	public void differentiate() {
-		final float dt = (float) (resolution * integration.instrument.samplingInterval);
+		final float dt = (float) (resolution * integration.getInstrument().samplingInterval);
 		
 		final int n = value.length;
 		final int nm1 = n-1;
@@ -242,7 +242,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 	// Intergate using trapesiod rule...
 	public void integrate() {
-		double dt = (float) (resolution * integration.instrument.samplingInterval);		
+		double dt = (float) (resolution * integration.getInstrument().samplingInterval);		
 		double I = 0.0;
 		
 		float halfLast = 0.0F;
@@ -318,7 +318,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 
 	public void print(PrintStream out) {
-		out.println("# " + (1.0 / (resolution * integration.instrument.integrationTime)));
+		out.println("# " + (1.0 / (resolution * integration.getInstrument().integrationTime)));
 		
 		for(int t=0; t<value.length; t++) out.println(Util.e3.format(value[t]));
 	}
@@ -345,7 +345,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 			@Override
 			protected void init() {
 				super.init();
-				dG = integration.instrument.getDataPoints();
+				dG = integration.getInstrument().getDataPoints();
 				for(int k=mode.size(); --k >= 0; ) dG[k].noData();
 			}
 			
@@ -537,7 +537,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 	public double getCovariance() {
 		final ChannelGroup<?> channels = mode.getChannels().createGroup().discard(~0);
-		final int nc = integration.instrument.size();
+		final int nc = integration.getInstrument().size();
 		
 		final double[] sumXS = new double[nc];
 		final double[] sumX2 = new double[nc];

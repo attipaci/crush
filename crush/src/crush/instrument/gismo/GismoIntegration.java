@@ -34,7 +34,7 @@ import jnum.astro.*;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> {
+public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 	/**
 	 * 
 	 */
@@ -48,6 +48,9 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 	
 	@Override
     public GismoScan getScan() { return (GismoScan) super.getScan(); }
+	
+	@Override
+    public Gismo getInstrument() { return (Gismo) super.getInstrument(); }
 	
 	@Override
 	public void setTau() throws Exception {
@@ -65,21 +68,21 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 	
 	@Override
 	public GismoFrame getFrameInstance() {
-		return new GismoFrame((GismoScan) scan);
+		return new GismoFrame(getScan());
 	}
 	
 	protected void read(BinaryTableHDU hdu, boolean oldFormat) throws Exception {
 		int records = hdu.getAxes()[0];
 
-		scan.info("Processing scan data:");		
+		getScan().info("Processing scan data:");		
 		info("Reading " + records + " frames.");
 	
 		Header header = hdu.getHeader();
 		
-		instrument.integrationTime = instrument.samplingInterval = header.getDoubleValue("CDELT1") * Unit.ms;
+		getInstrument().integrationTime = getInstrument().samplingInterval = header.getDoubleValue("CDELT1") * Unit.ms;
 		
-		info("Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
-				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
+		info("Sampling at " + Util.f1.format(getInstrument().integrationTime / Unit.ms) + " ms ---> " 
+				+ Util.f1.format(getInstrument().samplingInterval * records / Unit.min) + " minutes.");
 			
 		clear();
 		ensureCapacity(records);
@@ -97,7 +100,7 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 		private byte[] SDI;
 		private int channels;
 		
-		private final GismoScan gismoScan = (GismoScan) scan;
+		private final GismoScan gismoScan = getScan();
 		
 		public GismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
@@ -287,7 +290,7 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 		private byte[] SDI;
 		private int channels;
 		
-		private final GismoScan gismoScan = (GismoScan) scan;
+		private final GismoScan gismoScan = getScan();
 		
 		public OldGismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
@@ -435,7 +438,7 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 	
 	@Override
 	public String getFullID(String separator) {
-		return scan.getID();
+		return getScan().getID();
 	}
 	
 	private static final int CALFLAG_RECONSTRUCTED = 10;

@@ -51,11 +51,11 @@ public class WhiteningFilter extends AdaptiveFilter {
 
     private DataPoint[] A, temp; // The amplitude at reduced resolution, and a temp storage for median
 
-    public WhiteningFilter(Integration<?, ?> integration) {
+    public WhiteningFilter(Integration<?> integration) {
         super(integration);
     }
 
-    public WhiteningFilter(Integration<?,?> integration, float[] data) {
+    public WhiteningFilter(Integration<?> integration, float[] data) {
         super(integration, data);
     }
 
@@ -68,7 +68,7 @@ public class WhiteningFilter extends AdaptiveFilter {
     }
 
     @Override
-    protected void setIntegration(Integration<?,?> integration) {	
+    protected void setIntegration(Integration<?> integration) {	
         super.setIntegration(integration);
     }
 

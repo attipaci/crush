@@ -42,8 +42,8 @@ import java.io.*;
 import java.util.*;
 
 
-public abstract class SofiaScan<InstrumentType extends SofiaInstrument<? extends Channel>, IntegrationType extends SofiaIntegration<InstrumentType, ? extends SofiaFrame>> 
-extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
+public abstract class SofiaScan<IntegrationType extends SofiaIntegration<? extends SofiaFrame>> 
+extends GroundBasedScan<IntegrationType> implements Weather {
     /**
      * 
      */
@@ -77,9 +77,12 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
     
     LinkedHashMap<String, HeaderCard> preservedKeys = new LinkedHashMap<String, HeaderCard>();
 
-    public SofiaScan(InstrumentType instrument) {
+    public SofiaScan(SofiaInstrument<?> instrument) {
         super(instrument);
     }
+    
+    @Override
+    public SofiaInstrument<?> getInstrument() { return (SofiaInstrument<?>) super.getInstrument(); }
 
     public boolean useChopper() {
         return mode.isChopping || hasOption("chopped");
@@ -153,7 +156,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         if(!upperCaseName.contains(".FITS")) return false;
 
         // 2. Check if the file contains the instrument ID...
-        if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;    
+        if(!upperCaseName.contains("_" + getInstrument().getFileID().toUpperCase())) return false;    
 
         // 3. Check if the file name contains the flight ID...                 
         String flightID = "_F" + Util.d3.format(flightNo) + "_";
@@ -216,7 +219,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 
     public void parseHeader(SofiaHeader header) throws Exception {
         // Load any options based on the FITS header...
-        instrument.setFitsHeaderOptions(header.getFitsHeader());
+        getInstrument().setFitsHeaderOptions(header.getFitsHeader());
 
         fileDate = header.getString("DATE");
         date = header.getString("DATE-OBS");
@@ -285,7 +288,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 
         info("Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
 
-        instrument.parseHeader(header);
+        getInstrument().parseHeader(header);
 
         if(mode.isChopping) chopper = new SofiaChopperData(header);
         if(mode.isNodding) nodding = new SofiaNoddingData(header);
@@ -293,7 +296,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         if(mode.isMapping) mapping = new SofiaMappingData(header);
         if(mode.isScanning) scanning = getScanningDataInstance(header);	
 
-        for(String key : instrument.getPreservedHeaderKeys()) {
+        for(String key : getInstrument().getPreservedHeaderKeys()) {
             HeaderCard card = header.getFitsHeader().findCard(key);
             if(card != null) preservedKeys.put(key, card);
         }
@@ -325,7 +328,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         aircraft.editHeader(header);
         telescope.editHeader(header);
 
-        instrument.editHeader(header);
+        getInstrument().editHeader(header);
 
         mode.editHeader(header);
 
@@ -345,7 +348,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
         addHistory(c);
-        instrument.addHistory(header, null);
+        getInstrument().addHistory(header, null);
     }
 
 
@@ -454,15 +457,15 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
     protected void read(BasicHDU<?>[] hdu, boolean readFully) throws Exception {	
         parseHeader(new SofiaHeader(hdu[0].getHeader()));
 
-        instrument.readData(hdu);
-        instrument.validate(this);	
+        getInstrument().readData(hdu);
+        getInstrument().validate(this);	
 
         clear();
 
         addIntegrationsFrom(hdu);
 
-        instrument.samplingInterval = get(0).instrument.samplingInterval;
-        instrument.integrationTime = get(0).instrument.integrationTime;
+        getInstrument().samplingInterval = get(0).getInstrument().samplingInterval;
+        getInstrument().integrationTime = get(0).getInstrument().integrationTime;
     }
 
     public abstract void addIntegrationsFrom(BasicHDU<?>[] hdu) throws Exception;
@@ -543,7 +546,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 
         // TODO Add Sofia Header data...  
         SofiaData[] groups = new SofiaData[] { 
-                aircraft, chopper, dither, environment, instrument.instrumentData, instrument.array, mapping, 
+                aircraft, chopper, dither, environment, getInstrument().instrumentData, getInstrument().array, mapping, 
                 mission, nodding, observation, origin, processing, scanning, telescope 
         };
 
@@ -557,7 +560,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         Vector2D offset = new Vector2D(nativePointing); 
 
         // Add the pointing offset used in the reduction back in...
-        if(instrument.hasOption("pointing")) offset.add(instrument.option("pointing").getVector2D(Unit.arcsec));
+        if(hasOption("pointing")) offset.add(option("pointing").getVector2D(Unit.arcsec));
 
         return offset;
     }
@@ -569,11 +572,11 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
         siOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
 
         // Correct for the residual instrument rotation...
-        siOffset.rotate(-instrument.getRotationAngle());
+        siOffset.rotate(-getInstrument().getRotationAngle());
 
         // convert offset to pixels
         // The SI y axis is upside down relative to the elevation axis
-        Vector2D pixelSize = instrument.getSIPixelSize();  
+        Vector2D pixelSize = getInstrument().getSIPixelSize();  
         siOffset.scaleX(1.0 / pixelSize.x());
         siOffset.scaleY(-1.0 / pixelSize.y());
 

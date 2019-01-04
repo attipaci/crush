@@ -44,6 +44,9 @@ public class Scuba2Frame extends HorizontalFrame {
 	}
 	
 	@Override
+    public Scuba2Scan getScan() { return (Scuba2Scan) super.getScan(); }
+	
+	@Override
     public Scuba2Frame copy(boolean withContents) {
 	    Scuba2Frame copy = (Scuba2Frame) super.copy(withContents);
 	    
@@ -57,7 +60,7 @@ public class Scuba2Frame extends HorizontalFrame {
 	}
 	
 	public void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {
-		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
+		Scuba2Scan scuba2Scan = getScan();
 		final int blankingValue = scuba2Scan.blankingValue;
 		
 		if(data == null) create(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);

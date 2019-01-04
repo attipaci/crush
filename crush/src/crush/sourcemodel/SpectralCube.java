@@ -124,10 +124,10 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     }
 
    
-    public Range getFrequencyRange(Collection<? extends Scan<?,?>> scans) {
+    public Range getFrequencyRange(Collection<? extends Scan<?>> scans) {
         Range r = new Range();
-        for(Scan<?, ?> scan : scans) for(Integration<?, ?> integration : scan) {
-            r.include(integration.getFrequencyRange(integration.instrument.getObservingChannels()));
+        for(Scan<?> scan : scans) for(Integration<?> integration : scan) {
+            r.include(integration.getFrequencyRange(integration.getInstrument().getObservingChannels()));
         }
         return r;
     }
@@ -198,7 +198,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     
     
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         
         createCube();
         
@@ -323,7 +323,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     }
 
     @Override
-    protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain,
+    protected void calcCoupling(Integration<?> integration, Collection<? extends Pixel> pixels, double[] sourceGain,
             double[] syncGain) {
         // TODO Auto-generated method stub  
     }

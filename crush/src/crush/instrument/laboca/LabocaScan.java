@@ -25,7 +25,7 @@ package crush.instrument.laboca;
 
 import crush.telescope.apex.APEXScan;
 
-public class LabocaScan extends APEXScan<Laboca, LabocaSubscan> {
+public class LabocaScan extends APEXScan<LabocaSubscan> {
 	/**
 	 * 
 	 */
@@ -35,6 +35,9 @@ public class LabocaScan extends APEXScan<Laboca, LabocaSubscan> {
 		super(instrument);
 	}
 
+	@Override
+    public Laboca getInstrument() { return (Laboca) super.getInstrument(); }
+	
 	@Override
 	public LabocaSubscan getIntegrationInstance() {
 		return new LabocaSubscan(this);

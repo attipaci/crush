@@ -60,7 +60,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     private String id;
      
-    private Vector<Scan<?,?>> scans;
+    private Vector<Scan<?>> scans;
     private int generation = 0;
     
     private double integrationTime = 0.0;    //  TODO new...
@@ -89,17 +89,17 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         excludeSamples = pattern;
     }
 
-    public List<Scan<?,?>> getScans() { return scans; }
+    public List<Scan<?>> getScans() { return scans; }
 
-    public void setScans(Vector<Scan<?,?>> scans) { this.scans = scans; }
+    public void setScans(Vector<Scan<?>> scans) { this.scans = scans; }
    
-    public final Scan<?, ?> getScan(int i) { return scans.get(i); }
+    public final Scan<?> getScan(int i) { return scans.get(i); }
     
-    public final Scan<?, ?> getFirstScan() { return scans.get(0); }
+    public final Scan<?> getFirstScan() { return scans.get(0); }
     
     public int numberOfScans() { return scans == null ? 0 : scans.size(); }
 
-    public void addScan(Scan<?,?> scan) { scans.add(scan); }
+    public void addScan(Scan<?> scan) { scans.add(scan); }
 
     public int getGeneration() { return generation; }
 
@@ -129,7 +129,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public SourceModel clone() {
         try { 
             SourceModel clone = (SourceModel) super.clone(); 
-            if(scans != null) clone.scans = (Vector<Scan<?,?>>) scans.clone(); 
+            if(scans != null) clone.scans = (Vector<Scan<?>>) scans.clone(); 
             return clone;
         }
         catch(CloneNotSupportedException e) { return null; }
@@ -187,16 +187,16 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public void clearProcessBrief() { processBrief = new StringBuffer(); }
 
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
-        this.scans = new Vector<Scan<?,?>>(collection);
-        for(Scan<?,?> scan : scans) scan.setSourceModel(this);		
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
+        this.scans = new Vector<Scan<?>>(collection);
+        for(Scan<?> scan : scans) scan.setSourceModel(this);		
 
         // TODO remove this if source.setInstrument works in Pipeline...
-        double janskyPerBeam = scans.get(0).instrument.janskyPerBeam();
-        for(Scan<?,?> scan : scans) {
+        double janskyPerBeam = scans.get(0).getInstrument().janskyPerBeam();
+        for(Scan<?> scan : scans) {
             scan.setSourceModel(this);
-            for(Integration<?,?> integration : scan)
-                integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
+            for(Integration<?> integration : scan)
+                integration.gain *= integration.getInstrument().janskyPerBeam() / janskyPerBeam;
         }
         
         
@@ -212,9 +212,9 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public double getAverageResolution() {
         double sum = 0.0, sumw = 0.0;
 
-        for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) if(integration.instrument != instrument) {
+        for(Scan<?> scan : scans) for(Integration<?> integration : scan) if(integration.getInstrument() != instrument) {
             double wG2 = scan.weight * integration.gain * integration.gain;
-            double resolution = integration.instrument.getResolution();
+            double resolution = integration.getInstrument().getResolution();
             sum += wG2 * resolution * resolution;
             sumw += wG2;
         }
@@ -252,13 +252,13 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     
     public abstract void addModelData(SourceModel model, double weight);
 
-    public abstract void add(Integration<?,?> integration);
+    public abstract void add(Integration<?> integration);
 
-    public abstract void process(Scan<?,?> scan);
+    public abstract void process(Scan<?> scan);
 
-    public void postProcess(Scan<?,?> scan) {}
+    public void postProcess(Scan<?> scan) {}
 
-    public abstract void sync(Integration<?,?> integration);
+    public abstract void sync(Integration<?> integration);
 
     public abstract void setBase();
 
@@ -272,7 +272,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         boolean scanningProblemOnly = false;
 
         int scansWithFewPixels = 0;
-        for(Scan<?, ?> scan : scans) for(Integration<?, ?> integration : scan) if(!checkPixelCount(integration)) {
+        for(Scan<?> scan : scans) for(Integration<?> integration : scan) if(!checkPixelCount(integration)) {
             scansWithFewPixels++;
             break;
         }
@@ -287,11 +287,11 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         boolean speedProblemOnly = true;
 
         for(int i=0; i<scans.size(); i++) {
-            Scan<?,?> scan = scans.get(i);
+            Scan<?> scan = scans.get(i);
             boolean lowSpeed = false;
 
-            for(Integration<?,?> integration : scan) if(!checkPixelCount(integration)) {
-                int driftN = (int) Math.round(integration.filterTimeScale / integration.instrument.samplingInterval);
+            for(Integration<?> integration : scan) if(!checkPixelCount(integration)) {
+                int driftN = (int) Math.round(integration.filterTimeScale / integration.getInstrument().samplingInterval);
                 if(driftN <= 1) lowSpeed = true;
                 else speedProblemOnly = false;
             }
@@ -355,7 +355,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
         final int nParms = countPoints();
       
-        for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
+        for(Scan<?> scan : scans) for(Integration<?> integration : scan) {
             sync(integration);
             integration.sourceGeneration++;
             integration.scan.sourcePoints = nParms;
@@ -412,10 +412,10 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     }
 
     public String getDefaultCoreName() {
-        Scan<?,?> first, last;
+        Scan<?> first, last;
         first = last = scans.get(0);
 
-        for(Scan<?,?> scan : scans) {
+        for(Scan<?> scan : scans) {
             if(scan.compareTo(first) < 0) first = scan;
             else if(scan.compareTo(last) > 0) last = scan;			
         }
@@ -427,16 +427,16 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     }
 
     /*
-	public ArrayList<Integration<?,?>> getIntegrations() {
-		final ArrayList<Integration<?,?>> integrations = new ArrayList<Integration<?,?>>();
-		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) integrations.add(integration);
+	public ArrayList<Integration<?>> getIntegrations() {
+		final ArrayList<Integration<?>> integrations = new ArrayList<Integration<?>>();
+		for(Scan<?> scan : scans) for(Integration<?> integration : scan) integrations.add(integration);
 		return integrations;		
 	}
      */
 
-    public boolean checkPixelCount(Integration<?,?> integration) {
-        Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(0);
-        int nObs = integration.instrument.getObservingChannels().size();
+    public boolean checkPixelCount(Integration<?> integration) {
+        Collection<? extends Pixel> pixels = integration.getInstrument().getMappingPixels(0);
+        int nObs = integration.getInstrument().getObservingChannels().size();
 
         // If there aren't enough good pixels in the scan, do not generate a map...
         if(integration.hasOption("mappingpixels")) if(pixels.size() < integration.option("mappingpixels").getInt()) {
@@ -539,7 +539,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public void addScanHDUsTo(Fits fits) throws FitsException, IOException {
         if(instrument == null) return;
         if(!hasOption("write.scandata")) return;    
-        for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(getOptions()));
+        for(Scan<?> scan : scans) fits.addHDU(scan.getSummaryHDU(getOptions()));
     }
 
     @Override

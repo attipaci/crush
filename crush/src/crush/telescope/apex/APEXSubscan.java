@@ -41,10 +41,10 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
+import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 
-public class APEXSubscan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
-extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModulated, Chopping {
+public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegration<FrameType> implements PhaseModulated, Chopping {
 	/**
 	 * 
 	 */
@@ -56,19 +56,22 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 	
 	double pwv = Double.NaN;
 	
-	public APEXSubscan(APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, ? extends FrameType>> parent) {
+	public APEXSubscan(APEXScan<? extends APEXSubscan<? extends FrameType>> parent) {
 		super(parent);
 	}
 	
     @SuppressWarnings("unchecked")
     @Override
-    public APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, FrameType>> getScan() { 
-        return (APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, FrameType>>) super.getScan(); 
+    public APEXScan<? extends APEXSubscan<? extends FrameType>> getScan() { 
+        return (APEXScan<? extends APEXSubscan<? extends FrameType>>) super.getScan(); 
     }
     
     
-    public APEXScan<InstrumentType, APEXSubscan<InstrumentType, FrameType>> getScanInstance() {
-        return new APEXScan<InstrumentType, APEXSubscan<InstrumentType, FrameType>>(instrument);
+    @Override
+    public APEXInstrument<?> getInstrument() { return (APEXInstrument<?>) super.getInstrument(); }
+    
+    public APEXScan<APEXSubscan<FrameType>> getScanInstance() {
+        return new APEXScan<APEXSubscan<FrameType>>(getInstrument());
     }
 	
 	@Override
@@ -127,8 +130,8 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 		// 1/5 beams ~90% on the boundary
 		// 1/4 beams ~85% on the boundary
 		// 1/3 beams ~75% on the boundary
-		double tolerance = instrument.getPointSize() / 5.0;
-		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * instrument.getPointSize();
+		double tolerance = getInstrument().getPointSize() / 5.0;
+		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * getInstrument().getPointSize();
 		
 		
 		markChopped(left, right, tolerance);
@@ -147,7 +150,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 	    
 		buf.append("Marking Chopper Phases... ");
 	
-		for(Pixel pixel : instrument.getPixels()) {
+		for(Pixel pixel : getInstrument().getPixels()) {
 			Vector2D position = pixel.getPosition();
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
@@ -305,7 +308,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 			final Object[] row = hdu.getRow(exposure.index);
 			final float[][] data = (float[][]) row[iData];
 			for(int c=0; c<data.length; c++) data[c][0] = 0.0F;
-			for(Channel channel : instrument) data[channel.getFixedIndex()][0] = exposure.data[channel.index];
+			for(Channel channel : getInstrument()) data[channel.getFixedIndex()][0] = exposure.data[channel.index];
 			hdu.setRow(exposure.index, row);
 		}	
 		
@@ -326,14 +329,14 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 		ensureCapacity(frames);
 		for(int i=frames; --i >= 0; ) add(null);
 		
-		instrument.samplingInterval = instrument.integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
+		getInstrument().samplingInterval = getInstrument().integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
 		// Use the integrationTime to convert to data weights...
-		instrument.sampleWeights();
+		getInstrument().sampleWeights();
 		
-		info("Sampling at " + Util.f3.format(1.0/instrument.samplingInterval) + " Hz.");
+		info("Sampling at " + Util.f3.format(1.0 / getInstrument().samplingInterval) + " Hz.");
 	
 		info(frames + " frames found (" + 
-				Util.f1.format(frames * instrument.samplingInterval / Unit.min) + " minutes).");
+				Util.f1.format(frames * getInstrument().samplingInterval / Unit.min) + " minutes).");
 	
 		new DataParTable(hdu).read(); 
 	}
@@ -342,7 +345,6 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 		private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
 		private int[] phase;
 		private boolean chopperIncluded;
-		private final APEXScan<InstrumentType, ?> apexScan = (APEXScan<InstrumentType, ?>) scan;
 		private final static double m900 = -900.0;
 		
 		public DataParTable(TableHDU<?> hdu) throws FitsException {
@@ -370,7 +372,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
                 
                 for(int i=objX.length; --i >= 0; ) if(!Double.isNaN(objX[i])) if(objX[i] > m900) {
                     info("Non-sidereal tracking detected...");
-                    scan.isNonSidereal = true;
+                    getScan().isNonSidereal = true;
                     break;
                 }
             }
@@ -409,7 +411,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 				else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_LEFT;
 			}
 
-			if(apexScan.chopper != null) chopper = apexScan.chopper.copy();
+			if(getScan().chopper != null) chopper = getScan().chopper.copy();
 
 			if(chopper != null)
 			    info("Nodding " + (nodPhase == TelescopeFrame.CHOP_LEFT ? "[LEFT]" : 
@@ -427,11 +429,12 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 				public void init() {
 					super.init();
 					tempOffset = new Vector2D();
+					Class<? extends SphericalCoordinates> basisSystem = getScan().basisSystem;
 					
-					if(apexScan.basisSystem != HorizontalCoordinates.class && apexScan.basisSystem != EquatorialCoordinates.class) {
-						try { basisCoords = (CelestialCoordinates) apexScan.basisSystem.getConstructor().newInstance(); }
+					if(basisSystem != HorizontalCoordinates.class && basisSystem != EquatorialCoordinates.class) {
+						try { basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance(); }
 						catch(Exception e) {
-							throw new IllegalStateException("Cannot instantiate " + apexScan.basisSystem.getName() +
+							throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() +
 									": " + e.getMessage());
 						}
 					}					
@@ -457,14 +460,14 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 					exposure.MJD = MJD[t];
 					exposure.LST = LST[t];
 					
-					boolean hasObjectCoords = objX == null ? false : scan.isNonSidereal && objX[t] > m900 && objY[t] > m900;
+					boolean hasObjectCoords = objX == null ? false : getScan().isNonSidereal && objX[t] > m900 && objY[t] > m900;
 					
 					if(basisCoords != null) {
 						basisCoords.set(X[t] * Unit.deg, Y[t] * Unit.deg);
 						exposure.equatorial = basisCoords.toEquatorial();
 						exposure.calcHorizontal();
 					}	
-					else if(apexScan.basisSystem == EquatorialCoordinates.class) {
+					else if(getScan().basisSystem == EquatorialCoordinates.class) {
 						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.epoch);
 						exposure.calcHorizontal();
 					}
@@ -482,7 +485,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
                             exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(basisCoords.toEquatorial());
                             exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
                         }
-					    else if(apexScan.basisSystem == EquatorialCoordinates.class) { 
+					    else if(getScan().basisSystem == EquatorialCoordinates.class) { 
 					        exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(
                                     new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.epoch)
                             );
@@ -498,7 +501,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 					else {
 					    exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
 					
-					    if(apexScan.nativeSystem == EquatorialCoordinates.class)
+					    if(getScan().nativeSystem == EquatorialCoordinates.class)
 					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
 					}
 					    
@@ -561,7 +564,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 	    pwv = sum / N; 
 	    
 	    if(!hasOption("tau.pwv")) {
-            try { instrument.getOptions().process("tau.pwv", pwv + ""); } 
+            try { getInstrument().getOptions().process("tau.pwv", pwv + ""); } 
             catch (LockedException e) {}
 	    }
 	    
@@ -571,12 +574,12 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 	@SuppressWarnings("unchecked")
 	@Override
 	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame((APEXScan<APEXInstrument<?>, APEXSubscan<APEXInstrument<?>, FrameType>>) scan);
+		return (FrameType) new APEXFrame(getScan());
 	}
 			
 	public void fitsRCP() {
 		info("Using RCP data contained in the FITS.");
-		for(APEXContinuumPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
+		for(APEXContinuumPixel pixel : getInstrument()) pixel.position = (Vector2D) pixel.fitsPosition.clone();
 	}
 
 	@Override

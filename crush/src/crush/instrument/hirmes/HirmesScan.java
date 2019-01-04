@@ -43,7 +43,7 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {    
+public class HirmesScan extends SofiaScan<HirmesIntegration> {    
     /**
      * 
      */
@@ -64,6 +64,9 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
     }
 
     @Override
+    public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
+    
+    @Override
     public HirmesIntegration getIntegrationInstance() {
         return new HirmesIntegration(this);
     }
@@ -76,7 +79,7 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
         String upperCaseName = fileName.toUpperCase();
 
         // 1. Check if the file name contains the instrument ID...
-        if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;
+        if(!upperCaseName.contains("_" + getInstrument().getFileID().toUpperCase())) return false;
 
         // 2. Check if the file name starts with the flight ID...
         String oldFlightID = "F" + Util.d4.format(flightNo) + "_"; 

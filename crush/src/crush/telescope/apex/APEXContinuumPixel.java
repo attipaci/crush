@@ -133,7 +133,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 	
 	public void writeLROffset(final PhaseSet phases, String fileName, final Collection<APEXContinuumPixel> bgPixels, final double[] sourceGain) throws IOException {
 		final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));	
-		final APEXSubscan<?,?> subscan = (APEXSubscan<?,?>) phases.getIntegration();
+		final APEXSubscan<?> subscan = (APEXSubscan<?>) phases.getIntegration();
 		
 		out.println("# CRUSH APEX Photometry Nod-cycle Data");
 		out.println("# =============================================================================");
@@ -156,7 +156,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 	
 	public void writeLRSpectrum(final PhaseSet phases, String fileName) throws IOException {
 		final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		final APEXSubscan<?,?> subscan = (APEXSubscan<?,?>) phases.getIntegration();
+		final APEXSubscan<?> subscan = (APEXSubscan<?>) phases.getIntegration();
 	
 		out.println("# CRUSH APEX Photometry Nod-cycle Spectrum");
 		out.println("# =============================================================================");

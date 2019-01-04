@@ -52,8 +52,12 @@ public class HawcFrame extends SofiaFrame {
     
     public HawcFrame(HawcScan hawcScan) {
         super(hawcScan);
-        create(hawcScan.instrument.size());
+        create(hawcScan.getInstrument().size());
     }
+    
+    @Override
+    public HawcScan getScan() { return (HawcScan) super.getScan(); }
+
     
     @Override
     public HawcFrame copy(boolean withContents) {
@@ -73,7 +77,7 @@ public class HawcFrame extends SofiaFrame {
 
     // Parses data for valid pixels only...
     private void parseData(int[] DAC, short[] jump, int from) {  
-        Hawc hawc = (Hawc) scan.instrument;
+        Hawc hawc = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
         
@@ -84,7 +88,7 @@ public class HawcFrame extends SofiaFrame {
     }
     
     public void parseData(int[][] DAC, short[][] jump) {  
-        Hawc hawc = (Hawc) scan.instrument;
+        Hawc hawc = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
         
@@ -135,8 +139,8 @@ public class HawcFrame extends SofiaFrame {
     
     @Override
     public boolean validate() {
-        HawcScan hawcScan = (HawcScan) scan;
-        Hawc hawc = hawcScan.instrument;
+        HawcScan hawcScan = getScan();
+        Hawc hawc = hawcScan.getInstrument();
         
         if(!isComplete) return false;
          
@@ -153,7 +157,7 @@ public class HawcFrame extends SofiaFrame {
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
             if(equatorial.isNull()) return false;
-            if(scan.isNonSidereal) if(objectEq.isNull()) return false;
+            if(hawcScan.isNonSidereal) if(objectEq.isNull()) return false;
             
             if(equatorial.isNaN()) return false;
             if(horizontal.isNaN()) return false;
@@ -189,7 +193,7 @@ public class HawcFrame extends SofiaFrame {
     
 
     public void darkCorrect() {
-        Hawc hawc = (Hawc) scan.instrument;
+        Hawc hawc = getScan().getInstrument();
 
         for(HawcPixel pixel : hawc) if(!pixel.isFlagged(Channel.FLAG_BLIND))
             data[pixel.index] -= data[hawc.darkSquidLookup[pixel.sub][pixel.col]];

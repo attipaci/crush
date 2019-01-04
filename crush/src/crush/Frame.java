@@ -40,7 +40,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	 * 
 	 */
 	private static final long serialVersionUID = 6878330196774273680L;
-	public Scan<?, ?> scan;
+	private Scan<?> scan;
 	public int index;
 	
 	public double MJD;
@@ -65,14 +65,14 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	private boolean isValid = false;
 	
-	public Frame(Scan<?, ?> parent) { 
+	public Frame(Scan<?> parent) { 
 		scan = parent; 
 		index = parent.size();
 	}
 	
-	public Scan<?,?> getScan() { return scan; }
+	public Scan<?> getScan() { return scan; }
 	
-	public Instrument<?> getInstrument() { return getScan().instrument; }
+	public Instrument<?> getInstrument() { return getScan().getInstrument(); }
 	
 	public final int size() { return data.length; }
 	

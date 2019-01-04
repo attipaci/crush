@@ -81,7 +81,7 @@ public class CorrelatedMode extends Mode {
 		return getChannels().createGroup().discard(skipFlags);
 	}
 	
-	public void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {	
+	public void updateSignals(Integration<?> integration, boolean isRobust) throws Exception {	
 		CorrelatedSignal signal = (CorrelatedSignal) integration.getSignal(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);
 

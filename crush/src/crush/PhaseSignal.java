@@ -68,7 +68,7 @@ public class PhaseSignal implements Serializable {
 		final float[] G = mode.getGains();
 		final ChannelGroup<?> channels = mode.getChannels();
 		
-		final Integration<?,?> integration = phases.getIntegration();
+		final Integration<?> integration = phases.getIntegration();
 		
 		// Allow phases.estimator to override the default estimator request
 		if(integration.hasOption("phases.estimator")) 
@@ -91,11 +91,11 @@ public class PhaseSignal implements Serializable {
 				dC = new WeightedPoint();
 				
 				// Use local channel dependency accounting for the mode...
-				phaseChannelParms = integration.instrument.getDoubles();
+				phaseChannelParms = integration.getInstrument().getDoubles();
 				Arrays.fill(phaseChannelParms, 0, mode.size(), 0.0);
 				
 				if(useMedians) {
-					temp = integration.instrument.getDataPoints();
+					temp = integration.getInstrument().getDataPoints();
 					for(int i=G.length; --i >= 0; ) temp[i].noData();
 				}
 			}

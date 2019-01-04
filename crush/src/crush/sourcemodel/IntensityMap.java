@@ -140,7 +140,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     }
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         createMap();
 
         super.createFrom(collection);  
@@ -237,7 +237,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
         info("Inserting test sources into data.");
 
-        for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) {
+        for(Scan<?> scan : getScans()) for(Integration<?> integration : scan) {
             sync(integration);
             integration.sourceGeneration=0;
         }
@@ -311,7 +311,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     }
 
     @Override
-    public void postProcess(Scan<?,?> scan) {
+    public void postProcess(Scan<?> scan) {
         super.postProcess(scan);
 
         if(isEmpty()) return;
@@ -319,7 +319,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
         
         
         if(hasOption("pointing.suggest")) {
-            double optimal = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit().value() : scan.instrument.getPointSize();
+            double optimal = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * scan.getInstrument().getSizeUnit().value() : scan.getInstrument().getPointSize();
 
             map.smoothTo(optimal);
                
@@ -449,11 +449,11 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
 
     public void maskSamples(byte sampleFlagPattern) {
-        for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) maskSamples(integration, sampleFlagPattern);
+        for(Scan<?> scan : getScans()) for(Integration<?> integration : scan) maskSamples(integration, sampleFlagPattern);
     }
 
-    public void maskSamples(Integration<?,?> integration, final byte sampleFlagPattern) {
-        final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(~0);
+    public void maskSamples(Integration<?> integration, final byte sampleFlagPattern) {
+        final Collection<? extends Pixel> pixels = integration.getInstrument().getMappingPixels(~0);
 
         integration.new Fork<Void>() {
             private Projector2D<?> projector;
@@ -479,9 +479,9 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
 
     @Override
-    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
+    protected int add(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
         int goodFrames = super.add(integration, pixels, sourceGain, signalMode);
-        addIntegrationTime(goodFrames * integration.instrument.samplingInterval);
+        addIntegrationTime(goodFrames * integration.getInstrument().samplingInterval);
         return goodFrames;
     }
 
@@ -506,7 +506,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
 
     @Override
-    protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
+    protected void calcCoupling(final Integration<?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
         final Range s2nRange = hasSourceOption("coupling.s2n") ?
                 Range.from(sourceOption("coupling.s2n").getValue(), true) :
                     new Range(5.0, Double.POSITIVE_INFINITY);
@@ -522,7 +522,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
                         super.init();
                         projector = getProjectorInstance();
                         index = new Index2D();
-                        sum = integration.instrument.getDataPoints();
+                        sum = integration.getInstrument().getDataPoints();
                         for(int i=sum.length; --i >= 0; ) sum[i].noData();
                     }
 
@@ -582,7 +582,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
                 final DataPoint[] result = calcCoupling.getResult();
 
-                for(final Channel channel : integration.instrument) {
+                for(final Channel channel : integration.getInstrument()) {
                     DataPoint increment = result[channel.index];
                     if(increment.weight() <= 0.0) continue;
                     channel.coupling += (increment.value() / increment.weight()) * channel.coupling;
@@ -590,7 +590,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
                 // Normalize the couplings to 1.0
                 try {     
-                    CorrelatedMode coupling = (CorrelatedMode) integration.instrument.modalities.get("coupling").get(0);
+                    CorrelatedMode coupling = (CorrelatedMode) integration.getInstrument().modalities.get("coupling").get(0);
                     coupling.normalizeGains();
                 }
                 catch(Exception e) { warning(e); }

@@ -44,7 +44,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	public double zenithTau = 0.0;
 	
-	public HorizontalFrame(GroundBasedScan<? extends TelescopeInstrument<?>, ? extends GroundBasedIntegration<?,?>> parent) {
+	public HorizontalFrame(GroundBasedScan<? extends GroundBasedIntegration<?>> parent) {
 		super(parent);
 	}
 	
@@ -60,8 +60,8 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	@SuppressWarnings("unchecked")
     @Override
-    public GroundBasedScan<? extends TelescopeInstrument<?>, ? extends GroundBasedIntegration<?,?>> getScan() { 
-	    return (GroundBasedScan<? extends TelescopeInstrument<?>, ? extends GroundBasedIntegration<?,?>>) super.getScan();
+    public GroundBasedScan<? extends GroundBasedIntegration<?>> getScan() { 
+	    return (GroundBasedScan<? extends GroundBasedIntegration<?>>) super.getScan();
 	}
 
 	
@@ -168,7 +168,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	public void calcEquatorial() {
 		// This assumes that the object is tracked on sky...
 		// Uses the scanning offsets, on top of the tracking coordinate of the scan...
-		if(scan.isTracking) {
+		if(getScan().isTracking) {
 			if(equatorial == null) equatorial = (EquatorialCoordinates) getScan().equatorial.clone();
 			equatorial.setNativeLongitude(getScan().equatorial.x() + (PA.cos() * horizontalOffset.x() - PA.sin() * horizontalOffset.y()) / getScan().equatorial.cosLat());
 			equatorial.setNativeLatitude(getScan().equatorial.y() + (PA.cos() * horizontalOffset.y() + PA.sin() * horizontalOffset.x()));	

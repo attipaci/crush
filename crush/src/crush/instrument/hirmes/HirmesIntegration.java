@@ -38,7 +38,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
 
-public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {    
+public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {    
     /**
      * 
      */
@@ -53,8 +53,11 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
     public HirmesScan getScan() { return (HirmesScan) super.getScan(); }
 
     @Override
+    public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
+    
+    @Override
     public HirmesFrame getFrameInstance() {
-        return new HirmesFrame((HirmesScan) scan);
+        return new HirmesFrame(getScan());
     }
 
 
@@ -62,17 +65,17 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
-        instrument.info("Processing scan data:");
+        getInstrument().info("Processing scan data:");
         info("Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
-        info("Sampling at " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz ---> " 
-                + Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
+        info("Sampling at " + Util.f2.format(1.0 / getInstrument().integrationTime) + " Hz ---> " 
+                + Util.f1.format(getInstrument().samplingInterval * records / Unit.min) + " minutes.");
 
         clear();
         ensureCapacity(records);
         for(int t=records; --t>=0; ) add(null);
 
         for(int i=0; i<dataHDUs.size(); i++) 
-            new HirmesRowReader(dataHDUs.get(i), ((HirmesScan) scan).fits.getStream()).read(1); 
+            new HirmesRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1); 
     }
 
     class HirmesRowReader extends HDURowReader { 
@@ -87,7 +90,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
 
         private boolean invertChop = false;
 
-        private final HirmesScan hirmesScan = (HirmesScan) scan;
+        private final HirmesScan hirmesScan = getScan();
 
         public HirmesRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
@@ -118,7 +121,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
             iRA = hdu.findColumn("RA");
             iDEC = hdu.findColumn("DEC");
 
-            if(scan.isNonSidereal) {
+            if(hirmesScan.isNonSidereal) {
                 iORA = hdu.findColumn("NonSiderealRA");
                 iODEC = hdu.findColumn("NonSiderealDec");
             }
@@ -153,8 +156,8 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
 
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
-                if(scan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
-                scan.isNonSidereal = false;        
+                if(hirmesScan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
+                hirmesScan.isNonSidereal = false;        
             } 
 
             isConfigured = true;
@@ -174,7 +177,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
 
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = ((HirmesScan) scan).telescope.epoch;
+                    epoch = hirmesScan.telescope.epoch;
                 }
 
                 @Override
@@ -189,7 +192,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
                     frame.parseData((int[][]) row[iDAC], iJump < 0 ? null : (short[][]) row[iJump]);
                     frame.mceSerial = iSN < 0 ? 0L : ((long[]) row[iSN])[0];
    
-                    frame.utc = iTS < 0 ? i * instrument.samplingInterval : ((double[]) row[iTS])[0];
+                    frame.utc = iTS < 0 ? i * getInstrument().samplingInterval : ((double[]) row[iTS])[0];
                     timeStamp.setUTC(frame.utc);
                     frame.MJD = timeStamp.getMJD();
                         
@@ -227,7 +230,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
                             epoch
                             );                             
 
-                    if(scan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
+                    if(hirmesScan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
                         frame.objectEq = new EquatorialCoordinates(
                                 ((double[]) row[iORA])[0] * Unit.hourAngle, 
                                 ((double[]) row[iODEC])[0] * Unit.deg, 
@@ -235,7 +238,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
                                 );
                     }
 
-                    EquatorialCoordinates reference = scan.isNonSidereal ? frame.objectEq : getScan().equatorial;
+                    EquatorialCoordinates reference = hirmesScan.isNonSidereal ? frame.objectEq : getScan().equatorial;
 
                     // I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
@@ -311,7 +314,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
 
     @Override
     public String getFullID(String separator) {
-        return scan.getID();
+        return getScan().getID();
     }
 
  
@@ -320,7 +323,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
         flagZeroedChannels();
         checkJumps();       
         
-        if(hasOption("gyrocorrect")) ((HirmesScan) scan).gyroDrifts.correct(this);
+        if(hasOption("gyrocorrect")) getScan().gyroDrifts.correct(this);
         
         super.validate(); 
     }
@@ -333,7 +336,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
     
     private void printEquivalentTaus(double value) { 
         CRUSH.values(this, "--->"
-                + " tau(" + Util.f0.format(instrument.instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
+                + " tau(" + Util.f0.format(getInstrument().instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
                 + ", tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
                 + ", PWV:" + Util.f1.format(getTau("pwv", value)) + "um"
         );      
@@ -353,25 +356,25 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
             @Override
             protected void process(HirmesFrame frame) {
                 for(int k=startCounter.length; --k >= 0; ) 
-                    if(frame.jumpCounter[k] != startCounter[k]) instrument.get(k).hasJumps = true;
+                    if(frame.jumpCounter[k] != startCounter[k]) getInstrument().get(k).hasJumps = true;
             }
 
         }.process();
 
         int jumpPixels = 0;
-        for(HirmesPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
+        for(HirmesPixel pixel : getInstrument()) if(pixel.hasJumps) jumpPixels++;
 
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
 
-    @SuppressWarnings("cast")
+
     private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
         
         // TODO
         // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
         // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
-        ((Hirmes) instrument).new Fork<Void>() {
+        getInstrument().new Fork<Void>() {
             @Override
             protected void process(final HirmesPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
@@ -382,7 +385,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
             }
         }.process();
         
-        for(Channel channel : instrument) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
+        for(Channel channel : getInstrument()) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
     }
 
   

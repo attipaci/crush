@@ -36,7 +36,7 @@ public class PhaseData implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1535628125231643099L;
-	protected Integration<?,?> integration;
+	protected Integration<?> integration;
 	public int index;
 	
 	public float[] value, weight;
@@ -46,7 +46,7 @@ public class PhaseData implements Serializable {
 	
 	public double dependents = 0.0;
 	
-	public PhaseData(Integration<?,?> integration){
+	public PhaseData(Integration<?> integration){
 		this.integration = integration;
 	}
 	
@@ -57,7 +57,7 @@ public class PhaseData implements Serializable {
 	public void update(final ChannelGroup<?> channels, final Dependents parms) {
 		if(end.index - start.index < 1) return;	
 		
-		final int nc = integration.instrument.size();
+		final int nc = integration.getInstrument().size();
 		if(value == null) {
 			value = new float[nc];
 			weight = new float[nc];

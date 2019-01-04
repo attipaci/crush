@@ -37,6 +37,9 @@ public class PolKaScan extends LabocaScan {
 	}
 	
 	@Override
+    public PolKa getInstrument() { return (PolKa) super.getInstrument(); }
+	
+	@Override
 	public LabocaSubscan getIntegrationInstance() {
 		return new PolKaSubscan(this);
 	}

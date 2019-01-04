@@ -165,11 +165,11 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     }
 
     @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+    public void editImageHeader(List<Scan<?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);	
        
-        SofiaScan<?,?> first = (SofiaScan<?,?>) Scan.getEarliest(scans);
-        SofiaScan<?,?> last = (SofiaScan<?,?>) Scan.getLatest(scans);
+        SofiaScan<?> first = (SofiaScan<?>) Scan.getEarliest(scans);
+        SofiaScan<?> last = (SofiaScan<?>) Scan.getLatest(scans);
               
         // Associated IDs...
         TreeSet<String> aors = new TreeSet<String>();
@@ -177,10 +177,10 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         TreeSet<Float> freqs = new TreeSet<Float>();
          
         for(int i=0; i<scans.size(); i++) {
-            final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
+            final SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);       
             if(SofiaHeader.isValid(scan.observation.aorID)) aors.add(scan.observation.aorID);      
             if(SofiaHeader.isValid(scan.mission.missionID)) missionIDs.add(scan.mission.missionID);
-            if(!Double.isNaN(scan.instrument.getFrequency())) freqs.add((float) scan.instrument.getFrequency());
+            if(!Double.isNaN(scan.getInstrument().getFrequency())) freqs.add((float) scan.getInstrument().getFrequency());
         }
         
         // SOFIA date and time keys...
@@ -228,7 +228,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         instrumentData.exposureTime = getTotalExposureTime(scans);
         
         // SOFIA array keys...
-        if(array != null) array.boresightIndex = scans.size() == 1 ? first.instrument.array.boresightIndex : new Vector2D(Double.NaN, Double.NaN);
+        if(array != null) array.boresightIndex = scans.size() == 1 ? first.getInstrument().array.boresightIndex : new Vector2D(Double.NaN, Double.NaN);
                       
         editHeader(header);
         
@@ -270,7 +270,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     }
    
     @Override
-    public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {	
+    public void addHistory(Header header, List<Scan<?>> scans) throws HeaderCardException {	
         super.addHistory(header, scans);			
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
@@ -287,8 +287,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     }
 
     @Override
-    public void validate(Vector<Scan<?,?>> scans) throws Exception {
-        SofiaScan<?,?> firstScan = (SofiaScan<?,?>) scans.get(0);
+    public void validate(Vector<Scan<?>> scans) throws Exception {
+        SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0);
         
         if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
      
@@ -335,50 +335,50 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     
     
     
-    public static SofiaScan<?,?> getEarliestScan(List<Scan<?,?>> scans) {
+    public static SofiaScan<?> getEarliestScan(List<Scan<?>> scans) {
         double firstMJD = scans.get(0).getMJD();
-        Scan<?,?> earliestScan = scans.get(0);
+        Scan<?> earliestScan = scans.get(0);
 
         for(int i=1; i < scans.size(); i++) if(scans.get(i).getMJD() < firstMJD) {
             earliestScan = scans.get(i);
             firstMJD = earliestScan.getMJD();
         }
 
-        return (SofiaScan<?, ?>) earliestScan;
+        return (SofiaScan<?>) earliestScan;
     }
 
 
-    public static SofiaScan<?,?> getLatestScan(List<Scan<?,?>> scans) {
+    public static SofiaScan<?> getLatestScan(List<Scan<?>> scans) {
         double lastMJD = scans.get(0).getMJD();
-        Scan<?,?> latestScan = scans.get(0);
+        Scan<?> latestScan = scans.get(0);
 
         for(int i=scans.size(); --i > 1; ) if(scans.get(i).getMJD() > lastMJD) {
             latestScan = scans.get(i);
             lastMJD = latestScan.getMJD();
         }
 
-        return (SofiaScan<?, ?>) latestScan;
+        return (SofiaScan<?>) latestScan;
     }
     
     
-    public static int getLowestQualityScan(List<Scan<?,?>> scans) {
-        int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
+    public static int getLowestQualityScan(List<Scan<?>> scans) {
+        int overall = ((SofiaScan<?>) scans.get(0)).processing.qualityLevel;
         for(int i=scans.size(); --i > 0; ) {
-            int level = ((SofiaScan<?,?>) scans.get(i)).processing.qualityLevel;
+            int level = ((SofiaScan<?>) scans.get(i)).processing.qualityLevel;
             if(level < overall) overall = level;
         }
         return overall;
     }
  
     
-    public static boolean hasTrackingError(Collection<Scan<?,?>> scans) {
-        for(Scan<?,?> scan : scans) if(((SofiaScan<?,?>) scan).telescope.hasTrackingError) return true;
+    public static boolean hasTrackingError(Collection<Scan<?>> scans) {
+        for(Scan<?> scan : scans) if(((SofiaScan<?>) scan).telescope.hasTrackingError) return true;
         return false;
     }
 
-    public static double getTotalExposureTime(Collection<Scan<?,?>> scans) {
+    public static double getTotalExposureTime(Collection<Scan<?>> scans) {
         double t = 0.0;
-        for(Scan<?,?> scan : scans) t += ((SofiaInstrument<?>) scan.instrument).instrumentData.exposureTime;
+        for(Scan<?> scan : scans) t += ((SofiaInstrument<?>) scan.getInstrument()).instrumentData.exposureTime;
         return t;
     }
 

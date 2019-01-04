@@ -37,7 +37,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
      */
     private static final long serialVersionUID = 3448515171055358173L;
 
-    private Integration<?,?> integration;
+    private Integration<?> integration;
     protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
     protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<String, PhaseDependents>();
 
@@ -48,10 +48,10 @@ public class PhaseSet extends ArrayList<PhaseData> {
     int generation = 0;	
     //public int driftParms = 0;
 
-    public PhaseSet(Integration<?,?> integration) {
+    public PhaseSet(Integration<?> integration) {
         this.integration = integration;	
         integrationDeps = new Dependents(integration, "phases");
-        channelParms = new double[integration.instrument.size()];
+        channelParms = new double[integration.getInstrument().size()];
     }
 
     public PhaseSignal getSignal(Mode mode) {
@@ -64,7 +64,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
    
 
-    public Integration<?,?> getIntegration() { return integration; }
+    public Integration<?> getIntegration() { return integration; }
 
     public PhaseDependents getPhaseDependents(String name) {
         return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
@@ -95,7 +95,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     public void getWeights() {
         integration.comments.append(",P");
 
-        for(Channel channel : integration.instrument) if(channel instanceof PhaseWeighting) 
+        for(Channel channel : integration.getInstrument()) if(channel instanceof PhaseWeighting) 
             ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
     }
 
@@ -109,7 +109,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
         int spikes = 0;
 
-        for(Channel channel : integration.instrument) {
+        for(Channel channel : integration.getInstrument()) {
             levels.clear();
             noise.clear();
 

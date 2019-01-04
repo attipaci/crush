@@ -41,7 +41,7 @@ import crush.telescope.cso.CSOScan;
 import java.text.*;
 
 
-public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
+public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	/**
 	 * 
 	 */
@@ -56,6 +56,9 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		super(instrument);
 	}
 
+	@Override
+    public Sharc2 getInstrument() { return (Sharc2) super.getInstrument(); }
+	
 	@Override
 	public Sharc2Integration getIntegrationInstance() {
 		return new Sharc2Integration(this);
@@ -93,13 +96,14 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		parseScanPrimaryHDU(HDU[0]);
 		clear();
 		
+		Sharc2 sharc2 = getInstrument();
 		// Load the instrument settings...
-		instrument.parseScanPrimaryHDU(HDU[0]);
-		instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
-		instrument.parseDSPHDU((BinaryTableHDU) HDU[2]);
-		instrument.parsePixelHDU((BinaryTableHDU) HDU[3]);
-		instrument.parseDataHeader(firstDataHDU.getHeader());
-		instrument.validate(this);
+		sharc2.parseScanPrimaryHDU(HDU[0]);
+		sharc2.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+		sharc2.parseDSPHDU((BinaryTableHDU) HDU[2]);
+		sharc2.parsePixelHDU((BinaryTableHDU) HDU[3]);
+		sharc2.parseDataHeader(firstDataHDU.getHeader());
+		sharc2.validate(this);
 		
 		Sharc2Integration integration = new Sharc2Integration(this);
 		integration.read(HDU, i);
@@ -165,7 +169,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		info(">>> Fix: Assuming early JSharc data format.");
 		info(">>> Fix: Source coordinates obtained from antenna stream.");
 		
-		instrument.prematureFITS = true;
+		getInstrument().prematureFITS = true;
 		double epoch = header.getDoubleValue("EQUINOX", 2000.0);
 		header = data.getHeader();
 		float RA = ((float[]) data.getElement(0, data.findColumn("RA")))[0];
@@ -205,7 +209,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	
 	private String fixSourceName(String name) {
 		int serial = getSerial();
-		String fileName = instrument.getConfigPath() + "sourcename-2002.fix";
+		String fileName = getInstrument().getConfigPath() + "sourcename-2002.fix";
 		try { 
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 			String line = null;
@@ -228,7 +232,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		Header header = hdu.getHeader();
 
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		getInstrument().setFitsHeaderOptions(header);
 		
 		// Scan Info
 		setSerial(header.getIntValue("SCANNO"));
@@ -248,7 +252,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
 		else {
 			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.setOption("tau.225ghz=" + tau225GHz);
+			getInstrument().setOption("tau.225ghz=" + tau225GHz);
 		}
 
 		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + Constant.zeroCelsius;

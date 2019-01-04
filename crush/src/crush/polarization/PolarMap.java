@@ -78,7 +78,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void createFrom(Collection<? extends Scan<?, ?>> scans) throws Exception {
+	public void createFrom(Collection<? extends Scan<?>> scans) throws Exception {
 		super.createFrom(scans);
 		
 		N = getMapInstance();
@@ -127,7 +127,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void add(Integration<?, ?> subscan) {
+	public void add(Integration<?> subscan) {
 		((Purifiable) subscan).purify();
 		
 		N.add(subscan);	
@@ -149,7 +149,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
+	public void process(Scan<?> scan) {
 		N.process(scan);
 		if(usePolarization()) {
 			Q.process(scan);
@@ -194,7 +194,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	@Override
-	public void sync(Integration<?, ?> subscan) {
+	public void sync(Integration<?> subscan) {
 		N.sync(subscan);	
 		
 		if(usePolarization()) {
@@ -204,7 +204,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void postProcess(Scan<?,?> scan) {
+	public void postProcess(Scan<?> scan) {
 		super.postProcess(scan);
 		
 		// Treat N as a regular total-power map, so do the post-processing accordingly...

@@ -23,7 +23,7 @@
 
 package crush.telescope;
 
-import crush.Channel;
+
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
@@ -39,8 +39,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public abstract class GroundBasedScan<InstrumentType extends TelescopeInstrument<? extends Channel>, IntegrationType extends GroundBasedIntegration<InstrumentType, ?>> 
-extends TelescopeScan<InstrumentType, IntegrationType> implements Weather { 
+public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegration<?>> extends TelescopeScan<IntegrationType> implements Weather { 
     /**
      * 
      */
@@ -52,11 +51,11 @@ extends TelescopeScan<InstrumentType, IntegrationType> implements Weather {
     public double LST = Double.NaN;
 
 
-    public GroundBasedScan(InstrumentType instrument) {
+    public GroundBasedScan(TelescopeInstrument<?> instrument) {
         super(instrument);
     }
 
-
+    
     @Override
     public SphericalCoordinates getNativeCoordinates() { return horizontal; }
     

@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
+public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	/**
 	 * 
 	 */
@@ -60,6 +60,9 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
     public Scuba2Scan getScan() { return (Scuba2Scan) super.getScan(); }
 	
 	@Override
+    public Scuba2 getInstrument() { return (Scuba2) super.getInstrument(); }
+	
+	@Override
 	public void setTau() throws Exception {
 		String source = option("tau").getValue().toLowerCase();
 		if(source.equals("jctables") && hasOption("tau.jctables")) setJCMTTableTau();
@@ -70,11 +73,11 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 	
 	public void setJCMTTableTau() throws Exception {
 		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
-		String spec = scan.getShortDateString();
+		String spec = getScan().getShortDateString();
 		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
 		
 		try {
-			JCMTTauTable table = JCMTTauTable.get((int) scan.getMJD(), fileName);
+			JCMTTauTable table = JCMTTauTable.get((int) getScan().getMJD(), fileName);
 			table.setOptions(option("tau"));
 			setTau("183ghz", table.getTau(getMJD()));	
 		}
@@ -90,7 +93,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 				throw e;
 			}	
 			info("... Falling back to '" + source + "'.");
-			instrument.setOption("tau=" + source);
+			getInstrument().setOption("tau=" + source);
 			setTau();
 			return;
 		}
@@ -109,14 +112,14 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 	
 	@Override
 	public Scuba2Frame getFrameInstance() {
-		return new Scuba2Frame((Scuba2Scan) scan);
+		return new Scuba2Frame(getScan());
 	}
 	
 	
 	public void read() throws FitsException, UnsupportedIntegrationException, IOException {
 		clear();
 		
-		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
+		Scuba2Scan scuba2Scan = getScan();
 			
 		readoutLevel = new int[scuba2Scan.subarrays * Scuba2Subarray.PIXELS];
 		Arrays.fill(readoutLevel, scuba2Scan.blankingValue);
@@ -143,7 +146,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 			readCoordinateData(getJcmtHDU(HDU));
 		}
 		
-		Scuba2Subarray subarray = instrument.subarray[file.getSubarrayIndex()];
+		Scuba2Subarray subarray = getInstrument().subarray[file.getSubarrayIndex()];
 		subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
 	
 		readArrayData((ImageHDU) HDU[0], fits.getStream(), subarray.channelOffset, (float) subarray.scaling);
@@ -215,7 +218,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
         new Fork<Void>() {
             @Override
             protected void process(Scuba2Frame frame) {
-                for(Scuba2Pixel pixel : instrument) 
+                for(Scuba2Pixel pixel : getInstrument()) 
                     frame.data[pixel.index] -= frame.darkSquid[pixel.subarrayNo][pixel.row % Scuba2.SUBARRAY_ROWS];
             }
             
@@ -246,7 +249,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 		rawFrames = header.getIntValue("NAXIS3"); 
 	
 		// Get the tracking coordinates for the scan, if not already set...
-		Scuba2Scan scubaScan = (Scuba2Scan) scan;
+		Scuba2Scan scubaScan = getScan();
 		if(scubaScan.trackingClass == null) scubaScan.parseCoordinateInfo(header);
 		
 		info("Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
@@ -258,13 +261,13 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 			throw new IllegalStateException("Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
 
 		
-		instrument.integrationTime = instrument.samplingInterval = totalIntegrationTime / rawFrames;
+		getInstrument().integrationTime = getInstrument().samplingInterval = totalIntegrationTime / rawFrames;
 	}
 	
 	public void readCoordinateData(BinaryTableHDU hdu) throws FitsException {
 		
 		// TODO chop phase and beam (L/R/M?)...	
-		final Scuba2Scan scuba2Scan = (Scuba2Scan) scan;			
+		final Scuba2Scan scuba2Scan = getScan();			
 		
 		Object[] table = null;
 		
@@ -284,7 +287,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 		final int samples = MJDTAI.length;
 			
 		if(samples < 2) {
-			scan.warning("Subscan " + getID() + " has no coordinate data. Dropping from set.");
+			scuba2Scan.warning("Subscan " + getID() + " has no coordinate data. Dropping from set.");
 			return;
 		}
 				
@@ -382,7 +385,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 	
 	@Override
 	public String getFullID(String separator) {
-		return super.getFullID(separator) + separator + instrument.filter;
+		return super.getFullID(separator) + separator + getInstrument().filter;
 	}
 	
 }

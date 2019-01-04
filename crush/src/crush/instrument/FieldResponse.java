@@ -58,7 +58,7 @@ public class FieldResponse extends Response {
 	}
 	
 	@Override
-	public Signal getSignal(Integration<?, ?> integration) {
+	public Signal getSignal(Integration<?> integration) {
 		float[] data = new float[integration.size()];	
 		try {
 			for(int t=data.length; --t >= 0; ) {

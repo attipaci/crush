@@ -1,6 +1,7 @@
 >> AstroModel2D.findOutliers()
 >> AstroModel2D.findSlewing()
->> CSOInstrument rotation (explicit AND Nasmyth)
+>> getInstrument().getOptions() -> getOptions() : Integration / SourceModel.
+>> HAWC+/HIRMES validate(scans) -> SofiaInstrument
 
 
 

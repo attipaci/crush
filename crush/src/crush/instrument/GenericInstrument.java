@@ -64,12 +64,12 @@ public class GenericInstrument extends Instrument<Channel> {
 
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
+	public Scan<?> getScanInstance() {
 		return null;
 	}
 
 	@Override
-	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+	public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
 		return null;
 	}
 

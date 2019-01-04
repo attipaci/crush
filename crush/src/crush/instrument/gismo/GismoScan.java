@@ -51,7 +51,7 @@ import java.text.*;
 import java.util.*;
 
 
-public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implements Weather {
+public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 	/**
 	 * 
 	 */
@@ -77,6 +77,9 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 	public GismoScan(Gismo instrument) {
 		super(instrument);
 	}
+	
+	@Override
+    public Gismo getInstrument() { return (Gismo) super.getInstrument(); }
 	
 	@Override
 	public GismoIntegration getIntegrationInstance() {
@@ -108,7 +111,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 			
 				// Keep the pointing model referenced to the nominal array center even if
 				// pointing on a different location on the array...
-				model.addNasmythOffset(instrument.getPointingCenterOffset());	
+				model.addNasmythOffset(getInstrument().getPointingCenterOffset());	
 				
 				if(option.hasOption("model.static")) model.setStatic(true);
 				
@@ -240,22 +243,22 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 	
 	public void setVersionOptions(double ver) {
 		// Make options an independent set of options, setting version specifics...
-		if(!instrument.getOptions().containsKey("ver")) return;
+		if(!getInstrument().getOptions().containsKey("ver")) return;
 			
-		instrument.setOptions(instrument.getOptions().copy());
+		getInstrument().setOptions(getInstrument().getOptions().copy());
 		fitsVersion = ver;
 		
 		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.from(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parseAll(settings.get(rangeSpec));
+			if(Range.from(rangeSpec, true).contains(fitsVersion)) getInstrument().getOptions().parseAll(settings.get(rangeSpec));
 	}
 	
 	public void setScanIDOptions(String id) {
-		if(!instrument.getOptions().containsKey("id")) return;
+		if(!getInstrument().getOptions().containsKey("id")) return;
 	
 		// Make options an independent set of options, setting MJD specifics...
-		instrument.setOptions(instrument.getOptions().copy());
+		getInstrument().setOptions(getInstrument().getOptions().copy());
 		double fid = new IRAMScanID(id).asDouble();
 		
 		Hashtable<String, Vector<String>> settings = option("id").conditionals;
@@ -263,7 +266,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		for(String rangeSpec : settings.keySet()) {
 			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
 				//debug("Setting options for " + rangeSpec);
-				instrument.getOptions().parseAll(settings.get(rangeSpec));
+				getInstrument().getOptions().parseAll(settings.get(rangeSpec));
 			}
 		}
 	}
@@ -280,17 +283,17 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		skipReconstructed = hasOption("skipfwfix");
 		
 		if(isOldFormat) {
-			instrument.parseOldScanPrimaryHDU(HDU[0]);
+			getInstrument().parseOldScanPrimaryHDU(HDU[0]);
 			parseOldScanPrimaryHDU(HDU[0]);
-			instrument.parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
+			getInstrument().parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
 		}
 		else {
-			instrument.parseScanPrimaryHDU(HDU[0]);
+			getInstrument().parseScanPrimaryHDU(HDU[0]);
 			parseScanPrimaryHDU(HDU[0]);
-			instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+			getInstrument().parseHardwareHDU((BinaryTableHDU) HDU[1]);
 		}
 		
-		instrument.validate(this);	
+		getInstrument().validate(this);	
 		clear();
 
 		GismoIntegration integration = new GismoIntegration(this);
@@ -300,8 +303,8 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		try { fits.getStream().close(); }
 		catch(IOException e) {}
 		
-		instrument.samplingInterval = integration.instrument.samplingInterval;
-		instrument.integrationTime = integration.instrument.integrationTime;
+		getInstrument().samplingInterval = integration.getInstrument().samplingInterval;
+		getInstrument().integrationTime = integration.getInstrument().integrationTime;
 		
 	}
 	
@@ -311,7 +314,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		getInstrument().setFitsHeaderOptions(header);
 		
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
@@ -487,7 +490,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
+					getInstrument().getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) {
 					warning("Cannot read tau table: " + e2.getMessage());
@@ -499,7 +502,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		
 		if(Double.isNaN(tau225GHz)) {
 			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
+			getInstrument().getOptions().processSilent("tau.225ghz", tau225GHz + "");
 		}
 	
 		
@@ -531,7 +534,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		
 		// Keep the pointing model referenced to the nominal array center even if
 		// pointing on a different location on the array...
-		observingModel.addNasmythOffset(instrument.getPointingCenterOffset());
+		observingModel.addNasmythOffset(getInstrument().getPointingCenterOffset());
 		
 		isTracking = true;
 	}
@@ -540,7 +543,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		Header header = hdu.getHeader();
 	
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		getInstrument().setFitsHeaderOptions(header);
 		
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
@@ -640,7 +643,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
+					getInstrument().getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
 					warning("Cannot read tau table.");
@@ -709,7 +712,7 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 		Offset2D relative = getNativePointingIncrement(pointing);
 		Vector2D nasmyth = getNasmythOffset(relative);
 		
-		Unit sizeUnit = instrument.getSizeUnit();
+		Unit sizeUnit = getInstrument().getSizeUnit();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
@@ -717,8 +720,8 @@ public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implemen
 			
 		data.new Entry("X", (relative.x() + obs.x()), sizeUnit);
 		data.new Entry("Y", (relative.y() + obs.y()), sizeUnit);
-		data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()), sizeUnit);
-		data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()), sizeUnit);
+		data.new Entry("NasX", (getInstrument().nasmythOffset.x() + nasmyth.x()), sizeUnit);
+		data.new Entry("NasY", (getInstrument().nasmythOffset.y() + nasmyth.y()), sizeUnit);
 		return data;
 	}
 	

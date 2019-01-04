@@ -35,11 +35,11 @@ public abstract class FixedFilter extends Filter {
 	private double pointResponse = 1.0;
 	private double rejected = 0.0;
 	
-	public FixedFilter(Integration<?, ?> integration) {
+	public FixedFilter(Integration<?> integration) {
 		super(integration);
 	}
 
-	public FixedFilter(Integration<?, ?> integration, float[] data) {
+	public FixedFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 

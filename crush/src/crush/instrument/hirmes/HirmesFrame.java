@@ -48,9 +48,12 @@ public class HirmesFrame extends SofiaFrame {
     
     public HirmesFrame(HirmesScan scan) {
         super(scan);
-        create(scan.instrument.size());
+        create(scan.getInstrument().size());
     }
 
+    @Override
+    public HirmesScan getScan() { return (HirmesScan) super.getScan(); }
+    
     public void parseData(int frameIndex, int[] DAC, short[] jump) {   
         parseData(DAC, jump, frameIndex * FITS_CHANNELS);
     }
@@ -69,7 +72,7 @@ public class HirmesFrame extends SofiaFrame {
 
     // Parses data for valid pixels only...   
     public void parseData(int[] DAC, short[] jump, int from) {  
-        Hirmes hirmes = (Hirmes) scan.instrument;
+        Hirmes hirmes = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
         
@@ -80,7 +83,7 @@ public class HirmesFrame extends SofiaFrame {
     }
     
     public void parseData(int[][] DAC, short[][] jump) {  
-        Hirmes hirmes = (Hirmes) scan.instrument;
+        Hirmes hirmes = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
         
@@ -120,8 +123,8 @@ public class HirmesFrame extends SofiaFrame {
     
     @Override
     public boolean validate() {
-        HirmesScan hirmesScan = (HirmesScan) scan;
-        Hirmes hirmes = hirmesScan.instrument;
+        HirmesScan hirmesScan = getScan();
+        Hirmes hirmes = hirmesScan.getInstrument();
         
         if(!isComplete) return false;
          
@@ -138,7 +141,7 @@ public class HirmesFrame extends SofiaFrame {
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
             if(equatorial.isNull()) return false;
-            if(scan.isNonSidereal) if(objectEq.isNull()) return false;
+            if(hirmesScan.isNonSidereal) if(objectEq.isNull()) return false;
             
             if(equatorial.isNaN()) return false;
             if(horizontal.isNaN()) return false;
@@ -173,7 +176,7 @@ public class HirmesFrame extends SofiaFrame {
     
 
     public void darkCorrect() {
-        Hirmes hirmes = (Hirmes) scan.instrument;
+        Hirmes hirmes = getScan().getInstrument();
 
         for(HirmesPixel pixel : hirmes) if(!pixel.isFlagged(Channel.FLAG_BLIND))
             data[pixel.index] -= data[hirmes.darkSquidLookup[pixel.col]];

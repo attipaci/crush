@@ -50,7 +50,7 @@ public class CorrelatedSignal extends Signal {
 	int excludePixelFlags = Channel.FLAG_DEAD | Channel.FLAG_BLIND;
 	int excludeFrameFlags = Frame.MODELING_FLAGS;
 	
-	public CorrelatedSignal(CorrelatedMode mode, Integration<?, ?> integration) {
+	public CorrelatedSignal(CorrelatedMode mode, Integration<?> integration) {
 		super(mode, integration);
 		dependents = new Dependents(integration, mode.name);
 		resolution = mode.getFrameResolution(integration);
@@ -121,7 +121,7 @@ public class CorrelatedSignal extends Signal {
 	
 	@Override
 	public void differentiate() {
-		final double idt = 1.0 / (resolution * integration.instrument.samplingInterval);
+		final double idt = 1.0 / (resolution * integration.getInstrument().samplingInterval);
 		final WeightedPoint p1 = new WeightedPoint();
 		final WeightedPoint p2 = new WeightedPoint();
 		
@@ -166,7 +166,7 @@ public class CorrelatedSignal extends Signal {
 	// Intergate using trapesiod rule...
 	@Override
 	public void integrate() {
-		float dt = (float) (resolution * integration.instrument.samplingInterval);
+		float dt = (float) (resolution * integration.getInstrument().samplingInterval);
 		float dt2 = dt * dt;
 		
 		WeightedPoint halfLast = new WeightedPoint();
@@ -335,17 +335,17 @@ public class CorrelatedSignal extends Signal {
 				super.init();
 				increment = new WeightedPoint();
 				
-				channelParms = integration.instrument.getFloats();
+				channelParms = integration.getInstrument().getFloats();
 				Arrays.fill(channelParms, 0.0F);
 				
 				if(!isRobust) return;
 
 				// Try to use a recycleable buffer if it is large enough...
-				buffer = integration.instrument.getDataPoints();
+				buffer = integration.getInstrument().getDataPoints();
 				if(buffer.length < resolution * goodChannels.size()) {
 				    // Otherwise, just create a larger ad-hoc buffer that will not be recycled...
 				    Instrument.recycle(buffer);
-				    buffer = DataPoint.createArray(resolution * integration.instrument.size());
+				    buffer = DataPoint.createArray(resolution * integration.getInstrument().size());
 				    isRecycling = false;
 				}	
 			}

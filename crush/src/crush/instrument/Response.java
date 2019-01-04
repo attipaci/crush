@@ -38,7 +38,7 @@ public abstract class Response extends Mode {
 		// TODO Auto-generated constructor stub
 	}
 
-	public abstract Signal getSignal(Integration<?, ?> integration);
+	public abstract Signal getSignal(Integration<?> integration);
 	
 	
 }

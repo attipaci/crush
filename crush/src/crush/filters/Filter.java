@@ -28,6 +28,7 @@ import java.util.Arrays;
 import crush.Channel;
 import crush.Dependents;
 import crush.Frame;
+import crush.Instrument;
 import crush.Integration;
 import crush.instrument.ChannelGroup;
 import jnum.Configurator;
@@ -45,7 +46,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	 */
 	private static final long serialVersionUID = 9018904303446615792L;
 	
-	protected Integration<?,?> integration;
+	protected Integration<?> integration;
 	protected Dependents parms;
 	protected float[] frameParms;
 	private ChannelGroup<?> channels;
@@ -60,11 +61,11 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	
 	private float[] data;
 	
-	public Filter(Integration<?,?> integration) {
+	public Filter(Integration<?> integration) {
 		setIntegration(integration);
 	}
 	
-	public Filter(Integration<?,?> integration, float[] data) {
+	public Filter(Integration<?> integration, float[] data) {
 		this.data = data;
 		setIntegration(integration);
 	}
@@ -98,6 +99,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	    return copy;
 	}
 	
+	public final Instrument<?> getInstrument() { return integration.getInstrument(); }
 	
 	protected void makeTempData() {
 		if(data != null) discardTempData();
@@ -136,14 +138,14 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 		return 1.0 - responseAt(fch);
 	}
 	
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		this.integration = integration;
 		
 		nt = ExtraMath.pow2ceil(integration.size());	
 		nf = nt >>> 1;
-		df = 1.0 / (integration.instrument.samplingInterval * nt);
+		df = 1.0 / (getInstrument().samplingInterval * nt);
 		
-		if(getChannels() == null) setChannels(integration.instrument);
+		if(getChannels() == null) setChannels(getInstrument());
 	}
 	
 	public ChannelGroup<?> getChannels() {
@@ -280,7 +282,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	
 	public void report() {
 		integration.comments.append(
-		        integration.instrument.mappingChannels > 0 ? 
+		        getInstrument().mappingChannels > 0 ? 
 				"(" + Util.f2.format(getMeanPointResponse()) + ")" :
 				"(---)"
 		);

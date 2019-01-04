@@ -55,9 +55,15 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     double dAngle;
 
     
-    public PolKaSubscan(APEXScan<Laboca, LabocaSubscan> parent) {
+    public PolKaSubscan(APEXScan<LabocaSubscan> parent) {
         super(parent);
     }
+    
+    @Override
+    public PolKaScan getScan() { return (PolKaScan) super.getScan(); }
+    
+    @Override
+    public PolKa getInstrument() { return (PolKa) super.getInstrument(); }
 
     @Override
     public double getModulationFrequency(int signalMode) {
@@ -85,11 +91,11 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     @Override
     public int getPeriod(int mode) {
-        return (int)Math.round(instrument.samplingInterval / (4.0*getWaveplateFrequency()));
+        return (int)Math.round(getInstrument().samplingInterval / (4.0*getWaveplateFrequency()));
     }
 
     public double getWaveplateFrequency() {
-        return ((PolKa) instrument).waveplateFrequency;
+        return getInstrument().waveplateFrequency;
     }
 
     /*
@@ -101,7 +107,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     @Override
     public void validate() {
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
 
         if(!polka.hasAnalyzer()) {
             super.validate();
@@ -119,8 +125,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
             warning("Invalid waveplate data. Will attempt workaround...");
             //!calcMeanWavePlateFrequency();
             Channel channel = hasOption("waveplate.tpchannel") ?
-                    new ChannelLookup<LabocaPixel>(instrument).get(option("waveplate.tpchannel").getValue()) :
-                        instrument.referencePixel;
+                    new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue()) : polka.referencePixel;
                     setTPPhases(channel);
         }
         else if(hasOption("waveplate.fix")) fixAngles();
@@ -134,8 +139,8 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         if(hasOption("waveplate.tpchar")) {
             trim();
 
-            Channel channel = hasOption("waveplate.tpchannel") ? new ChannelLookup<LabocaPixel>(instrument).get(option("waveplate.tpchannel").getValue())
-                : instrument.referencePixel;
+            Channel channel = hasOption("waveplate.tpchannel") ? new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue())
+                : polka.referencePixel;
 
             measureTPPhases(channel);
             setTPPhases(channel);
@@ -193,14 +198,14 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
 
     public void removeTPModulation() {
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
 
         // If the waveplate is not rotating, then there is nothing to do...
         if(!(polka.waveplateFrequency > 0.0)) return;
 
         if(tpWaveform == null) {
             double oversample = hasOption("waveplate.oversample") ? option("waveplate.oversample").getDouble() : 1.0;
-            int n = (int)Math.round(oversample / (instrument.samplingInterval * polka.waveplateFrequency));
+            int n = (int)Math.round(oversample / (polka.samplingInterval * polka.waveplateFrequency));
 
             tpWaveform = WeightedPoint.createArray(n);
             dw = WeightedPoint.createArray(n);
@@ -210,7 +215,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
         comments.append("P(" + dw.length + ") ");
 
-        final ChannelGroup<?> channels = instrument.getObservingChannels();
+        final ChannelGroup<?> channels = polka.getObservingChannels();
         final Dependents parms = getDependents("tpmod");
 
         parms.clear(channels, 0, size());
@@ -287,17 +292,17 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     @Override
     public LabocaFrame getFrameInstance() {
-        return new PolKaFrame((PolKaScan) scan);
+        return new PolKaFrame(getScan());
     }
 
     @Override
     public Vector2D getTauCoefficients(String id) {
-        if(id.equals(instrument.getName())) return getTauCoefficients("laboca");
+        if(id.equals(getInstrument().getName())) return getTauCoefficients("laboca");
         return super.getTauCoefficients(id);
     }
 
     public ArrayList<Double> getMJDCrossings() {
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
         Channel offsetChannel = polka.offsetChannel;
         if(offsetChannel == null) return null;
         int c = offsetChannel.index;
@@ -324,7 +329,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
    
    
     private void fixAngles() throws IllegalStateException {	
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
 
         StringBuffer buf = new StringBuffer();
         buf.append("Fixing waveplate: ");
@@ -408,7 +413,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     }
 
     public void measureTPPhases(Channel channel) {
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
         PolKaFrame firstFrame = (PolKaFrame) get(0);
 
         //if(firstFrame.waveplateAngle == 0.0) warning("Zero waveplate angle.");
@@ -427,7 +432,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     public void setTPPhases(Channel channel) {
         info("Reconstructing waveplate angles from TP modulation.");
 
-        PolKa polka = (PolKa) instrument;
+        PolKa polka = getInstrument();
 
         int harmonic = hasOption("waveplate.tpharmonic") ? option("waveplate.tpharmonic").getInt() : 2;
 
@@ -447,7 +452,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
                     " deg.");
         }
 
-        final double w = Constant.twoPi * polka.waveplateFrequency * instrument.integrationTime;
+        final double w = Constant.twoPi * polka.waveplateFrequency * polka.integrationTime;
         for(Frame exposure : this) if(exposure != null) {
             PolKaFrame frame = (PolKaFrame) exposure;
             frame.waveplateAngle = Math.IEEEremainder(alpha + w * frame.index, Constant.twoPi);
@@ -458,7 +463,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     // Calculate the average TP phases at a given frequency...
     private double getMeanTPPhase(Channel channel, double freq) {		
         final int c = channel.index;
-        final double w = Constant.twoPi * freq * instrument.integrationTime;
+        final double w = Constant.twoPi * freq * getInstrument().integrationTime;
         double sumc = 0.0, sums = 0.0;
         int n = 0;
 

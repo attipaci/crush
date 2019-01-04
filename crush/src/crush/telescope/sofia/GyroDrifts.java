@@ -42,9 +42,9 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
      */
     private static final long serialVersionUID = -3751194338137621151L;
 
-    private SofiaScan<?,?> scan;
+    private SofiaScan<?> scan;
 
-    public GyroDrifts(SofiaScan<?,?> scan) {
+    public GyroDrifts(SofiaScan<?> scan) {
         this.scan = scan;
     } 
     
@@ -57,7 +57,7 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
         }    
     }
     
-    public void correct(SofiaIntegration<?,?> integration) {
+    public void correct(SofiaIntegration<?> integration) {
         if(isEmpty()) {
             integration.warning("Skipping gyro drift correction. No data...");
             return;

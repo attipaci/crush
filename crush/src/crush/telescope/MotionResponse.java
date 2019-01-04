@@ -40,10 +40,10 @@ public abstract class MotionResponse extends Response {
 		super();
 	}
 	
-	public abstract Signal getSignal(Integration<?, ?> integration, Motion direction);
+	public abstract Signal getSignal(Integration<?> integration, Motion direction);
 
 	@Override
-	public Signal getSignal(Integration<?, ?> integration) {
+	public Signal getSignal(Integration<?> integration) {
 		StringTokenizer tokens = new StringTokenizer(name, "-:");
 		tokens.nextToken();
 		String type = tokens.nextToken();

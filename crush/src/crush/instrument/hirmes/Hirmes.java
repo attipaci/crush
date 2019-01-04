@@ -101,7 +101,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
     @Override
-    public Scan<?, ?> getScanInstance() {
+    public Scan<?> getScanInstance() {
         return new HirmesScan(this);
     }
 
@@ -352,7 +352,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
      */
 
     @Override
-    public void validate(Scan<?,?> scan) {
+    public void validate(Scan<?> scan) {
         darkSquidCorrection = hasOption("darkcorrect");
         createDarkSquidLookup();
 
@@ -360,21 +360,21 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
     @Override
-    public void validate(Vector<Scan<?,?>> scans) throws Exception {
+    public void validate(Vector<Scan<?>> scans) throws Exception {
         final HirmesScan firstScan = (HirmesScan) scans.get(0);
 
-        double wavelength = firstScan.instrument.instrumentData.wavelength;
+        double wavelength = firstScan.getInstrument().instrumentData.wavelength;
 
         for(int i=scans.size(); --i >= 1; ) {
             HirmesScan scan = (HirmesScan) scans.get(i);
 
-            double dlambda = scan.instrument.instrumentData.wavelength - wavelength;
+            double dlambda = scan.getInstrument().instrumentData.wavelength - wavelength;
             if(Math.abs(dlambda) > 0.1 * wavelength) {
                 warning("Scan " + scans.get(i).getID() + " is at too different of a wavelength. Removing from set.");
                 scans.remove(i);
             }
 
-            if(!scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
+            if(!scan.getInstrument().instrumentData.instrumentConfig.equals(firstScan.getInstrument().instrumentData.instrumentConfig)) {
                 warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
                 scans.remove(i);                
             }  
@@ -445,7 +445,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
    
     @Override
-    public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+    public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("spectralmap")) return new SpectralCube(this); 

@@ -36,8 +36,14 @@ public class APEXFrame extends HorizontalFrame {
 	
 	public static double skydipFactor = 1.0;
 	
-	public APEXFrame(APEXScan<?, ?> parent) {
+	public APEXFrame(APEXScan<? extends APEXSubscan<? extends APEXFrame>> parent) {
 		super(parent);
+	}
+	
+	@SuppressWarnings("unchecked")
+    @Override
+    public APEXScan<? extends APEXSubscan<? extends APEXFrame>> getScan() {
+	    return (APEXScan<? extends APEXSubscan<? extends APEXFrame>>) super.getScan();
 	}
 
 	@Override

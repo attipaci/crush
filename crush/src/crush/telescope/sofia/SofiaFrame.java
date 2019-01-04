@@ -47,10 +47,11 @@ public class SofiaFrame extends HorizontalFrame {
      
     public double PWV;
 
-    public SofiaFrame(SofiaScan<?, ?> parent) {
+    public SofiaFrame(SofiaScan<?> parent) {
         super(parent);
     }
    
+    
     @Override
     public SofiaFrame copy(boolean withContents) {
         SofiaFrame copy = (SofiaFrame) super.copy(withContents);
@@ -61,6 +62,12 @@ public class SofiaFrame extends HorizontalFrame {
         return copy;
     }
     
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public SofiaScan<? extends SofiaIntegration<? extends SofiaFrame>> getScan() { 
+        return (SofiaScan<? extends SofiaIntegration<? extends SofiaFrame>>) super.getScan(); 
+    }
     
     @Override
     public void project(final Vector2D position, final AstroProjector projector) {

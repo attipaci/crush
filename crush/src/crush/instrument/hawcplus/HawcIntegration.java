@@ -40,7 +40,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
 
-public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {	
+public class HawcIntegration extends SofiaIntegration<HawcFrame> {	
     /**
      * 
      */
@@ -59,8 +59,11 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
     public HawcScan getScan() { return (HawcScan) super.getScan(); }
 
     @Override
+    public Hawc getInstrument() { return (Hawc) super.getInstrument(); }
+    
+    @Override
     public HawcFrame getFrameInstance() {
-        return new HawcFrame((HawcScan) scan);
+        return new HawcFrame(getScan());
     }
 
     public double getMeanHWPAngle() {
@@ -71,17 +74,17 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
-        instrument.info("Processing scan data:");
+        getInstrument().info("Processing scan data:");
         info("Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
-        info("Sampling at " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz ---> " 
-                + Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
+        info("Sampling at " + Util.f2.format(1.0 / getInstrument().integrationTime) + " Hz ---> " 
+                + Util.f1.format(getInstrument().samplingInterval * records / Unit.min) + " minutes.");
 
         clear();
         ensureCapacity(records);
         for(int t=records; --t>=0; ) add(null);
 
         for(int i=0; i<dataHDUs.size(); i++) 
-            new HawcPlusRowReader(dataHDUs.get(i), ((HawcScan) scan).fits.getStream()).read(1);	
+            new HawcPlusRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1);	
     }
 
     class HawcPlusRowReader extends HDURowReader { 
@@ -96,7 +99,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
 
         private boolean invertChop = false;
 
-        private final HawcScan hawcPlusScan = (HawcScan) scan;
+        private final HawcScan hawcScan = getScan();
 
         public HawcPlusRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
@@ -131,7 +134,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
             iRA = hdu.findColumn("RA");
             iDEC = hdu.findColumn("DEC");
 
-            if(scan.isNonSidereal) {
+            if(hawcScan.isNonSidereal) {
                 iORA = hdu.findColumn("NonSiderealRA");
                 iODEC = hdu.findColumn("NonSiderealDec");
             }
@@ -166,8 +169,8 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
 
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
-                if(scan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
-                scan.isNonSidereal = false;        
+                if(hawcScan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
+                hawcScan.isNonSidereal = false;        
             } 
 
             isConfigured = true;
@@ -187,15 +190,15 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
 
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = ((HawcScan) scan).telescope.epoch;
+                    epoch = hawcScan.telescope.epoch;
                 }
 
                 @Override
                 public void processRow(int i, Object[] row) {                    
-                    Hawc hawc = scan.instrument;
+                    Hawc hawc = getInstrument();
 
                     // Create the frame object only if it cleared the above hurdles...
-                    final HawcFrame frame = new HawcFrame(hawcPlusScan);
+                    final HawcFrame frame = new HawcFrame(hawcScan);
                     frame.index = i;
                     frame.isComplete = false;
                     frame.hasTelescopeInfo = !isLab;
@@ -243,7 +246,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
                             epoch
                             );                             
 
-                    if(scan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
+                    if(hawcScan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
                         frame.objectEq = new EquatorialCoordinates(
                                 ((double[]) row[iORA])[0] * Unit.hourAngle, 
                                 ((double[]) row[iODEC])[0] * Unit.deg, 
@@ -251,7 +254,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
                                 );
                     }
 
-                    EquatorialCoordinates reference = scan.isNonSidereal ? frame.objectEq : getScan().equatorial;
+                    EquatorialCoordinates reference = hawcScan.isNonSidereal ? frame.objectEq : getScan().equatorial;
 
                     // I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
@@ -331,15 +334,15 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
 
         if(hasOption("write.flatfield")) {
             String fileName = option("write.flatfield").getValue();
-            if(fileName.isEmpty()) fileName = instrument.getOutputPath() + File.separator + "flatfield-" + getDisplayID() + ".fits";
-            try { instrument.writeFlatfield(fileName); }
+            if(fileName.isEmpty()) fileName = getInstrument().getOutputPath() + File.separator + "flatfield-" + getDisplayID() + ".fits";
+            try { getInstrument().writeFlatfield(fileName); }
             catch(Exception e) { error(e); }
         }
     }
 
     @Override
     public String getFullID(String separator) {
-        return scan.getID();
+        return getScan().getID();
     }
 
     @Override
@@ -367,7 +370,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
         
         if(hasOption("jumpdata")) correctJumps();
         
-        if(hasOption("gyrocorrect")) ((HawcScan) scan).gyroDrifts.correct(this);
+        if(hasOption("gyrocorrect")) getScan().gyroDrifts.correct(this);
         
         super.validate();
     }
@@ -380,7 +383,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
     
     private void printEquivalentTaus(double value) { 
         CRUSH.values(this, "--->"
-                + " tau(" + Util.f0.format(instrument.instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
+                + " tau(" + Util.f0.format(getInstrument().instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
                 + ", tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
                 + ", PWV:" + Util.f1.format(getTau("pwv", value)) + "um"
         );      
@@ -400,25 +403,24 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
             @Override
             protected void process(HawcFrame frame) {
                 for(int k=startCounter.length; --k >= 0; ) 
-                    if(frame.jumpCounter[k] != startCounter[k]) instrument.get(k).hasJumps = true;
+                    if(frame.jumpCounter[k] != startCounter[k]) getInstrument().get(k).hasJumps = true;
             }
 
         }.process();
 
         int jumpPixels = 0;
-        for(HawcPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
+        for(HawcPixel pixel : getInstrument()) if(pixel.hasJumps) jumpPixels++;
 
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
 
-    @SuppressWarnings("cast")
     private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
         
         // TODO
         // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
         // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
-        ((Hawc) instrument).new Fork<Void>() {
+        getInstrument().new Fork<Void>() {
             @Override
             protected void process(final HawcPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
@@ -429,7 +431,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
             }
         }.process();
         
-        for(Channel channel : instrument) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
+        for(Channel channel : getInstrument()) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
     }
 
     @Override
@@ -559,7 +561,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
         new Fork<Void>() {
             @Override
             protected void process(HawcFrame frame) {
-                for(HawcPixel pixel : instrument) if(pixel.jump != 0.0) {
+                for(HawcPixel pixel : getInstrument()) if(pixel.jump != 0.0) {
                     int nJumps = frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index];
                     // Check for wraparound...
                     if(nJumps > maxJump) nJumps -= HawcFrame.JUMP_RANGE;

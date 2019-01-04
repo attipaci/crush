@@ -80,7 +80,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 		for(CorrelatedMode mode : this) mode.skipFlags = pattern;
 	}
 	
-	public void updateSignals(Integration<?, ?> integration, boolean isRobust) {	
+	public void updateSignals(Integration<?> integration, boolean isRobust) {	
 		for(CorrelatedMode mode : this) {
 			if(!Double.isNaN(resolution)) mode.resolution = resolution;
 			try { mode.updateSignals(integration, isRobust); }

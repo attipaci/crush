@@ -42,14 +42,17 @@ public class PolKaFrame extends LabocaFrame {
 	float unpolarizedGain;
 	double waveplateOffset = Double.NaN, waveplateAngle = Double.NaN, waveplateFrequency = Double.NaN;
 	
-	public PolKaFrame(APEXScan<Laboca, LabocaSubscan> parent) {
+	public PolKaFrame(APEXScan<LabocaSubscan> parent) {
 		super(parent);
 	}
 	
 	@Override
+    public PolKaScan getScan() { return (PolKaScan) super.getScan(); }
+	
+	@Override
     public void getChannelStokesResponse(Channel channel, StokesResponse toStokes) {  
         toStokes.setNQUV(0.5 * unpolarizedGain, 0.5 * Q, 0.5 * U, 0.0);
-        toStokes.setInverted(((PolKa) scan.instrument).analyzerPosition == PolKa.ANALYZER_H);
+        toStokes.setInverted(getScan().getInstrument().analyzerPosition == PolKa.ANALYZER_H);
     }
 	
 	
@@ -65,7 +68,7 @@ public class PolKaFrame extends LabocaFrame {
 	
 	
 	public void loadWaveplateData() {
-		final PolKa polka = (PolKa) scan.instrument;
+		final PolKa polka = getScan().getInstrument();
 		
 		if(polka.frequencyChannel != null) waveplateFrequency = data[polka.frequencyChannel.index];	
 		else waveplateFrequency = polka.waveplateFrequency;		
@@ -83,7 +86,7 @@ public class PolKaFrame extends LabocaFrame {
         
 	    if(!super.validate()) return false;
 	    
-		final PolKa polka = (PolKa) scan.instrument;
+		final PolKa polka = getScan().getInstrument();
 		
 		if(polka.isCounterRotating) waveplateAngle *= -1.0;
 		

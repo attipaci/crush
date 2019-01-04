@@ -137,15 +137,15 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	}
 
 	@Override
-	public APEXScan<? extends APEXInstrument<ChannelType>, ? extends APEXSubscan<? extends APEXInstrument<ChannelType>, ?>> getScanInstance() {
-		return new APEXScan<APEXInstrument<ChannelType>, APEXSubscan<APEXInstrument<ChannelType>, ?>>(this);
+	public APEXScan<? extends APEXSubscan<?>> getScanInstance() {
+		return new APEXScan<APEXSubscan<?>>(this);
 	}
 
 	@Override
-	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+	public void validate(Vector<Scan<?>> scans) throws Exception {
 		
-		final APEXScan<?,?> firstScan = (APEXScan<?,?>) scans.get(0);
-		final APEXSubscan<?,?> firstSubscan = firstScan.get(0);
+		final APEXScan<?> firstScan = (APEXScan<?>) scans.get(0);
+		final APEXSubscan<?> firstSubscan = firstScan.get(0);
 		final EquatorialCoordinates reference = firstScan.equatorial;
 		final String sourceName = firstScan.getSourceName();
 		
@@ -178,8 +178,8 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 		
 		// Make sure the rest of the list conform to the first scan...
 		for(int i=scans.size(); --i > 0; ) {
-			APEXScan<?,?> scan = (APEXScan<?,?>) scans.get(i);
-			APEXSubscan<?,?> subscan = scan.get(0);
+			APEXScan<?> scan = (APEXScan<?>) scans.get(i);
+			APEXSubscan<?> subscan = scan.get(0);
 			
 			// Throw out any subsequent skydips...
 			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {
@@ -225,7 +225,7 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	}
 	
 	@Override
-	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+	public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
 		if(hasOption("chopped")) return new APEXChoppedPhotometry(this);
 		return super.getSourceModelInstance(scans);
 	}

@@ -127,7 +127,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    public Scan<?, ?> getScanInstance() {
+    public Scan<?> getScanInstance() {
         return new HawcScan(this);
     }
 
@@ -443,7 +443,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    public void validate(Scan<?,?> scan) {
+    public void validate(Scan<?> scan) {
 
         darkSquidCorrection = hasOption("darkcorrect");
 
@@ -484,11 +484,11 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    public void validate(Vector<Scan<?,?>> scans) throws Exception {
+    public void validate(Vector<Scan<?>> scans) throws Exception {
         final HawcScan firstScan = (HawcScan) scans.get(0);
 
-        double wavelength = firstScan.instrument.instrumentData.wavelength;
-        for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?,?>) scans.get(i)).instrument.instrumentData.wavelength != wavelength) {
+        double wavelength = firstScan.getInstrument().instrumentData.wavelength;
+        for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?>) scans.get(i)).getInstrument().instrumentData.wavelength != wavelength) {
             warning("Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
             scans.remove(i);
         }
@@ -497,7 +497,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
         for(int i=scans.size(); --i >= 1; ) {
             HawcScan scan = (HawcScan) scans.get(i);
 
-            if(!scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
+            if(!scan.getInstrument().instrumentData.instrumentConfig.equals(firstScan.getInstrument().instrumentData.instrumentConfig)) {
                 warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
                 scans.remove(i);				
             }	          

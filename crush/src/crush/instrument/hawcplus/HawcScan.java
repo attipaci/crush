@@ -47,7 +47,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HawcScan extends SofiaScan<Hawc, HawcIntegration> {	
+public class HawcScan extends SofiaScan<HawcIntegration> {	
     /**
      * 
      */
@@ -67,6 +67,9 @@ public class HawcScan extends SofiaScan<Hawc, HawcIntegration> {
         // Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
     }
+    
+    @Override
+    public Hawc getInstrument() { return (Hawc) super.getInstrument(); }
 
     @Override
     public HawcIntegration getIntegrationInstance() {
@@ -87,7 +90,7 @@ public class HawcScan extends SofiaScan<Hawc, HawcIntegration> {
         String upperCaseName = fileName.toUpperCase();
 
         // 1. Check if the file name contains the instrument ID...
-        if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;
+        if(!upperCaseName.contains("_" + getInstrument().getFileID().toUpperCase())) return false;
 
         // 2. Check if the file name starts with the flight ID...
         String oldFlightID = "F" + Util.d4.format(flightNo) + "_"; 

@@ -40,7 +40,7 @@ public class PhaseDependents implements Serializable {
 		this.name = name;
 		this.phases = owner;
 		forPhase = new double[phases.size()];
-		forChannel = new double[phases.getIntegration().instrument.size()];
+		forChannel = new double[phases.getIntegration().getInstrument().size()];
 		phases.phaseDeps.put(name, this);
 	}
 

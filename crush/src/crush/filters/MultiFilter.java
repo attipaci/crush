@@ -40,7 +40,7 @@ public class MultiFilter extends VariedFilter {
 	
 	private int enabled = 0;
 	
-	public MultiFilter(Integration<?, ?> integration) {
+	public MultiFilter(Integration<?> integration) {
 		super(integration);
 	}
 	
@@ -65,7 +65,7 @@ public class MultiFilter extends VariedFilter {
 	public ArrayList<Filter> getFilters() { return filters; }
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
 		
 		if(filters != null) for(Filter filter : filters) {

@@ -114,7 +114,7 @@ public abstract class SourceModel2D extends SourceModel {
     
     protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain);
 
-    protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
+    protected abstract void calcCoupling(final Integration<?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
 
 
 
@@ -187,7 +187,7 @@ public abstract class SourceModel2D extends SourceModel {
     
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         super.createFrom(collection);
         
         info("Initializing Source Map.");	
@@ -252,8 +252,8 @@ public abstract class SourceModel2D extends SourceModel {
     public double getSourceSize() { return ExtraMath.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
 
 
-    private void flagOutside(final Integration<?,?> integration, final Vector2D fixedSize) {
-        final Instrument<?> instrument = integration.instrument;
+    private void flagOutside(final Integration<?> integration, final Vector2D fixedSize) {
+        final Instrument<?> instrument = integration.getInstrument();
         final Collection<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 
         new CRUSH.Fork<Void>(integration.size(), integration.getThreadCount()) {
@@ -302,17 +302,17 @@ public abstract class SourceModel2D extends SourceModel {
 
             range.setRange(-fixedSize.x(), -fixedSize.y(), fixedSize.x(), fixedSize.y());	
 
-            for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) flagOutside(integration, fixedSize);
+            for(Scan<?> scan : getScans()) for(Integration<?> integration : scan) flagOutside(integration, fixedSize);
         }
 
         else {
             range.empty();
 
-            for(Scan<?,?> scan : getScans()) {
+            for(Scan<?> scan : getScans()) {
                 scan.range = new Range2D();
                    
-                for(Integration<?,?> integration : scan) {
-                    Range2D r = integration.searchCorners(integration.instrument.getLayout().getPerimeterPixels(), getProjection());
+                for(Integration<?> integration : scan) {
+                    Range2D r = integration.searchCorners(integration.getInstrument().getLayout().getPerimeterPixels(), getProjection());
                     if(r != null) scan.range.include(r);
                 }
                 range.include(scan.range);
@@ -330,19 +330,19 @@ public abstract class SourceModel2D extends SourceModel {
         long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
         final long maxUsed = (long) (maxUsage * maxAvailable);
 
-        for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) {
+        for(Scan<?> scan : getScans()) for(Integration<?> integration : scan) {
             if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) return;
             createLookup(integration);  
         }
     }
 
 
-    public void createLookup(Integration<?,?> integration) {    
-        final Instrument<?> instrument = integration.instrument;
+    public void createLookup(Integration<?> integration) {    
+        final Instrument<?> instrument = integration.getInstrument();
         final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
-        final int n = integration.instrument.getPixelCount();
+        final int n = integration.getInstrument().getPixelCount();
 
-        if(CRUSH.debug) debug("lookup.pixels " + pixels.size() + " : " + integration.instrument.size());
+        if(CRUSH.debug) debug("lookup.pixels " + pixels.size() + " : " + integration.getInstrument().size());
 
         indexShiftX = ExtraMath.log2ceil(sizeY());
         indexMaskY = (1<<indexShiftX) - 1;
@@ -489,24 +489,24 @@ public abstract class SourceModel2D extends SourceModel {
 
         if(numberOfScans() > 1) {
             // Check if there is a scan at least half long edge away from the median center...
-            Collection<Scan<?,?>> suspects = findOutliers(diagonal / 2.0);
+            Collection<Scan<?>> suspects = findOutliers(diagonal / 2.0);
             if(!suspects.isEmpty()) {
                 foundSuspects = true;
                 buf.append(
                         "   * Check that all scans observe the same area on sky, \n" +
                         "     and remove those that are far from your source.\n");	
                 buf.append("     Suspect scan(s) are:\n");
-                for(Scan<?,?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
+                for(Scan<?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
             }
         }
 
         // Check if there is a scan that spans at least a half long edge... 
-        Collection<Scan<?,?>> suspects = findSlewing(diagonal / 2.0);
+        Collection<Scan<?>> suspects = findSlewing(diagonal / 2.0);
         if(!suspects.isEmpty()) {
             foundSuspects = true;
             buf.append("   * Was data acquired during telescope slew?\n");	
             buf.append("     Suspect scan(s) are:\n");
-            for(Scan<?,?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
+            for(Scan<?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
         }
 
         if(!foundSuspects) {	
@@ -533,8 +533,8 @@ public abstract class SourceModel2D extends SourceModel {
         if(used + required > max) createMemoryError(sizeX, sizeY); 
     }
 
-    public Collection<Scan<?,?>> findOutliers(double maxDistance) {
-        ArrayList<Scan<?,?>> outliers = new ArrayList<Scan<?,?>>();
+    public Collection<Scan<?>> findOutliers(double maxDistance) {
+        ArrayList<Scan<?>> outliers = new ArrayList<Scan<?>>();
 
         /* TODO
         int scans = numberOfScans();
@@ -553,7 +553,7 @@ public abstract class SourceModel2D extends SourceModel {
                 Statistics.Inplace.median(ra), Statistics.Inplace.median(dec), CoordinateEpoch.J2000
         );
 
-        for(Scan<?,?> scan : getScans()) {
+        for(Scan<?> scan : getScans()) {
             EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.copy();
             equatorial.precess(CoordinateEpoch.J2000);
             double d = equatorial.distanceTo(median);
@@ -564,13 +564,13 @@ public abstract class SourceModel2D extends SourceModel {
         return outliers;
     }
 
-    public Collection<Scan<?,?>> findSlewing(double maxDistance) {
-        ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
+    public Collection<Scan<?>> findSlewing(double maxDistance) {
+        ArrayList<Scan<?>> slews = new ArrayList<Scan<?>>();
         
         /* TODO
         double cosLat = getProjection().getReference().cosLat();
 
-        for(Scan<?,?> scan : getScans()) {
+        for(Scan<?> scan : getScans()) {
             double span = ExtraMath.hypot(scan.range.getXRange().span() * cosLat, scan.range.getYRange().span());
             if(span > maxDistance) slews.add(scan);
         }
@@ -587,13 +587,13 @@ public abstract class SourceModel2D extends SourceModel {
     }
     
  
-    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
-        if(CRUSH.debug) debug("add.pixels " + pixels.size() + " : " + integration.instrument.size());  
+    protected int add(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
+        if(CRUSH.debug) debug("add.pixels " + pixels.size() + " : " + integration.getInstrument().size());  
         return addForkFrames(integration, pixels, sourceGain, signalMode);
     }
 
     
-    protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
+    protected int addForkFrames(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         
         class Mapper extends CRUSH.Fork<Integer> {
             private SourceModel2D localSource;
@@ -662,7 +662,7 @@ public abstract class SourceModel2D extends SourceModel {
         return mapping.getResult();		
     }
 
-    protected int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
+    protected int addForkPixels(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         int mappingFrames = 0;
 
         for(Frame exposure : integration) if(exposure != null) {
@@ -723,12 +723,12 @@ public abstract class SourceModel2D extends SourceModel {
 
 
     @Override
-    public void add(Integration<?,?> integration) {
+    public void add(Integration<?> integration) {
         add(integration, signalMode);
     }
 
-    public void add(Integration<?,?> integration, int signalMode) {
-        final Instrument<?> instrument = integration.instrument; 
+    public void add(Integration<?> integration, int signalMode) {
+        final Instrument<?> instrument = integration.getInstrument(); 
 
         integration.comments.append("Map");
         if(getID() != null) integration.comments.append("." + getID());
@@ -747,7 +747,7 @@ public abstract class SourceModel2D extends SourceModel {
       
         final int mappingFrames = add(
                 integration, 
-                integration.instrument.getMappingPixels(0), 
+                integration.getInstrument().getMappingPixels(0), 
                 instrument.getSourceGains(signalCorrection), 
                 signalMode
         );
@@ -762,13 +762,13 @@ public abstract class SourceModel2D extends SourceModel {
         integration.comments.append(" ");
     }
 
-    public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {
+    public void setSyncGains(final Integration<?> integration, final Pixel pixel, final double[] sourceGain) {
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
         for(Channel channel : pixel) integration.sourceSyncGain[channel.index] = sourceGain[channel.index];
     }
 
-    protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
-        if(CRUSH.debug) debug("sync.pixels " + pixels.size() + " : " + integration.instrument.size());
+    protected void sync(final Integration<?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
+        if(CRUSH.debug) debug("sync.pixels " + pixels.size() + " : " + integration.getInstrument().size());
 
         integration.new Fork<Void>() {
             private Projector2D<?> projector;
@@ -795,13 +795,13 @@ public abstract class SourceModel2D extends SourceModel {
     }
 
     @Override
-    public void sync(Integration<?,?> integration) {
+    public void sync(Integration<?> integration) {
         sync(integration, signalMode);
     }
 
 
-    public void sync(final Integration<?,?> integration, final int signalMode) {
-        Instrument<?> instrument = integration.instrument; 
+    public void sync(final Integration<?> integration, final int signalMode) {
+        Instrument<?> instrument = integration.getInstrument(); 
 
         double[] sourceGain = instrument.getSourceGains(false);	
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
@@ -823,7 +823,7 @@ public abstract class SourceModel2D extends SourceModel {
         for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS))
             sumfw += exposure.relativeWeight * exposure.getSourceGain(signalMode);		
 
-        double N = Math.min(integration.scan.sourcePoints, countPoints()) / covariantPoints();
+        double N = Math.min(integration.getScan().sourcePoints, countPoints()) / covariantPoints();
         final double np = sumpw > 0.0 ? N / sumpw : 0.0;
         final double nf = sumfw > 0 ? N / sumfw : 0.0;
 

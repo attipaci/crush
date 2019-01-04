@@ -38,7 +38,7 @@ public class Pipeline implements Runnable, Serializable {
 
 	CRUSH crush;
 	
-	List<Scan<?,?>> scans = new ArrayList<Scan<?,?>>();
+	List<Scan<?>> scans = new ArrayList<Scan<?>>();
 	List<String> ordering = new ArrayList<String>();
 	SourceModel scanSource;
 	
@@ -87,8 +87,8 @@ public class Pipeline implements Runnable, Serializable {
 		for(int i=0; i<scans.size(); i++) iterate(scans.get(i));
 	}
 	
-	private void iterate(Scan<?,?> scan) throws InterruptedException {	
-		for(Integration<?, ?> integration: scan) {
+	private void iterate(Scan<?> scan) throws InterruptedException {	
+		for(Integration<?> integration: scan) {
 		    integration.nextIteration();
 			integration.setThreadCount(threadCount);
 		}
@@ -103,19 +103,19 @@ public class Pipeline implements Runnable, Serializable {
 		// is extracted at the end.
 		if(ordering.contains("source")) if(scan.hasOption("source")) updateSource(scan);
 
-		for(Integration<?, ?> integration: scan) crush.checkout(integration);
+		for(Integration<?> integration: scan) crush.checkout(integration);
 	}
 	
-	private void updateSource(Scan<?,?> scan) {	
+	private void updateSource(Scan<?> scan) {	
 	      
 		if(crush.source == null) return;
 				
 		// Reset smoothing etc. for raw map.
 		scanSource.renew();		
 		
-		scanSource.setInstrument(scan.instrument);
+		scanSource.setInstrument(scan.getInstrument());
 		
-		for(Integration<?, ?> integration: scan) {						
+		for(Integration<?> integration: scan) {						
 			if(integration.hasOption("jackknife")) integration.comments.append(integration.gain > 0.0 ? "+" : "-");
 			else if(integration.gain < 0.0) integration.comments.append("-");
 			scanSource.add(integration);

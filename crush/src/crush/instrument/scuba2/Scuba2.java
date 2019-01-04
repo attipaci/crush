@@ -93,7 +93,7 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	}
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
+	public Scan<?> getScanInstance() {
 		return new Scuba2Scan(this);
 	}
 

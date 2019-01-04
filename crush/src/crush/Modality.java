@@ -119,7 +119,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	// Gains are stored according to dataIndex
-	public void averageGains(WeightedPoint[] G, Integration<?,?> integration, boolean isRobust) throws Exception {
+	public void averageGains(WeightedPoint[] G, Integration<?> integration, boolean isRobust) throws Exception {
 		for(Mode mode : this) if(!mode.fixedGains) {
 			final ChannelGroup<?> channels = mode.getChannels();
 			final WeightedPoint[] modeGain = mode.deriveGains(integration, isRobust);
@@ -128,7 +128,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	// Gain arrays is according to dataIndex
-	public boolean applyGains(WeightedPoint[] G, Integration<?,?> integration) throws Exception {
+	public boolean applyGains(WeightedPoint[] G, Integration<?> integration) throws Exception {
 		boolean isFlagging = false;
 		
 		for(Mode mode : this) if(!mode.fixedGains) {
@@ -152,7 +152,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	
-	public boolean updateAllGains(Integration<?, ?> integration, boolean isRobust) {
+	public boolean updateAllGains(Integration<?> integration, boolean isRobust) {
 		if(!solveGains) return false;
 		boolean isFlagging = false;
 		

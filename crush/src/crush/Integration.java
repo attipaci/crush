@@ -66,16 +66,16 @@ import nom.tam.fits.*;
  * @param <FrameType>
  * 
  */
-public abstract class Integration<InstrumentType extends Instrument<? extends Channel>, FrameType extends Frame> 
+public abstract class Integration<FrameType extends Frame> 
 extends ArrayList<FrameType> 
-implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, BasicMessaging {
+implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMessaging {
     /**
      * 
      */
     private static final long serialVersionUID = 365675228828101776L;
 
-    public Scan<InstrumentType, ?> scan;
-    public InstrumentType instrument;
+    Scan<? extends Integration<? extends FrameType>> scan;
+    private Instrument<?> instrument;
 
     public int integrationNo;	
     
@@ -104,10 +104,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     // The integration should carry a copy of the instrument s.t. the integration can freely modify it...
     // The constructor of Integration thus copies the Scan instrument for private use...
-    @SuppressWarnings("unchecked")
-    public Integration(Scan<InstrumentType, ?> parent) {
+    public Integration(Scan<? extends Integration<? extends FrameType>> parent) {
         scan = parent;
-        instrument = (InstrumentType) scan.instrument.copy();
+        instrument = scan.getInstrument().copy();
         instrument.setParent(this);
         setThreadCount(CRUSH.maxThreads);
     }
@@ -115,8 +114,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     @SuppressWarnings("unchecked")
     @Override
-    public Integration<InstrumentType, FrameType> clone() { 
-        Integration<InstrumentType, FrameType> clone = (Integration<InstrumentType, FrameType>) super.clone();
+    public Integration<FrameType> clone() { 
+        Integration<FrameType> clone = (Integration<FrameType>) super.clone();
         // TODO redo it safely, s.t. existing reduction steps copy over as well?
         clone.dependents = new Hashtable<String, Dependents>(); 
         clone.signals = new Hashtable<Mode, Signal>();
@@ -125,13 +124,26 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         return clone;
     }
+   
+    Integration<FrameType> cloneWithCopyOf(Instrument<?> instrument) {
+        Integration<FrameType> clone = clone();
+        clone.instrument = instrument.copy();
+        return clone;
+    }
+    
+    
+    
+    
 
     @Override
-    public int compareTo(Integration<InstrumentType, FrameType> other) {
+    public int compareTo(Integration<FrameType> other) {
         return Double.compare(getMJD(), other.getMJD());
     }
 
-    public Scan<InstrumentType, ? extends Integration<InstrumentType, ?>> getScan() { return scan; }
+    public Scan<? extends Integration<? extends FrameType>> getScan() { return scan; }
+    
+    public Instrument<?> getInstrument() { return instrument; }
+    
     
     public void reindex() {
         for(int k=size(); --k >= 0; ) {

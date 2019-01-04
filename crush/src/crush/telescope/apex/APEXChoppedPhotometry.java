@@ -48,11 +48,11 @@ public class APEXChoppedPhotometry extends Photometry {
 
 
 	@Override
-	public void process(Scan<?, ?> scan) {		
+	public void process(Scan<?> scan) {		
 		final DataPoint[] left = DataPoint.createArray(flux.length);
 		final DataPoint[] right = DataPoint.createArray(flux.length);
 
-		for(Integration<?,?> integration : scan) process((APEXSubscan<?,?>) integration, left, right);
+		for(Integration<?> integration : scan) process((APEXSubscan<?>) integration, left, right);
 		
 		sourceFlux.noData();	
 		
@@ -71,18 +71,18 @@ public class APEXChoppedPhotometry extends Photometry {
 		scan.getLastIntegration().comments.append(" " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>") + " ");
 	}
 	
-	protected void process(final APEXSubscan<?,?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
+	protected void process(final APEXSubscan<?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
 		// Proceed only if there are enough pixels to do the job...
 		if(!checkPixelCount(subscan)) return;		
 
 
 		final double transmission = 0.5 * (subscan.getFirstFrame().getTransmission() + subscan.getLastFrame().getTransmission());
-		final double[] sourceGain = subscan.instrument.getSourceGains(false);
+		final double[] sourceGain = subscan.getInstrument().getSourceGains(false);
 		final PhaseSet phases = subscan.getPhases();
 
 		//final double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
 
-		subscan.instrument.getObservingChannels().new Fork<Void>() {
+		subscan.getInstrument().getObservingChannels().new Fork<Void>() {
 			@Override
 			protected void process(APEXContinuumPixel pixel) {	
 				WeightedPoint point = null;

@@ -23,15 +23,13 @@
 
 package crush.telescope.sofia;
 
-import crush.Channel;
 import crush.telescope.GroundBasedIntegration;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaInstrument<? extends Channel>, FrameType extends SofiaFrame> 
-extends GroundBasedIntegration<InstrumentType, FrameType> {
+public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends GroundBasedIntegration<FrameType> {
 
     /**
      * 
@@ -39,20 +37,22 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
     private static final long serialVersionUID = -4771883165716694480L;
 
 
-    public SofiaIntegration(SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>> parent) {
+    public SofiaIntegration(SofiaScan<? extends SofiaIntegration<? extends FrameType>> parent) {
         super(parent);
     }
     
     @SuppressWarnings("unchecked")
     @Override
-    public SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>> getScan() { 
-        return (SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    public SofiaScan<? extends SofiaIntegration<? extends FrameType>> getScan() { 
+        return (SofiaScan<? extends SofiaIntegration<? extends FrameType>>) super.getScan(); 
     }
+    
+    @Override
+    public SofiaInstrument<?> getInstrument() { return (SofiaInstrument<?>) super.getInstrument(); }
 
     @Override
     public double getModulationFrequency(int signalMode) {
-        SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan;
-        if(sofiaScan.mode.isChopping) return sofiaScan.chopper.frequency;
+        if(getScan().mode.isChopping) return getScan().chopper.frequency;
         return super.getModulationFrequency(signalMode);
     }
     
@@ -68,13 +68,13 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
         return sum / n;
     }
 
-    //public double getMeanPWV() { return ((SofiaScan<?,?>) scan).environment.pwv.midPoint(); }
+    //public double getMeanPWV() { return ((SofiaScan<?>) scan).environment.pwv.midPoint(); }
     
     public double getModelPWV() {
         info("Estimating PWV based on altitude...");
         double pwv41k = hasOption("pwv41k") ? option("pwv41k").getDouble() * Unit.um : 29.0 * Unit.um;
         double b = 1.0 / (hasOption("pwvscale") ? option("pwvscale").getDouble() : 5.0);
-        double altkf = ((SofiaScan<?,?>) scan).aircraft.altitude.midPoint() / (1000.0 * Unit.ft);
+        double altkf = getScan().aircraft.altitude.midPoint() / (1000.0 * Unit.ft);
         return pwv41k * Math.exp(-b * (altkf - 41.0));
     }
     
@@ -94,7 +94,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
         
         if(!hasOption("tau.pwv")) {
-            try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
+            try { getInstrument().getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }  
     }
@@ -113,8 +113,8 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
     
     
     public void setVaccaTau() throws Exception {
-        AtranModel model = new AtranModel(instrument.getOptions());
-        double altitude = ((SofiaScan<?,?>) scan).aircraft.altitude.midPoint();
+        AtranModel model = new AtranModel(getInstrument().getOptions());
+        double altitude = getScan().aircraft.altitude.midPoint();
         double elevation = 0.5 * (getFirstFrame().horizontal.EL() + getLastFrame().horizontal.EL());
         
         double C = model.getRelativeTransmission(altitude, elevation);
@@ -129,7 +129,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
         
         info("Using PWV model to correct fluxes: PWV = " + Util.f1.format(pwv));  
         
-        try { instrument.getOptions().process("tau.pwv", Double.toString(pwv)); }
+        try { getInstrument().getOptions().process("tau.pwv", Double.toString(pwv)); }
         catch(LockedException e) {}
         
         this.setTau("pwv", pwv);

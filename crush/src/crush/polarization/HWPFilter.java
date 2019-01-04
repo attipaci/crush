@@ -35,27 +35,27 @@ public class HWPFilter extends KillFilter {
 	 */
 	private static final long serialVersionUID = 4848853813082110238L;
 
-	public HWPFilter(Integration<?, ?> integration) {
+	public HWPFilter(Integration<?> integration) {
 		super(integration);
 	}
 
-	public HWPFilter(Integration<?, ?> integration, float[] data) {
+	public HWPFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
 		
 		
 		
 		// Use waveplate frequency and jitter 
 		// Use filter.hwp.harmonics
-		Oscillating hwp = (Oscillating) integration.instrument;
+		Oscillating hwp = (Oscillating) integration.getInstrument();
 		
 		if(!(hwp.getFrequency() > 0.0)) {
 		    integration.warning("Waveplate rotation not detected. Assuming total-power mode. Blacklisting 'filter.hwp'.");
-			integration.instrument.setOption("blacklist=filter.hwp");
+			integration.getInstrument().setOption("blacklist=filter.hwp");
 			return;
 		}
 		

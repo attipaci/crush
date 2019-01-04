@@ -49,7 +49,7 @@ public abstract class TelescopeFrame extends Frame {
     private float transmission = 1.0F;
 
        
-    public TelescopeFrame(TelescopeScan<? extends TelescopeInstrument<?>, ? extends Integration<?, ? extends TelescopeFrame>> parent) {
+    public TelescopeFrame(TelescopeScan<? extends Integration<? extends TelescopeFrame>> parent) {
         super(parent);
     }
     
@@ -65,12 +65,12 @@ public abstract class TelescopeFrame extends Frame {
     
     @SuppressWarnings("unchecked")
     @Override
-    public TelescopeScan<? extends TelescopeInstrument<?>, ? extends Integration<?, ? extends TelescopeFrame>> getScan() { 
-        return (TelescopeScan<? extends TelescopeInstrument<?>, ? extends Integration<?, ? extends TelescopeFrame>>) scan; 
+    public TelescopeScan<? extends Integration<? extends TelescopeFrame>> getScan() { 
+        return (TelescopeScan<? extends Integration<? extends TelescopeFrame>>) super.getScan(); 
     }
     
     @Override
-    public TelescopeInstrument<?> getInstrument() { return getScan().instrument; }
+    public TelescopeInstrument<?> getInstrument() { return getScan().getInstrument(); }
   
     
     public float getTransmission() { return transmission; }
@@ -177,7 +177,7 @@ public abstract class TelescopeFrame extends Frame {
             projector.getCoordinates().addNativeOffset(projector.offset);
             projector.project();
         }
-        else if(scan.isNonSidereal) {
+        else if(getScan().isNonSidereal) {
             projector.setReferenceCoords();
             // Deproject SFL native offsets...
             getEquatorialNativeOffset(fpOffset, projector.offset);

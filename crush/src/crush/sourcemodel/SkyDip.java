@@ -76,7 +76,7 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         super.createFrom(collection);
 
         resolution = hasOption("skydip.grid") ? Math.abs(option("skydip.grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;
@@ -104,10 +104,10 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void add(Integration<?, ?> integration) {
+    public void add(Integration<?> integration) {
         integration.comments.append("[Dip] ");
 
-        CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get(signalName).get(signalIndex);
+        CorrelatedMode mode = (CorrelatedMode) integration.getInstrument().modalities.get(signalName).get(signalIndex);
         CorrelatedSignal C = (CorrelatedSignal) integration.getSignal(mode);
 
         if(C == null) {
@@ -144,7 +144,7 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void process(Scan<?, ?> scan) {
+    public void process(Scan<?> scan) {
         for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
         if(scan instanceof Weather) {
             double ambientT = ((Weather) scan).getAmbientKelvins();
@@ -161,7 +161,7 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void sync(Integration<?, ?> integration) {
+    public void sync(Integration<?> integration) {
         // Unused -- synching is performed by the correlated signal...
     }
 

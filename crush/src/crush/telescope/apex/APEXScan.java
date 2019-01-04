@@ -52,8 +52,7 @@ import java.util.logging.Logger;
 
 
 
-public class APEXScan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, SubscanType extends APEXSubscan<InstrumentType, ? extends APEXFrame>> 
-extends GroundBasedScan<InstrumentType, SubscanType> {
+public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> extends GroundBasedScan<SubscanType> {
 	/**
 	 * 
 	 */
@@ -72,9 +71,12 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
 	
 	Vector2D pointingOffset;
 	
-	public APEXScan(InstrumentType instrument) {
+	public APEXScan(APEXInstrument<?> instrument) {
 		super(instrument);
 	}
+	
+	@Override
+    public APEXInstrument<?> getInstrument() { return (APEXInstrument<?>) super.getInstrument(); }
 	
 	@Override
 	public void mergeIntegrations() {
@@ -137,7 +139,7 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public SubscanType getIntegrationInstance() {
-		return (SubscanType) new APEXSubscan<InstrumentType, APEXFrame>(this);
+		return (SubscanType) new APEXSubscan<APEXFrame>(this);
 	}
 	
 	public String getFileName(String path, String spec, String projectID) throws FileNotFoundException {
@@ -219,8 +221,8 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
 		
 		int subscans = readScanInfo(getFits(dir + "SCAN" + ext));
 		
-		instrument.readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
-		instrument.validate(this);
+		getInstrument().readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
+		getInstrument().validate(this);
 		clear();	
 		
 		for(int i=0; i<subscans; i++) {
@@ -251,8 +253,8 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
     
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
-		instrument.readPar((BinaryTableHDU) hdu[2]);
-		instrument.validate(this);
+		getInstrument().readPar((BinaryTableHDU) hdu[2]);
+		getInstrument().validate(this);
 		clear();
 		
 		int k=3;
@@ -304,7 +306,7 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		getInstrument().setFitsHeaderOptions(header);
 		
 		setSerial(header.getIntValue("SCANNUM"));
 		type = header.getStringValue("SCANTYPE");
@@ -350,7 +352,7 @@ extends GroundBasedScan<InstrumentType, SubscanType> {
 			chopper.positions = 2;
 			chopper.angle = 0.0 * Unit.degree;
 			info("Setting options for chopped photometry.");
-			instrument.setOption("chopped");
+			getInstrument().setOption("chopped");
 		}
 					
 		//isPlanetary = header.getBooleanValue("MOVEFRAM");		

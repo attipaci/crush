@@ -77,9 +77,9 @@ public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends 
 	public abstract double getLoadTemperature();
 	
 	@Override
-	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+	public void validate(Vector<Scan<?>> scans) throws Exception {
 		
-		final CSOScan<?,?> firstScan = (CSOScan<?,?>) scans.get(0);
+		final CSOScan<?> firstScan = (CSOScan<?>) scans.get(0);
 		
 		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		
@@ -87,7 +87,7 @@ public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends 
 	}
 	
 	@Override
-	public void validate(Scan<?,?> scan) {
+	public void validate(Scan<?> scan) {
 		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;
 		super.validate(scan);
 	}

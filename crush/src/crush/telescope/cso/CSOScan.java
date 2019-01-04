@@ -28,7 +28,6 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBasedScan;
 import crush.telescope.HorizontalFrame;
 import jnum.Unit;
@@ -40,8 +39,7 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.DataTable;
 
-public abstract class CSOScan<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, IntegrationType extends CSOIntegration<InstrumentType, ? extends HorizontalFrame>> 
-extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
+public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends HorizontalFrame>> extends GroundBasedScan<IntegrationType> implements Weather {
 	/**
 	 * 
 	 */
@@ -59,7 +57,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 	public int iMJD;	
 
 	
-	public CSOScan(InstrumentType instrument) {
+	public CSOScan(CSOInstrument<?> instrument) {
 		super(instrument);
 		
 		/* Legacy crush coordinates, based on another telescope and map...
@@ -102,7 +100,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 				String fileName = option("elevation-response").getPath();	
 				elevationResponse = new ElevationCouplingCurve(fileName).getValue(horizontal.elevation()); 
 				info("Relative beam efficiency is " + Util.f3.format(elevationResponse));
-				for(CSOIntegration<?,?> integration : this) integration.gain *= elevationResponse;
+				for(CSOIntegration<?> integration : this) integration.gain *= elevationResponse;
 			}
 			catch(IOException e) { 
 				warning("Cannot read elevation response table..."); 
@@ -131,7 +129,7 @@ extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 		DataTable data = super.getPointingData();
 		Offset2D relative = getNativePointingIncrement(pointing);
 		
-		Unit sizeUnit = instrument.getSizeUnit();
+		Unit sizeUnit = getInstrument().getSizeUnit();
 		
 		data.new Entry("FAZO", (relative.x() + fixedOffset.x()), sizeUnit);
 		data.new Entry("FZAO", -(relative.y() + fixedOffset.y()), sizeUnit);

@@ -49,16 +49,16 @@ public class MotionFilter extends KillFilter {
 	int harmonics = 1;
 	boolean oddHarmonicsOnly = false;
 	
-	public MotionFilter(Integration<?,?> integration) {
+	public MotionFilter(Integration<?> integration) {
 		super(integration);
 	}
 	
-	public MotionFilter(Integration<?,?> integration, float[] data) {
+	public MotionFilter(Integration<?> integration, float[] data) {
 		super(integration, data);
 	}
 	
 	@Override
-	protected void setIntegration(Integration<?,?> integration) {
+	protected void setIntegration(Integration<?> integration) {
 		super.setIntegration(integration);
 		if(integration.hasOption("lab")) return;
 
@@ -160,7 +160,7 @@ public class MotionFilter extends KillFilter {
 			if(value > criticalLevel) reject[i>>1] = true;	
 		}
 		
-		double df = 1.0 / (integration.instrument.samplingInterval * data.length);
+		double df = 1.0 / (getInstrument().samplingInterval * data.length);
 		double f = peakIndex/2 * df;
 	
 		discardTempData();
@@ -220,7 +220,7 @@ public class MotionFilter extends KillFilter {
 	
 	@Override
 	protected void preFilter() {
-		setChannels(integration.instrument.getObservingChannels());
+		setChannels(getInstrument().getObservingChannels());
 		super.preFilter();
 	}
 

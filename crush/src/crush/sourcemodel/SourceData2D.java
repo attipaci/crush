@@ -55,7 +55,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
     }
     
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+    public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
         super.createFrom(collection);  
         if(hasOption("unit")) getData().setUnit(option("unit").getValue());
     }
@@ -159,7 +159,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
 
 
     @Override
-    public void process(Scan<?, ?> scan) {
+    public void process(Scan<?> scan) {
         DataType data = getData();
         
         endAccumulation();          
@@ -224,7 +224,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
         if(hasSourceOption("filter") && getSourceSize() > 0.0) addProcessBrief("{filter} ");
 
         if(enableWeighting) if(hasOption("weighting.scans"))
-            for(Scan<?,?> scan : getScans()) addProcessBrief("{" + Util.f2.format(1.0/Math.sqrt(scan.weight)) + "x} ");
+            for(Scan<?> scan : getScans()) addProcessBrief("{" + Util.f2.format(1.0/Math.sqrt(scan.weight)) + "x} ");
 
         if(hasSourceOption("redundancy"))  {
             addProcessBrief("(check) ");

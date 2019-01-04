@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 
 import crush.CRUSH;
-import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBasedIntegration;
 import crush.telescope.HorizontalFrame;
 import crush.telescope.jcmt.JCMTTauTable;
@@ -35,23 +34,25 @@ import jnum.Unit;
 import jnum.Util;
 
 
-public abstract class CSOIntegration<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, FrameType extends HorizontalFrame> 
-extends GroundBasedIntegration<InstrumentType, FrameType> {
+public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends GroundBasedIntegration<FrameType> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8762250193431287809L;
 
-	public CSOIntegration(CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, ? extends FrameType>> parent) {
+	public CSOIntegration(CSOScan<? extends CSOIntegration<? extends FrameType>> parent) {
 		super(parent);
 	}
 	
     @SuppressWarnings("unchecked")
     @Override
-    public CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, FrameType>> getScan() { 
-        return (CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    public CSOScan<? extends CSOIntegration<? extends FrameType>> getScan() { 
+        return (CSOScan<? extends CSOIntegration<? extends FrameType>>) super.getScan(); 
     }
-	
+    
+    @Override
+    public CSOInstrument<?> getInstrument() { return (CSOInstrument<?>) super.getInstrument(); }
+
 	@Override
 	public void validate() {	
 		if(!hasOption("nochopper")) if(!hasOption("lab")) {
@@ -69,7 +70,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 	}
 	
 	private void removeChopperDCOffset() {
-		double threshold = 0.4 * instrument.getMinBeamFWHM();
+		double threshold = 0.4 * getInstrument().getMinBeamFWHM();
 		double sumP = 0.0, sumM = 0.0;
 		int nP = 0, nM = 0;
 		
@@ -100,7 +101,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 		}
 		
 		if(nP == 0 || nM == 0) {
-			instrument.forget("detect.chopped");
+			getInstrument().forget("detect.chopped");
 			return;
 		}
 		
@@ -129,7 +130,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 	
 	public double getSkyLoadTemperature() {
 		double transmission = 0.5 * (getFirstFrame().getTransmission() + getLastFrame().getTransmission());
-		return (1.0 - transmission) * ((CSOScan<?,?>) scan).getAmbientKelvins();
+		return (1.0 - transmission) * getScan().getAmbientKelvins();
 	}
 	
 	
@@ -146,7 +147,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 		printEquivalentTaus(zenithTau);
 		
 		double tauLOS = zenithTau / getScan().horizontal.sinLat();
-		CRUSH.values(this, "Optical load is " + Util.f1.format(((CSOScan<?,?>) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
+		CRUSH.values(this, "Optical load is " + Util.f1.format(getScan().ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
 	
 	}
 	
@@ -162,29 +163,30 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 	
 	public void setTableTau() throws Exception {
 		String source = hasOption("tau.tables") ? option("tau.tables").getPath() : ".";
-		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
+		String id = getScan().getID();
+		String date = id.substring(0, id.indexOf('.'));
 		String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
 		
 		File file = new File(source + File.separator + spec + ".dat");
 		if(!file.exists()) {
 			warning("No tau table found for " + date + ". Using default tau.");
-			instrument.getOptions().remove("tau");
+			getInstrument().getOptions().remove("tau");
 			setTau();
 			return;
 		}
 		
-		CSOTauTable table = CSOTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
+		CSOTauTable table = CSOTauTable.get(getScan().iMJD, file.getPath());
 		table.setOptions(option("tau"));
 		setTau("225GHz", table.getTau(getMJD()));	
 	}
 	
 	public void setJCMTTableTau() throws Exception {
 		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
-		String spec = scan.getShortDateString();
+		String spec = getScan().getShortDateString();
 		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
 		
 		try {
-			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, fileName);
+			JCMTTauTable table = JCMTTauTable.get(getScan().iMJD, fileName);
 			table.setOptions(option("tau"));
 			setTau("225gHz", table.getTau(getMJD()));	
 		}
@@ -200,7 +202,7 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 				throw e;
 			}	
 			info("---> Falling back to '" + source + "'.");
-			instrument.setOption("tau=" + source);
+			getInstrument().setOption("tau=" + source);
 			setTau();
 			return;
 		}
@@ -235,17 +237,17 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 	public String getASCIIHeader() {
 	 
 		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / getScan().horizontal.sinLat());
-		double Tload = ((CSOScan<?, ?>) scan).getAmbientKelvins();
+		double Tload = getScan().getAmbientKelvins();
 		
 		return super.getASCIIHeader() + "\n" 
 				+ "# tau(225GHz) = " + Util.f3.format(this.getTau("225ghz")) + "\n"
-				+ "# T_amb = " + Util.f1.format((((CSOScan<?,?>) scan).getAmbientKelvins() - Constant.zeroCelsius) / Unit.K) + " C\n" 
+				+ "# T_amb = " + Util.f1.format((getScan().getAmbientKelvins() - Constant.zeroCelsius) / Unit.K) + " C\n" 
 				+ "# T_load = " + Util.f1.format(Tload * eps / Unit.K) + " K";
 	}
 	 
 
 	public double getDirectTau() { 
-		double eps = (instrument.getLoadTemperature() - instrument.excessLoad) / ((CSOScan<?,?>) scan).ambientT; 	
+		double eps = (getInstrument().getLoadTemperature() - getInstrument().excessLoad) / getScan().ambientT; 	
 		return -Math.log(1.0-eps) * getScan().horizontal.sinLat();
 	}
 	

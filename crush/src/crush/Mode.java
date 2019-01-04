@@ -187,7 +187,7 @@ public class Mode implements Serializable {
 
 
 
-    public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
+    public WeightedPoint[] deriveGains(Integration<?> integration, boolean isRobust) throws Exception {
         if(fixedGains) throw new IllegalStateException("Cannot solve gains for fixed gain modes.");
 
         float[] G0 = getGains();
@@ -204,7 +204,7 @@ public class Mode implements Serializable {
         return G;		
     }
 
-    protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
+    protected void syncAllGains(Integration<?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
         integration.getSignal(this).syncGains(sumwC2, isTempReady);
 
         // Solve for the correlated phases also, if required
@@ -215,11 +215,11 @@ public class Mode implements Serializable {
         if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
     }
 
-    public int getFrameResolution(Integration<?, ?> integration) {
+    public int getFrameResolution(Integration<?> integration) {
         return integration.power2FramesFor(resolution/Math.sqrt(2.0));
     }
 
-    public int signalLength(Integration<?, ?> integration) {
+    public int signalLength(Integration<?> integration) {
         return ExtraMath.roundupRatio(integration.size(), getFrameResolution(integration));
     }
 
@@ -279,7 +279,7 @@ public class Mode implements Serializable {
         }
 
         // Recursively resync all dependent modes...
-        protected void resyncGains(Integration<?,?> integration) throws Exception {
+        protected void resyncGains(Integration<?> integration) throws Exception {
             Signal signal = integration.getSignal(this);
             if(signal != null) signal.resyncGains();
 
@@ -306,7 +306,7 @@ public class Mode implements Serializable {
         }
         
         @Override
-        public Signal getSignal(Integration<?, ?> integration) {
+        public Signal getSignal(Integration<?> integration) {
             Signal signal = integration.getSignal(Mode.this);
             
             float[] C2 = new float[signal.value.length];
@@ -317,7 +317,7 @@ public class Mode implements Serializable {
             return s2;
         }
         
-        public void updateSignal(Integration<?,?> integration) {
+        public void updateSignal(Integration<?> integration) {
             Signal c = integration.getSignal(Mode.this);
             Signal c2 = integration.getSignal(NonLinearResponse.this);
             
@@ -332,7 +332,7 @@ public class Mode implements Serializable {
         }
         
         @Override
-        public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
+        public WeightedPoint[] deriveGains(Integration<?> integration, boolean isRobust) throws Exception {
             // Undo the prior nonlinearity correction....
             setGains(new float[size()]);
             syncAllGains(integration, null, true);       

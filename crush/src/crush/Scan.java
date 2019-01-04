@@ -58,13 +58,13 @@ import jnum.text.TableFormatter;
 import jnum.util.*;
 import jnum.util.DataTable;
 
-public abstract class Scan<InstrumentType extends Instrument<? extends Channel>, IntegrationType extends Integration<InstrumentType, ? extends Frame>>
-extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, BasicMessaging {
+public abstract class Scan<IntegrationType extends Integration<? extends Frame>>
+extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.Entries, BasicMessaging {
     /**
      * 
      */
     private static final long serialVersionUID = 8967822331907667222L;
-    public InstrumentType instrument;
+    private Instrument<?> instrument;
 
     private int serialNo = -1;
     private double MJD = Double.NaN;
@@ -89,14 +89,17 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
     public GaussianSource pointing;
 
     // Creates a scan with an initialized copy of the instrument
-    @SuppressWarnings("unchecked")
-    public Scan(InstrumentType instrument) { 
-        this.instrument = (InstrumentType) instrument.copy();
+    public Scan(Instrument<?> instrument) { 
+        this.instrument = instrument.copy();
         this.instrument.setParent(this);
     }
+    
+    public Instrument<?> getInstrument() { return instrument; }
 
+    public Configurator getOptions() { return instrument.getOptions(); }
+    
     @Override
-    public int compareTo(Scan<?, ?> other) {
+    public int compareTo(Scan<?> other) {
         return Double.compare(getMJD(), other.getMJD());
     }
 
@@ -120,7 +123,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
 
         for(int i=0; i<size(); ) {
-            Integration<InstrumentType, ?> integration = get(i);
+            Integration<?> integration = get(i);
             try { 
                 info("Processing integration " + (i+1) + ":");
                 integration.validate();
@@ -144,7 +147,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
     public void setIteration(int i, int rounds) {
         CRUSH.setIteration(instrument.getOptions(), i, rounds);
         instrument.calcOverlap(getPointSize());
-        for(Integration<?,?> integration : this) if(integration.instrument != instrument) integration.setIteration(i, rounds);	
+        for(Integration<?> integration : this) if(integration.getInstrument() != instrument) integration.setIteration(i, rounds);	
     }
 
     public int getSerial() { return serialNo; }
@@ -194,7 +197,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
                 Util.f1.format(correction.x() / sizeUnit) + ", " + Util.f1.format(correction.y() / sizeUnit) +
                 " " + instrument.getSizeUnit().name() + ".");
 
-        for(Integration<?,?> integration : this) integration.pointingAt(correction);
+        for(Integration<?> integration : this) integration.pointingAt(correction);
         if(pointingCorrection == null) pointingCorrection = correction;
         else pointingCorrection.add(correction);
     }
@@ -240,7 +243,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
         final double maxDiscontinuity = hasOption("subscans.merge.maxgap") ? option("subscans.merge.maxgap").getDouble() * Unit.s : Double.NaN;
         final int maxGap = Double.isNaN(maxDiscontinuity) ? Integer.MAX_VALUE : (int) Math.ceil(maxDiscontinuity / instrument.samplingInterval);
 
-        Integration<InstrumentType, Frame> merged = (Integration<InstrumentType, Frame>) get(0);
+        Integration<Frame> merged = (Integration<Frame>) get(0);
         merged.trimEnd();
 
         double lastMJD = merged.getLastFrame().MJD;
@@ -269,7 +272,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
                 else {
                     info("  > Large gap before integration " + integration.getID() + ". Starting new merge.");
                     parts.add((IntegrationType) merged);
-                    merged = (Integration<InstrumentType, Frame>) integration;
+                    merged = (Integration<Frame>) integration;
                 }	
             }
 
@@ -375,7 +378,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
     public double getObservingTime(int skipFlags) {
         double t = 0.0;
-        for(IntegrationType integration : this) t += integration.getFrameCount(skipFlags) * integration.instrument.integrationTime;
+        for(IntegrationType integration : this) t += integration.getFrameCount(skipFlags) * integration.getInstrument().integrationTime;
         return t;
     }
 
@@ -481,12 +484,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
     public int getSourceGeneration() {
         int max = 0;
-        for(Integration<?,?> integration : this) max = Math.max(integration.sourceGeneration, max);
+        for(Integration<?> integration : this) max = Math.max(integration.sourceGeneration, max);
         return max;		
     }
 
     public void writeProducts() {
-        for(Integration<?,?> integration : this) integration.writeProducts();
+        for(Integration<?> integration : this) integration.writeProducts();
 
         if(!hasOption("lab")) {
             reportFocus();
@@ -525,16 +528,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public ArrayList<Scan<InstrumentType, IntegrationType>> split() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public ArrayList<Scan<IntegrationType>> split() {
         info("Splitting subscans into separate scans.");
-        ArrayList<Scan<InstrumentType, IntegrationType>> scans = new ArrayList<Scan<InstrumentType, IntegrationType>>();
+        ArrayList<Scan<IntegrationType>> scans = new ArrayList<Scan<IntegrationType>>();
         for(IntegrationType integration : this) {
-            Scan<InstrumentType, IntegrationType> scan = (Scan<InstrumentType, IntegrationType>) clone();
+            Scan<IntegrationType> scan = (Scan<IntegrationType>) clone();
             if(size() > 1) scan.isSplit = true;
             scan.clear();
-            scan.instrument = integration.instrument;
-            integration.scan = scan;
+            scan.instrument = integration.getInstrument();
+            integration.scan = (Scan) scan;
             scan.add(integration);
             scans.add(scan);
         }
@@ -569,7 +572,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
             }
 
             try {		
-                Modality<?> modality = integration.instrument.modalities.get(modalityName);
+                Modality<?> modality = integration.getInstrument().modalities.get(modalityName);
                 if(modality.trigger != null) if(!hasOption(modality.trigger)) continue;
                 modality.averageGains(G, integration, isRobust);
                 gotGains = true;
@@ -587,7 +590,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
         // Apply the gain increment
         for(IntegrationType integration : this) {
-            Modality<?> modality = integration.instrument.modalities.get(modalityName);
+            Modality<?> modality = integration.getInstrument().modalities.get(modalityName);
             boolean isFlagging = false; 
 
             WeightedPoint[] G = phaseGains.get(usePhases ? integration.getPhase() : 0);
@@ -596,8 +599,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
             catch(Exception e) { error(e); }
 
             if(isFlagging) {
-                integration.instrument.census();
-                integration.comments.append(integration.instrument.mappingChannels);
+                integration.getInstrument().census();
+                integration.comments.append(integration.getInstrument().mappingChannels);
             }
         }
     }
@@ -868,11 +871,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
         clear();
 
         for(int i=0, t=0; i<N; i++) {
-            Integration<InstrumentType, Frame> integration = (Integration<InstrumentType, Frame>) merged.clone();
+            Integration<Frame> integration = (Integration<Frame>) merged.cloneWithCopyOf(merged.getInstrument());
             integration.clear();
-            integration.instrument = (InstrumentType) merged.instrument.copy();
             integration.integrationNo = i;
-
+            
             int nk = Math.min(merged.size() - t, nT);
             integration.ensureCapacity(nk);
 
@@ -911,22 +913,22 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
     public void error(Throwable e) { CRUSH.error(this, e); }
 
 
-    public static Scan<?,?> getEarliest(Collection<Scan<?,?>> scans) {
+    public static Scan<?> getEarliest(Collection<Scan<?>> scans) {
         double firstMJD = Double.POSITIVE_INFINITY;
-        Scan<?,?> first = null;
+        Scan<?> first = null;
 
-        for(Scan<?,?> scan : scans) if(scan != null) if(scan.getMJD() < firstMJD) {
+        for(Scan<?> scan : scans) if(scan != null) if(scan.getMJD() < firstMJD) {
             first = scan;
             firstMJD = scan.getMJD();
         }
         return first;
     }
 
-    public static Scan<?,?> getLatest(Collection<Scan<?,?>> scans) {
+    public static Scan<?> getLatest(Collection<Scan<?>> scans) {
         double lastMJD = Double.NEGATIVE_INFINITY;
-        Scan<?,?> last = null;
+        Scan<?> last = null;
 
-        for(Scan<?,?> scan : scans) if(scan != null) if(scan.getMJD() > lastMJD) {
+        for(Scan<?> scan : scans) if(scan != null) if(scan.getMJD() > lastMJD) {
             last = scan;
             lastMJD = scan.getMJD();
         }

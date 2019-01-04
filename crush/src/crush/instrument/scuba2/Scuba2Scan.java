@@ -44,7 +44,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implements Weather {
+public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 	/**
 	 * 
 	 */
@@ -71,6 +71,9 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 	}
 	
 	@Override
+    public Scuba2 getInstrument() { return (Scuba2) super.getInstrument(); }
+	
+	@Override
 	public Scuba2Subscan getIntegrationInstance() {
 		return new Scuba2Subscan(this);
 	}
@@ -90,8 +93,8 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 		for(int i=size(); --i >= 0; ) {
 			Scuba2Subscan subscan = get(i);
 			subscan.integrationNo = i;
-			subscan.instrument.integrationTime = instrument.integrationTime;
-			subscan.instrument.samplingInterval = instrument.samplingInterval;
+			subscan.getInstrument().integrationTime = getInstrument().integrationTime;
+			subscan.getInstrument().samplingInterval = getInstrument().samplingInterval;
 		}
 	}
 	
@@ -110,16 +113,18 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 		
 		BasicHDU<?> mainHDU = files.get(0).getHDUs()[0];
 		parseScanPrimaryHDU(mainHDU);
-		instrument.addPixelsFor(hasSubarray);
-		instrument.parseScanPrimaryHDU(mainHDU);
-		instrument.validate(this);	
+		
+		Scuba2 scuba2 = getInstrument();
+		scuba2.addPixelsFor(hasSubarray);
+		scuba2.parseScanPrimaryHDU(mainHDU);
+		scuba2.validate(this);	
 		
 		// Count how many subarrays are active
 		subarrays = 0;
 		int channelOffset = 0;
 		for(int i=0; i<hasSubarray.length; i++) if(hasSubarray[i]) {
 			subarrays++;
-			instrument.subarray[i].channelOffset = channelOffset;
+			scuba2.subarray[i].channelOffset = channelOffset;
 			channelOffset += Scuba2Subarray.PIXELS;
 		}
 		info("Found data for " + subarrays + " subarrays.");
@@ -169,7 +174,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 			totalTime += subscan.totalIntegrationTime;
 			nFrames += subscan.rawFrames;
 		}
-		instrument.samplingInterval = instrument.integrationTime = totalTime / nFrames;
+		getInstrument().samplingInterval = getInstrument().integrationTime = totalTime / nFrames;
 	
 	}
 		
@@ -178,7 +183,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 		if(isEmpty()) return;	// TODO warning?
 		
 		calcSamplingRate();
-		info("Typical sampling rate is " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz.");
+		info("Typical sampling rate is " + Util.f2.format(1.0 / getInstrument().integrationTime) + " Hz.");
 	
 		
 		Scuba2Frame firstFrame = getFirstIntegration().getFirstFrame();
@@ -239,7 +244,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 					if(files == null) throw new FileNotFoundException("Not a directory or other I/O error.");
 					
 					for(int i=0; i<files.length; i++) if(files[i].startsWith(prefix)) if(files[i].substring(3).startsWith(scanID)) {
-						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], instrument.getOptions())); }
+						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], getInstrument().getOptions())); }
 						catch(IllegalStateException e) { 
 							// there is a FITS alternative already...
 						}
@@ -268,7 +273,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 				if(!scanFile.exists()) throw new FileNotFoundException("Could not find scan " + scanDescriptor);
 			} 	
 			
-			try { scanFiles.add(new Scuba2Fits(scanFile.getPath(), instrument.getOptions())); }
+			try { scanFiles.add(new Scuba2Fits(scanFile.getPath(), getInstrument().getOptions())); }
 			catch(IllegalStateException e2) {
 				// There is a FITS alternative already...
 			}
@@ -285,11 +290,11 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		getInstrument().setFitsHeaderOptions(header);
 		
 		// Scan Info
 		setSerial(header.getIntValue("OBSNUM"));
-		if(instrument.getOptions().containsKey("serial")) instrument.setSerialOptions(getSerial());
+		if(getInstrument().getOptions().containsKey("serial")) getInstrument().setSerialOptions(getSerial());
 	
 		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
 		creator = header.getStringValue("ORIGIN");
@@ -327,13 +332,13 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 		if(hasOption("tau.183ghz")) tau183GHz = option("tau.183ghz").getDouble();
 		else {
 			tau183GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
-			instrument.setOption("tau.183ghz=" + tau183GHz);
+			getInstrument().setOption("tau.183ghz=" + tau183GHz);
 		}
 		
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
 		else {
 			tau225GHz = 0.5 * (header.getDoubleValue("TAU225ST") + header.getDoubleValue("TAU225EN"));
-			instrument.setOption("tau.225ghz=" + tau225GHz);
+			getInstrument().setOption("tau.225ghz=" + tau225GHz);
 		}
 		
 		ambientT = 0.5 * (header.getDoubleValue("ATSTART") + header.getDoubleValue("ATEND")) * Unit.K + Constant.zeroCelsius;
@@ -441,7 +446,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implement
 	@Override
 	public void setSourceModel(SourceModel model) {
 		super.setSourceModel(model);
-		sourceModel.setID(instrument.filter);
+		sourceModel.setID(getInstrument().filter);
 	}	
 	
 	@Override

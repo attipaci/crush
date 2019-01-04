@@ -35,15 +35,15 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	 */
 	private static final long serialVersionUID = -2489033861985258941L;
 	private String name;
-	private Integration<?, ?> integration;
+	private Integration<?> integration;
 	private float[] forFrame, forChannel;
 	
-	public Dependents(Integration<?, ?> owner, String name) {
+	public Dependents(Integration<?> owner, String name) {
 		this.name = name;
 		this.integration = owner;
 		
 		forFrame = new float[integration.size()];
-		forChannel = new float[integration.instrument.size()];
+		forChannel = new float[integration.getInstrument().size()];
 			
 		integration.dependents.put(name, this);
 	}
@@ -77,7 +77,7 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	
 	public void setName(String value) { this.name = value; }
 	
-	public Integration<?, ?> getIntegration() { return integration; }
+	public Integration<?> getIntegration() { return integration; }
 
 	public final void addAsync(final Frame exposure, final double dp) { 
 		forFrame[exposure.index] += dp; 

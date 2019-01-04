@@ -42,8 +42,11 @@ public class GismoFrame extends HorizontalFrame {
 	
 	public GismoFrame(GismoScan parent) {
 		super(parent);
-		create(((Gismo) scan.instrument).pixels());
+		create(getScan().getInstrument().pixels());
 	}
+	
+	@Override
+    public GismoScan getScan() { return (GismoScan) super.getScan(); }
 	
 	@Override
     public void cloneReadout(Frame from) {
@@ -58,7 +61,7 @@ public class GismoFrame extends HorizontalFrame {
 	
 	
 	public void parseData(float[][] DAC) {
-		final int pixels = ((Gismo) scan.instrument).pixels();
+		final int pixels = getScan().getInstrument().pixels();
 		for(int bol=0; bol<pixels; bol++) data[bol] = DAC[bol/8][bol%8];		
 	}
 	
