@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package test;
+package crush.devel;
 
 import jnum.Unit;
 import jnum.math.specialfunctions.CumulativeNormalDistribution;

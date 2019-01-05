@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package test;
+package crush.devel;
 
 import java.io.*;
 import java.util.StringTokenizer;

@@ -1,17 +1,18 @@
-package test;
+package crush.devel;
 
 import java.io.*;
 import java.util.StringTokenizer;
 
-import crush.astro.AstroImage;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.data.Interpolator;
+import jnum.data.image.Observation2D;
+import jnum.math.Coordinate2D;
 import jnum.math.Vector2D;
 
 public class ProfileSource {
 	Interpolator profile;
-	AstroImage image;
+	Observation2D image;
 	
 	
 	public static void main(String[] args) {
@@ -29,7 +30,7 @@ public class ProfileSource {
 	}
 	
 	public void process(String fileName, String profileName, double dx, double dy) throws Exception {
-		image = new AstroImage(fileName);
+		image = new Observation2D(fileName);
 		image.reset(true);
 		final double imageUnit = image.getUnit().value();
 	
@@ -59,11 +60,11 @@ public class ProfileSource {
 		};
 		
 		final Vector2D resolution = image.getResolution(); 
+		final Coordinate2D refIndex = image.getGrid().getReferenceIndex();
 		
-		double i0 = image.getGrid().refIndex.x() - dx/resolution.x();
-		double j0 = image.getGrid().refIndex.y() - dy/resolution.y();
-		
-		
+		double i0 = refIndex.x() - dx/resolution.x();
+		double j0 = refIndex.y() - dy/resolution.y();
+			
 		
 		for(int i=image.sizeX(); --i >=0; ) for(int j=image.sizeY(); --j >= 0; ) {
 			double r = ExtraMath.hypot((i - i0) * resolution.x(), (j - j0) * resolution.y());
