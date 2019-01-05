@@ -53,7 +53,6 @@ public class HawcScan extends SofiaScan<HawcIntegration> {
      */
     private static final long serialVersionUID = -3732251029215505308L;
    
-    GyroDrifts gyroDrifts;
     String priorPipelineStep;
     boolean useBetweenScans;	
 

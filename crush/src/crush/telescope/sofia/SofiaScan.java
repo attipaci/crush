@@ -55,6 +55,8 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     public String checksum, checksumVersion;
 
     public BracketedValues utc = new BracketedValues();
+    
+    public GyroDrifts gyroDrifts;
 
     Vector<String> history = new Vector<String>();
 
@@ -74,6 +76,8 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     public SofiaScanningData scanning;
 
     public Fits fits;
+    
+
     
     LinkedHashMap<String, HeaderCard> preservedKeys = new LinkedHashMap<String, HeaderCard>();
 

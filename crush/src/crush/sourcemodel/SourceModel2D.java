@@ -36,6 +36,9 @@ import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.Precessing;
+import jnum.data.Statistics;
 import jnum.data.image.Data2D;
 import jnum.data.image.Gaussian2D;
 import jnum.data.image.Grid2D;
@@ -45,8 +48,10 @@ import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.SphericalGrid;
 import jnum.math.Coordinate2D;
+import jnum.math.Metric;
 import jnum.math.Range;
 import jnum.math.Range2D;
+import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
 import jnum.plot.BufferedImageLayer;
@@ -152,9 +157,7 @@ public abstract class SourceModel2D extends SourceModel {
         return getGrid().getReference();
     }
 
-   
-    
-    
+
     
 
     @Override
@@ -533,48 +536,51 @@ public abstract class SourceModel2D extends SourceModel {
         if(used + required > max) createMemoryError(sizeX, sizeY); 
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Collection<Scan<?>> findOutliers(double maxDistance) {
         ArrayList<Scan<?>> outliers = new ArrayList<Scan<?>>();
 
-        /* TODO
         int scans = numberOfScans();
         
-        float[] ra = new float[scans];
-        float[] dec = new float[scans];
+        double[] x = new double[scans];
+        double[] y = new double[scans];
 
         for(int i=scans; --i >= 0; ) {
-            EquatorialCoordinates equatorial = (EquatorialCoordinates) getScan(i).equatorial.copy();
-            equatorial.precess(CoordinateEpoch.J2000);
-            ra[i] = (float) equatorial.RA();
-            dec[i] = (float) equatorial.DEC();
+            Coordinate2D coords = getScan(i).getReferenceCoordinates().copy();
+            if(coords instanceof Precessing) ((Precessing) coords).precess(CoordinateEpoch.J2000);
+            
+            x[i] = coords.x();
+            y[i] = coords.y();
         }
         
-        EquatorialCoordinates median = new EquatorialCoordinates(
-                Statistics.Inplace.median(ra), Statistics.Inplace.median(dec), CoordinateEpoch.J2000
-        );
+        Coordinate2D median = getScan(0).getReferenceCoordinates().copy();
+        if(median instanceof Precessing) ((Precessing) median).setEpoch(CoordinateEpoch.J2000);
+        median.set(Statistics.Inplace.median(x), Statistics.Inplace.median(y));
+
 
         for(Scan<?> scan : getScans()) {
-            EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.copy();
-            equatorial.precess(CoordinateEpoch.J2000);
-            double d = equatorial.distanceTo(median);
-            if(d > maxDistance) outliers.add(scan);
+            Coordinate2D coords = scan.getReferenceCoordinates().copy();
+            if(!(coords instanceof Metric)) continue;
+            if(!median.getClass().equals(coords.getClass())) continue;
+            
+            if(coords instanceof Precessing) ((Precessing) coords).precess(CoordinateEpoch.J2000);
+            
+            if(((Metric) coords).distanceTo(median) > maxDistance) outliers.add(scan);
         }
-        */
         
         return outliers;
     }
 
-    public Collection<Scan<?>> findSlewing(double maxDistance) {
+    public Collection<Scan<?>> findSlewing(double maxSpan) {
         ArrayList<Scan<?>> slews = new ArrayList<Scan<?>>();
         
-        /* TODO
-        double cosLat = getProjection().getReference().cosLat();
+        Coordinate2D ref = getProjection().getReference();
+        double cosLat = (ref instanceof SphericalCoordinates) ? ((SphericalCoordinates) ref).cosLat() : 1.0;
 
         for(Scan<?> scan : getScans()) {
             double span = ExtraMath.hypot(scan.range.getXRange().span() * cosLat, scan.range.getYRange().span());
-            if(span > maxDistance) slews.add(scan);
+            if(span > maxSpan) slews.add(scan);
         }
-        */
         
         return slews;
     }

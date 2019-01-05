@@ -34,7 +34,6 @@ import crush.instrument.PixelLayout;
 import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
-import crush.telescope.sofia.SofiaScan;
 import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Unit;
@@ -483,40 +482,6 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
         createDarkSquidLookup();
     }
 
-    @Override
-    public void validate(Vector<Scan<?>> scans) throws Exception {
-        final HawcScan firstScan = (HawcScan) scans.get(0);
-
-        double wavelength = firstScan.getInstrument().instrumentData.wavelength;
-        for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?>) scans.get(i)).getInstrument().instrumentData.wavelength != wavelength) {
-            warning("Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
-            scans.remove(i);
-        }
-
-        
-        for(int i=scans.size(); --i >= 1; ) {
-            HawcScan scan = (HawcScan) scans.get(i);
-
-            if(!scan.getInstrument().instrumentData.instrumentConfig.equals(firstScan.getInstrument().instrumentData.instrumentConfig)) {
-                warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
-                scans.remove(i);				
-            }	          
-        }
-        
-        for(int i=scans.size(); --i >= 1; ) {
-            HawcScan scan = (HawcScan) scans.get(i);
-            
-            if(scan.hasOption("gyrocorrect")) if(scan.hasOption("gyrocorrect.max")) {
-                double limit = scan.option("gyrocorrect.max").getDouble() * Unit.arcsec;
-                if(scan.gyroDrifts.getMax() > limit) {
-                    warning("Scan " + scans.get(i).getID() + " has too large gyro drifts. Removing from set.");
-                    scans.remove(i);
-                }
-            }
-        }
-
-        super.validate(scans);
-    }
 
     @Override
     public boolean slim(boolean reindex) {

@@ -2022,10 +2022,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         for(int t=size()-1; --t > 0; ) {
             if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
             else {
-                v[t] = new Vector2D(
-                        pos[t+1].x() - pos[t-1].x(),
-                        pos[t+1].y() - pos[t-1].y()
-                        );
+                v[t] = new Vector2D(pos[t+1].x() - pos[t-1].x(), pos[t+1].y() - pos[t-1].y());
                 v[t].scale(i2dt);
             }		
         }

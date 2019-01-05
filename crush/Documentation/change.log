@@ -1,10 +1,11 @@
->> AstroModel2D.findOutliers()
->> AstroModel2D.findSlewing()
->> HAWC+/HIRMES validate(scans) -> SofiaInstrument
-
-
 
 2.50-a1
+
+	[FIX] 'lab' mode fix to skip trying to precess when there is no
+	telescope data available.
+
+	[FIX] {SOFIA} Default coordinate epoch of J2000.0 is assumed when
+	coordinate epoch is unknown (-9999.0, or "UNKNOWN" in FITS).
 
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
 
@@ -29,6 +30,10 @@
 	crush.instrument and crush.telescope.
 
 	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
+
+	[CODE] {SOFIA} Upstream scan set validation based on instrument
+	config, wavelength, and gyro drifts. Specific instruments can override
+	how configs and wavelength are validated with appropriate methods.
 
 	[CODE] Convenience methods for getting setting options for Scan / 
 	Integration.

@@ -80,7 +80,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     public SofiaInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
         super(name, layout, size);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public SofiaInstrument<ChannelType> clone() {
@@ -92,12 +92,12 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     @Override
     public SofiaInstrument<ChannelType> copy() {
         SofiaInstrument<ChannelType> copy = (SofiaInstrument<ChannelType>) super.copy();
-        
+
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
         if(spectral != null) copy.spectral = spectral.copy();
         if(configFiles != null) copy.configFiles = new HashSet<String>(configFiles);
-        
+
         return copy;
     }
 
@@ -112,9 +112,9 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     @Override
     public void registerConfigFile(String fileName) {
         super.registerConfigFile(fileName);
-        
+
         if(configFiles.contains(fileName)) return; 
-        
+
         configFiles.add(fileName);
         history.add("AUX: " + fileName); 
     }
@@ -138,8 +138,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         if(instrumentData == null) return super.getName();
         return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
     }
-    
-    
+
+
     public void parseHeader(SofiaHeader header) {		
         instrumentData = new SofiaInstrumentData(header);
 
@@ -148,7 +148,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         setResolution(1.22 * instrumentData.wavelength / D);
 
         setFrequency(Constant.c / instrumentData.wavelength);
-        
+
         array = new SofiaArrayData(header);
 
         spectral = new SofiaSpectroscopyData(header);
@@ -167,74 +167,74 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     @Override
     public void editImageHeader(List<Scan<?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);	
-       
+
         SofiaScan<?> first = (SofiaScan<?>) Scan.getEarliest(scans);
         SofiaScan<?> last = (SofiaScan<?>) Scan.getLatest(scans);
-              
+
         // Associated IDs...
         TreeSet<String> aors = new TreeSet<String>();
         TreeSet<String> missionIDs = new TreeSet<String>();
         TreeSet<Float> freqs = new TreeSet<Float>();
-         
+
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);       
             if(SofiaHeader.isValid(scan.observation.aorID)) aors.add(scan.observation.aorID);      
             if(SofiaHeader.isValid(scan.mission.missionID)) missionIDs.add(scan.mission.missionID);
             if(!Double.isNaN(scan.getInstrument().getFrequency())) freqs.add((float) scan.getInstrument().getFrequency());
         }
-        
+
         // SOFIA date and time keys...
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(SofiaData.makeCard("DATE-OBS", first.timeStamp, "Start of observation"));
         c.add(SofiaData.makeCard("UTCSTART", AstroTime.FITSTimeFormat.format(first.utc.start), "UTC start of first scan"));
         c.add(SofiaData.makeCard("UTCEND", AstroTime.FITSTimeFormat.format(last.utc.end), "UTC end of last scan"));
         // DATE is added automatically...  
-        
+
         // SOFIA observation keys...
         // Make the OBS_ID processed!
         SofiaObservationData observation = (SofiaObservationData) SofiaData.getMerged(first.observation, last.observation);
         if(observation.obsID != null) if(!observation.obsID.startsWith("P_")) observation.obsID = "P_" + first.observation.obsID;
         observation.editHeader(header);
-        
+
         // SOFIA mission keys...
         first.mission.editHeader(header);
-        
+
         // SOFIA origination keys....
         SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
-        
+
         if(hasOption("organization")) origin.organization = option("organization").getValue();
         else {
             try { origin.organization = InetAddress.getLocalHost().getCanonicalHostName(); } 
             catch (UnknownHostException e) { origin.organization = null; }
         }
-        
+
         origin.creator = "crush " + CRUSH.getVersion();
         origin.fileName = null; // FILENAME fills automatically at writing...
         origin.editHeader(header);
-        
+
         // SOFIA environmental keys...
         SofiaData.getMerged(first.environment, last.environment).editHeader(header);
-      
+
         // SOFIA aircraft keys...
         SofiaData.getMerged(first.aircraft, last.aircraft).editHeader(header);
-        
+
         // SOFIA telescope keys...
         SofiaTelescopeData tel = (SofiaTelescopeData) SofiaData.getMerged(first.telescope, last.telescope);
         tel.requestedEquatorial = first.objectCoords;
         tel.hasTrackingError = hasTrackingError(scans);   
         tel.editHeader(header);
-     
+
         // SOFIA instrument keys..
         instrumentData.exposureTime = getTotalExposureTime(scans);
-        
+
         // SOFIA array keys...
         if(array != null) array.boresightIndex = scans.size() == 1 ? first.getInstrument().array.boresightIndex : new Vector2D(Double.NaN, Double.NaN);
-                      
+
         editHeader(header);
-        
+
         // SOFIA collection keys...
         first.mode.editHeader(header);
-        
+
         // SOFIA keys specific to collection modes...
         if(first.mode.isChopping) first.chopper.editHeader(header);
         if(first.mode.isNodding) first.nodding.editHeader(header);
@@ -245,36 +245,36 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         }
         if(first.mode.isMapping) first.mapping.editHeader(header);
         if(first.mode.isScanning) SofiaData.getMerged(first.scanning, last.scanning).editHeader(header);
-      
+
         // SOFIA data processing keys
         SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQualityScan(scans));
         processing.associatedAORs = aors;
         processing.associatedMissionIDs = missionIDs;
         processing.associatedFrequencies = freqs;
         processing.editHeader(header);
-        
+
         first.addPreservedHeaderKeysTo(header);     
     }	
-    
-    
-    
+
+
+
     public LinkedHashSet<String> getPreservedHeaderKeys() {
         LinkedHashSet<String> keys = new LinkedHashSet<String>();
-    
-         // Add any additional keys that should be added to the FITS header can specified by the 'fits.addkeys' option
+
+        // Add any additional keys that should be added to the FITS header can specified by the 'fits.addkeys' option
         if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {
             key = key.toUpperCase();
             if(!keys.contains(key)) keys.add(key);          
         }
         return keys;
     }
-   
+
     @Override
     public void addHistory(Header header, List<Scan<?>> scans) throws HeaderCardException {	
         super.addHistory(header, scans);			
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        
+
         // Add auxiliary file information
         try { FitsToolkit.addHistory(c, " PWD: " + new File(".").getCanonicalPath()); }
         catch(Exception e) { warning("Could not determine PWD for HISTORY entry..."); }
@@ -288,11 +288,42 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
     @Override
     public void validate(Vector<Scan<?>> scans) throws Exception {
-        SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0);
+        SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0);         
+
+        if(scans.size() == 1) {
+            if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
+        }
+        else for(int i=scans.size(); --i >= 1; ) {
+            SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);
+
+            if(!isWavelengthConsistent(scan.getInstrument().instrumentData.wavelength)) {
+                warning("Scan " + scans.get(i).getID() + " is at too different of a wavelength. Removing from set.");
+                scans.remove(i);
+            }
+
+            if(!isConfigConsistent(scan.getInstrument().instrumentData.instrumentConfig)) {
+                warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
+                scans.remove(i);                
+            }  
+
+            if(scan.hasOption("gyrocorrect")) if(scan.hasOption("gyrocorrect.max")) {
+                double limit = scan.option("gyrocorrect.max").getDouble() * Unit.arcsec;
+                if(scan.gyroDrifts.getMax() > limit) {
+                    warning("Scan " + scans.get(i).getID() + " has too large gyro drifts. Removing from set.");
+                    scans.remove(i);
+                }
+            }
+        }
         
-        if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
-     
         super.validate(scans);
+    }
+
+    protected boolean isConfigConsistent(String instrumentConfig) {
+        return instrumentConfig.equals(instrumentData.instrumentConfig);
+    }
+    
+    protected boolean isWavelengthConsistent(double wavelength) {
+        return wavelength == instrumentData.wavelength;
     }
 
     /**
@@ -306,15 +337,15 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     }
 
     public abstract Vector2D getSIPixelSize();
-    
+
     @Override
     public String getMapConfigHelp() {
         return super.getMapConfigHelp() + 
                 "     -calibrated    Produce Level 3 calibrated data (instead of Level 2).\n" +
                 "     -organization= Specify the organization where data is being reduced.\n";
     }
-    
-    
+
+
     @Override
     public String getScanOptionsHelp() {
         return super.getScanOptionsHelp() + 
@@ -323,18 +354,18 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
                 "     -tau=pwv       Use a PWV value (via PWV option) for tau correction.\n" +
                 "     -tau=pwvmodel  Use an empirical PWV model to provide tau correction.\n";
     }
-    
-    
+
+
     @Override
     public String getDataLocationHelp() {
         return super.getDataLocationHelp() +
                 "     -flight=       Flight number to use with scan numbers and ranges.\n";
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     public static SofiaScan<?> getEarliestScan(List<Scan<?>> scans) {
         double firstMJD = scans.get(0).getMJD();
         Scan<?> earliestScan = scans.get(0);
@@ -359,8 +390,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
         return (SofiaScan<?>) latestScan;
     }
-    
-    
+
+
     public static int getLowestQualityScan(List<Scan<?>> scans) {
         int overall = ((SofiaScan<?>) scans.get(0)).processing.qualityLevel;
         for(int i=scans.size(); --i > 0; ) {
@@ -369,8 +400,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         }
         return overall;
     }
- 
-    
+
+
     public static boolean hasTrackingError(Collection<Scan<?>> scans) {
         for(Scan<?> scan : scans) if(((SofiaScan<?>) scan).telescope.hasTrackingError) return true;
         return false;
@@ -383,8 +414,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     }
 
 
-    
-    
+
+
     public static final double telescopeDiameter = 2.5 * Unit.m;
 
 }

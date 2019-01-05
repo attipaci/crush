@@ -49,7 +49,6 @@ public class HirmesScan extends SofiaScan<HirmesIntegration> {
      */
     private static final long serialVersionUID = 730005029452978874L;
       
-    GyroDrifts gyroDrifts;
     boolean useBetweenScans;    
 
     double transitTolerance = Double.NaN;
