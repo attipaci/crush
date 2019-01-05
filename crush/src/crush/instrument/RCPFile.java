@@ -20,14 +20,13 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.tools;
+package crush.instrument;
 
 import java.io.*;
 import java.util.*;
 
 import jnum.Util;
 import jnum.math.Vector2D;
-import jnum.util.*;
 
 
 public class RCPFile {

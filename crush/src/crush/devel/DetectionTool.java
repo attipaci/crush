@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.tools;
+package crush.devel;
 /*******************************************************************************
  * Copyright (c) 2011 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 

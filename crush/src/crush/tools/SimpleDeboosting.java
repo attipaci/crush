@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.devel;
+package crush.tools;
 
 import java.io.IOException;
 

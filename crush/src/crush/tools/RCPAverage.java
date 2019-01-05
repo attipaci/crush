@@ -24,6 +24,8 @@ package crush.tools;
 
 import java.io.*;
 
+import crush.instrument.RCPFile;
+
 public class RCPAverage {
 	
 	public static void main(String[] args) {

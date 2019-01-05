@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.tools;
+package crush.devel;
 
 import crush.*;
 import jnum.Util;
