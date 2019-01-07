@@ -310,7 +310,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 	
 
 	
-	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
@@ -539,7 +539,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 		isTracking = true;
 	}
 	
-	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
+	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 	
 		// Load any options based on the FITS header...

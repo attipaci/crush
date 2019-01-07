@@ -145,7 +145,7 @@ public class SyntheticRCP {
 			return value * Math.pow(x, xOrder) * Math.pow(y, yOrder);
 		}
 		
-		private int parse(String spec, int from) throws NumberFormatException, ParseException {
+		private int parse(String spec, int from) throws NumberFormatException {
 			char c = spec.charAt(from);
 			
 			switch(c) {

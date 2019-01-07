@@ -86,7 +86,6 @@ public abstract class HDURowReader {
 			while((index = readNextRow(row)) >= 0) {
 				if(isInterrupted()) return;				
 				processRow(index, row);
-				Thread.yield();
 			}
 		}
 		

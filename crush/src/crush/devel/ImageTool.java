@@ -60,7 +60,7 @@ public class ImageTool {
 			
 			System.out.println(" Updated image information: \n");
 			
-			imageTool.image.toString();
+			System.out.println(imageTool.image.toString());
 			
 			imageTool.image.write();
 		}

@@ -267,7 +267,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 
 	}
 	
-	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws FitsException {
 		Header header = hdu.getHeader();
 		
 		// Focus
@@ -287,7 +287,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	}
 	
 	
-	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
+	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 			
 		// Focus
@@ -306,7 +306,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	
 	
 	
-	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseHardwareHDU(BinaryTableHDU hdu) throws FitsException {
 		Object[] row = hdu.getRow(0);
 		final int pixels = pixels();	
 		
@@ -364,7 +364,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	}
 
 	
-	protected void parseOldHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseOldHardwareHDU(BinaryTableHDU hdu) throws FitsException {
 		Object[] row = hdu.getRow(0);
 		final int pixels = pixels();	
 		

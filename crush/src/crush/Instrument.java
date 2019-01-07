@@ -1181,7 +1181,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public ChannelDivision<ChannelType> getDivision(String name, Field field, int discardFlags) throws IllegalAccessException {
-        Hashtable<Integer, ChannelGroup<ChannelType>> table = new Hashtable<Integer, ChannelGroup<ChannelType>>();
+        HashMap<Integer, ChannelGroup<ChannelType>> table = new HashMap<Integer, ChannelGroup<ChannelType>>();
 
         for(int i=0; i<size(); i++) {
             ChannelType channel = get(i);

@@ -38,11 +38,12 @@ public class PhaseData implements Serializable {
 	private static final long serialVersionUID = 1535628125231643099L;
 	protected Integration<?> integration;
 	public int index;
-	
+
+	public int phase = 0;
+	public Frame start, end;
 	public float[] value, weight;
 	public byte[] sampleFlag;
-	public Frame start, end;
-	public int phase = 0;
+
 	
 	public double dependents = 0.0;
 	

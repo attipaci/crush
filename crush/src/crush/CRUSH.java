@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.12";
+    private final static String revision = "devel.13";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -1161,7 +1161,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
             for(int k=size - index - 1; k >= 0; k -= threadCount) {
                 if(isInterrupted()) return;
                 processIndex(k);
-                Thread.yield();
             }
         }
 

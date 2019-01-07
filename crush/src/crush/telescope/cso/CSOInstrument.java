@@ -27,7 +27,6 @@ import java.util.Vector;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
 import crush.Scan;
 import crush.instrument.Rotating;
 import crush.instrument.SingleColorLayout;
@@ -132,7 +131,7 @@ public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends 
 	}
 	
 
-	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
+	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws FitsException {
 		Header header = hdu.getHeader();
 		
 		// Platform

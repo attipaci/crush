@@ -75,7 +75,7 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	}
 	
 
-	public void readPar(String fileName) throws IOException, FitsException, HeaderCardException {
+	public void readPar(String fileName) throws IOException, FitsException {
 		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"));
 
 		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
@@ -84,12 +84,12 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 		fits.close();
 	}
 	
-	public final void readPar(Fits fits) throws IOException, FitsException, HeaderCardException {
+	public final void readPar(Fits fits) throws IOException, FitsException {
 	    readPar((BinaryTableHDU) fits.getHDU(1));
 	    fits.close();
 	}
 	
-	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException {
 		Header header = hdu.getHeader();
 
 		Object[] row = hdu.getRow(0);

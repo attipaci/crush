@@ -124,7 +124,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
             hasTimeStamps = false;
             warning("Invalid waveplate data. Will attempt workaround...");
             //!calcMeanWavePlateFrequency();
-            Channel channel = hasOption("waveplate.tpchannel") ?
+            LabocaPixel channel = hasOption("waveplate.tpchannel") ?
                     new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue()) : polka.referencePixel;
                     setTPPhases(channel);
         }
@@ -139,7 +139,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         if(hasOption("waveplate.tpchar")) {
             trim();
 
-            Channel channel = hasOption("waveplate.tpchannel") ? new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue())
+            LabocaPixel channel = hasOption("waveplate.tpchannel") ? new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue())
                 : polka.referencePixel;
 
             measureTPPhases(channel);

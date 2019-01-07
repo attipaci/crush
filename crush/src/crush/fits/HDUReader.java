@@ -55,7 +55,6 @@ public abstract class HDUReader {
 			final int frames = hdu.getNRows();
 			for(; i<frames; i+=threadCount) {
 				processRow(i);
-				Thread.yield();
 			}
 		}
 			

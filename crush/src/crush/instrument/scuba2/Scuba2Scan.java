@@ -286,7 +286,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 	
 
 	
-	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException, UnsupportedScanException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, UnsupportedScanException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...

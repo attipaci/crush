@@ -298,7 +298,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	}
 
 	
-	public void writeData(String fromName, String toName) throws IOException, FitsException, HeaderCardException {
+	public void writeData(String fromName, String toName) throws IOException, FitsException {
 		Fits fits = new Fits(new File(fromName), fromName.endsWith(".gz"));
 		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
 			
@@ -531,12 +531,12 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		}
 	}
 	
-	public void readMonitor(Fits fits) throws IOException, FitsException, HeaderCardException {
+	public void readMonitor(Fits fits) throws IOException, FitsException {
 	    readMonitor((BinaryTableHDU) fits.getHDU(1));
 	    fits.close();
 	}
 
-	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {    
+	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException {    
 	    
 	    if(hasOption("tau.pwv")) return;
 	    

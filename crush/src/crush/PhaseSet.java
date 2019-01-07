@@ -104,8 +104,8 @@ public class PhaseSet extends ArrayList<PhaseData> {
     public void despike(double level) { 
         integration.comments.append(",P");
         
-        Hashtable<Integer, Double> levels = new Hashtable<Integer, Double>();
-        Hashtable<Integer, Double> noise = new Hashtable<Integer, Double>();
+        HashMap<Integer, Double> levels = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> noise = new HashMap<Integer, Double>();
 
         int spikes = 0;
 

@@ -130,7 +130,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	}
 	
 	
-	private File fromSDF(String sdfName) throws IOException, FileNotFoundException {
+	private File fromSDF(String sdfName) throws IOException {
 		// If it's an SDF, check if an equivalent FITS exists also...
 		// If so, then we can skip the SDF, and wait for the FITS to be read...
 		File fitsFile = new File(getFitsName(sdfName));

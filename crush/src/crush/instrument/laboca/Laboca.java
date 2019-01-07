@@ -60,7 +60,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 	public LabocaPixel getChannelInstance(int backendIndex) { return new LabocaPixel(this, backendIndex); }
 	
 	@Override
-	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException {
 		Header header = hdu.getHeader();
 
 		gain = 270.0 * (1<<(int)header.getDoubleValue("FEGAIN"));

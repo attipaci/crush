@@ -132,8 +132,11 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 		StringBuffer buf = new StringBuffer();
 		
 		for(Term term : sorted) {
-			buf.append("  " + term.toString() + ": ");
-			buf.append(get(term).toString() + "\n");
+			buf.append("  ");
+			buf.append(term.toString());
+			buf.append(": ");
+			buf.append(get(term).toString());
+			buf.append("\n");
 		}
 		
 		return "Distortion:\n" + new String(buf);

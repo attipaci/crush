@@ -180,12 +180,12 @@ public class SofiaProcessingData extends SofiaData {
         for(int i=1; i<array.length; i++) if(array[i] != null) {
             Object o = array[i];
            
-            if(o instanceof Short) if((Short) o == UNKNOWN_INT_VALUE) continue;
-            else if(o instanceof Integer) if((Integer) o == UNKNOWN_INT_VALUE) continue;
-            else if(o instanceof Long) if((Long) o == UNKNOWN_INT_VALUE) continue;
-            else if(o instanceof Float) if((Float) o == UNKNOWN_FLOAT_VALUE) continue;
-            else if(o instanceof Double) if((Double) o == UNKNOWN_DOUBLE_VALUE) continue;
-            else if(o instanceof String) if(Util.equals(o, UNKNOWN_STRING_VALUE)) continue;
+            if(o instanceof Short) { if((Short) o == UNKNOWN_INT_VALUE) continue; }
+            else if(o instanceof Integer) { if((Integer) o == UNKNOWN_INT_VALUE) continue; }
+            else if(o instanceof Long) { if((Long) o == UNKNOWN_INT_VALUE) continue; }
+            else if(o instanceof Float) { if((Float) o == UNKNOWN_FLOAT_VALUE) continue; }
+            else if(o instanceof Double) { if((Double) o == UNKNOWN_DOUBLE_VALUE) continue; }
+            else if(o instanceof String) { if(Util.equals(o, UNKNOWN_STRING_VALUE)) continue; }
             
             buf.append(", ");
             buf.append(o);

@@ -222,7 +222,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	}
 	
 
-	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseHardwareHDU(BinaryTableHDU hdu) throws FitsException {
 		// Get Vital information from Descriptive HDU's
 		double hiGain = hdu.getHeader().getDoubleValue("GAIN_HI", 10521.0);
 		double loGain = hdu.getHeader().getDoubleValue("GAIN_LO", 1412.0);
@@ -270,13 +270,13 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	}    
 	
 	
-	protected void parseDSPHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseDSPHDU(BinaryTableHDU hdu) throws HeaderCardException {
 		nativeSamplingInterval = prematureFITS ?
 				3.0 * hdu.getHeader().getDoubleValue("AVERAGE") * Unit.ms :
 				hdu.getHeader().getDoubleValue("FRAMESPC") * Unit.ms;
 	}
 
-	protected void parsePixelHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+	protected void parsePixelHDU(BinaryTableHDU hdu) throws FitsException {
 		
 		int iGain = hdu.findColumn("Relative Pixel Gains");
 		int iFlag = hdu.findColumn("Pixel Flags");
@@ -315,7 +315,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	} 
 	
 	
-	protected void parseDataHeader(Header header) throws HeaderCardException, FitsException {
+	protected void parseDataHeader(Header header) throws HeaderCardException {
 		if(prematureFITS) {
 			samplingInterval = integrationTime = nativeSamplingInterval;
 			arrayPointingCenter = new Vector2D(6.5, 16.5);

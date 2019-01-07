@@ -3488,7 +3488,6 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             op.process(frame);
             if(op.exception != null) return null;
         }
-        Thread.yield();
         return op.getResult();
     }
     
@@ -3599,7 +3598,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         public TimeStreamView(int from, int to) { 
             this.from = Math.max(from, 0);
             this.to = Math.min(to, Integration.this.size());
-            if(to < from) to = from;
+            if(this.to < this.from) this.to = this.from;
         }
         
         public void setChannel(Channel c) { this.channel = c; }

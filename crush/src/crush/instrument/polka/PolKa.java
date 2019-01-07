@@ -34,7 +34,7 @@ import java.util.Vector;
 
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
-import nom.tam.fits.HeaderCardException;
+
 
 public class PolKa extends Laboca implements Oscillating {
 	/**
@@ -151,7 +151,7 @@ public class PolKa extends Laboca implements Oscillating {
 	}
 	
 	@Override
-	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException {
 		super.readPar(hdu);
 	
 		int iAnalyzer = hdu.findColumn("POLTY");

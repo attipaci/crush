@@ -191,7 +191,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	}
 	
 
-	public void read(String projectID, String spec, boolean readFully) throws IOException, FitsException, HeaderCardException {		
+	public void read(String projectID, String spec, boolean readFully) throws IOException, FitsException {		
 		String name = getFileName(getDataPath(), spec, projectID);	
 	
 		File file = new File(name);
@@ -215,7 +215,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	
 	
 	// TODO Currently only the first FEBE combination is read from the data...
-	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException, HeaderCardException {	
+	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException {	
 		ext = ".fits" + ext;
 		dir += File.separator;
 		
@@ -243,7 +243,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	
 	}
 	
-	public void readScan(String fileName, boolean readFully) throws IOException, FitsException, HeaderCardException {	
+	public void readScan(String fileName, boolean readFully) throws IOException, FitsException {	
 			
 		Fits fits = getFits(fileName);		
 		BasicHDU<?>[] hdu = fits.read();
@@ -286,7 +286,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		
 	}
 	
-	public Fits getFits(String fileName) throws IOException, FitsException, HeaderCardException {   
+	public Fits getFits(String fileName) throws IOException, FitsException {   
 		File file = new File(fileName);
 		if(!file.exists()) file = new File(fileName + ".gz");
 		if(!file.exists()) file = new File(fileName + ".xz");
@@ -296,13 +296,13 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		return new Fits(file);
 	}
 	
-	public final int readScanInfo(Fits fits) throws IOException, FitsException, HeaderCardException {
+	public final int readScanInfo(Fits fits) throws IOException, FitsException {
 	    int result = readScanInfo((BinaryTableHDU) fits.getHDU(1));
 	    fits.close();
 	    return result;
 	}
 	
-	public int readScanInfo(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+	public int readScanInfo(BinaryTableHDU hdu) throws IOException, HeaderCardException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
