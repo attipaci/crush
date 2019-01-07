@@ -2957,7 +2957,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
             ((Chopping) this).setChopper(chopper);
 
-            info("Chopper detected: " + chopper.toString());
+            info("Chopper detected: " + chopper);
             instrument.setOption("chopped");
         }
         else {

@@ -293,7 +293,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		String timeString = tokens.nextToken() + ":" + tokens.nextToken() + " UT";
 		
 		info("[" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
-		if(equatorial != null) info("Equatorial: " + equatorial.toString());	
+		if(equatorial != null) info("Equatorial: " + equatorial);	
 		
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { error(e); }

@@ -23,7 +23,6 @@
 
 package crush;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.Arrays;
@@ -230,9 +229,6 @@ public class Mode implements Serializable {
         return description;
     }
 
-    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        stream.defaultReadObject();
-    }
 
     public class CoupledMode extends CorrelatedMode {
 

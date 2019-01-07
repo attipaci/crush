@@ -172,7 +172,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	public String toString() {
 		String description = getClass().getName() + " '" + id + "':\n";
 		for(int i=0; i<size(); i++) 
-			description += "  " + get(i).toString() + "\n";
+			description += "  " + get(i) + "\n";
 		return description; 
 	}
 	

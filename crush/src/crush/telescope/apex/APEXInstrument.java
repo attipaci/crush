@@ -156,7 +156,7 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	
 		if(isChopped) {
 			info("Chopped photometry reduction mode.");
-			info("Target is [" + sourceName + "] at " + reference.toString());
+			info("Target is [" + sourceName + "] at " + reference);
 			setOption("chopped");
 		}
 		else if(sourceName.equalsIgnoreCase("SKYDIP")) {

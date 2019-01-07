@@ -76,8 +76,8 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 			Object[] row = hdu.getRow(0);
 			float G = ((float[]) row[hdu.findColumn("BEGAIN")])[0];
 			range.scale(1.0 / G);
-			info("Setting ADC range to " + range.toString() + "(V)");
-			setOption("range=" + range.toString());
+			info("Setting ADC range to " + range + "(V)");
+			setOption("range=" + range);
 		}
 		
 		super.readPar(hdu);

@@ -79,7 +79,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         if(!hasOption("lab")) {
             // Use J2000 coordinates
             if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
-            info("  Equatorial: " + equatorial.toString());
+            info("  Equatorial: " + equatorial);
 
             // Calculate apparent and approximate horizontal coordinates.... 
             if(apparent == null) calcApparent();

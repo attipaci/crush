@@ -151,7 +151,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		
 		@Override
 		public String toString() { 
-			return timeStamp.toString() + ": " + tau.toString();
+			return timeStamp.toString() + ": " + tau;
 		}
 		
 	}

@@ -209,7 +209,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		
 		chopper.efficiency = ((double) usable / size());
 		
-		CRUSH.values(this, "Chopper parameters: " + chopper.toString());
+		CRUSH.values(this, "Chopper parameters: " + chopper);
 		
 		chopper.phases.validate();
 		

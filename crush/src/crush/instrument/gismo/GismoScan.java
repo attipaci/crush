@@ -435,7 +435,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 		
 		info("[" + sourceName + "] of project " + project);
 		info("Observed on " + date + " at " + startTime + " by " + observer);
-		info("Equatorial: " + equatorial.toString());	
+		info("Equatorial: " + equatorial);	
 		info("Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
 		// Figure out how scanning offsets are mean to be used...
@@ -629,7 +629,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 	
 		
 		info(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
-		info(" Equatorial: " + equatorial.toString());	
+		info(" Equatorial: " + equatorial);	
 		info(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
 		// Tau

@@ -202,7 +202,7 @@ public class SimpleDeboosting {
 		
 		DataPoint S0 = new DataPoint(Sobs, sigma);
 		
-		System.out.println("# observed: " + S0.toString());
+		System.out.println("# observed: " + S0);
 		System.out.println("# deboosted: " + result.toString(Util.getDecimalFormat(DataPoint.significanceOf(result))));
 		System.out.println("# counts: " + fileName);
 		System.out.println("# overlap order: " + order);

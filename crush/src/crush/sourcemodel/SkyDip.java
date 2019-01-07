@@ -178,15 +178,16 @@ public class SkyDip extends SourceModel {
             CRUSH.result(this,
                     "Skydip result:\n" +
                             "=================================================\n" +
-                            model.toString() +
-                    "=================================================\n");
+                            model +
+                            "=================================================\n"
+                    );
         }
         else warning("Skydip fit did not converge...");
 
         String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
         String coreName = getOutputPath() + File.separator + fileName;
         fileName = coreName + ".dat";
-        
+
 
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
         StringTokenizer header = new StringTokenizer(model.toString(), "\n");
@@ -209,7 +210,7 @@ public class SkyDip extends SourceModel {
         out.close();
 
         CRUSH.notify(this, "Written " + fileName);
-        
+
 
         gnuplot(coreName, fileName, model);
     }
@@ -325,7 +326,7 @@ public class SkyDip extends SourceModel {
                 " butt size " + sizeX + "," + sizeY);
         plot.println("set out '" + coreName + ".png'");
         plot.println("replot");
-        
+
         String fileName = coreName + ".png";
         plot.println("print 'Written " + fileName + "'");	
         CRUSH.notify(this, "Written " + fileName);

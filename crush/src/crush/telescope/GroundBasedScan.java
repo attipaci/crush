@@ -70,7 +70,7 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
             // TODO below are only for horizontal...
             if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getFirstIntegration().getFirstFrame().LST);
             if(horizontal == null && site != null) calcHorizontal();
-            if(horizontal != null) info("  Horizontal: " + horizontal.toString());
+            if(horizontal != null) info("  Horizontal: " + horizontal);
         }
 
         super.validate();

@@ -133,9 +133,9 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 		
 		for(Term term : sorted) {
 			buf.append("  ");
-			buf.append(term.toString());
+			buf.append(term);
 			buf.append(": ");
-			buf.append(get(term).toString());
+			buf.append(get(term));
 			buf.append("\n");
 		}
 		
