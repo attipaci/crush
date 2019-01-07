@@ -22,24 +22,24 @@
  ******************************************************************************/
 package crush.devel;
 
-import crush.Instrument;
 import crush.Integration;
 import crush.Scan;
+import jnum.math.Coordinate2D;
 
-public class ShadowScan extends Scan<Instrument<?>, Integration<Instrument<?>,?>> {
+public class ShadowScan extends Scan<Integration<?>> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3683079235950210496L;
-	Scan<Instrument<?>,?> parent;
+	Scan<?> parent;
 		
-	public ShadowScan(Scan<Instrument<?>,?> parent) {
-		super(parent.instrument);
+	public ShadowScan(Scan<?> parent) {
+		super(parent.getInstrument());
 		this.parent = parent;
 	}
 	
 	@Override
-	public Integration<Instrument<?>,?> getIntegrationInstance() {
+	public Integration<?> getIntegrationInstance() {
 		return parent.getIntegrationInstance();
 	}
 
@@ -47,6 +47,11 @@ public class ShadowScan extends Scan<Instrument<?>, Integration<Instrument<?>,?>
 	public void read(String descriptor, boolean readFully) throws Exception {
 		throw new UnsupportedOperationException("Shadow scans cannot be read.");
 	}
+
+    @Override
+    public Coordinate2D getNativeCoordinates() {
+        return parent.getNativeCoordinates();
+    }
 
 
 }

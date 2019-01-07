@@ -28,9 +28,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.text.*;
 
-import crush.instrument.ChannelDivision;
-import crush.instrument.ChannelGroup;
-import crush.instrument.ChannelLookup;
 import crush.instrument.GeometricIndexed;
 import crush.instrument.InstantFocus;
 import crush.instrument.NonOverlapping;
@@ -38,7 +35,6 @@ import crush.instrument.Overlap;
 import crush.instrument.PixelLayout;
 import crush.instrument.Rotating;
 import crush.instrument.SkyGradient;
-import crush.instrument.hawcplus.HawcPixel;
 import crush.motion.AccelerationResponse;
 import crush.motion.ChopperResponse;
 import crush.motion.PointingResponse;
@@ -744,7 +740,7 @@ implements TableFormatter.Entries, BasicMessaging {
         try { addModality(modalities.get("obs-channels").new CoupledModality("sky", "Cs", Channel.class.getField("coupling"))); }
         catch(NoSuchFieldException e) { error(e); }
  
-        try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPixel.class.getField("nonlinearity"))); } 
+        try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", Channel.class.getField("nonlinearity"))); } 
         catch(NoSuchFieldException e) { error(e); }
         
         // Gradients
@@ -1276,13 +1272,14 @@ implements TableFormatter.Entries, BasicMessaging {
         for(int k=size(); --k >= 0; ) get(k).index = k;
     }
 
+
     @Override
-    public final boolean slim() {
-        return slim(true);
+    public final boolean slim(int discardFlags) {
+        return slim(discardFlags, true);
     }
 
-    public boolean slim(boolean reindex) {
-        if(super.slim()) {
+    public boolean slim(int discardFlags, boolean reindex) {
+        if(super.slim(discardFlags)) {
             // remove discarded channels from groups (and divisiongroups) also...
             slimGroups();
             if(reindex) reindex();

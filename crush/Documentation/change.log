@@ -9,6 +9,9 @@
 
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
 
+	[TWEAK] 'write.spectrum' now writes proper channel column headers 
+	containing channel IDs.
+
 	[PRUNE] Remove future support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2,
 	SHARC (first gen.), and MUSTANG-2. Legacy support for these instruments
 	is available via 2.43-1 and earlier releases.
@@ -30,6 +33,8 @@
 	crush.instrument and crush.telescope.
 
 	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
+
+	[CODE] ChannelGroup.slim() switched to a more efficient algorithm.
 
 	[CODE] {SOFIA} Upstream scan set validation based on instrument
 	config, wavelength, and gyro drifts. Specific instruments can override

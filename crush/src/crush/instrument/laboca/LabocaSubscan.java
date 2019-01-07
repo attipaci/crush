@@ -24,7 +24,6 @@
 package crush.instrument.laboca;
 
 import crush.*;
-import crush.instrument.ChannelGroup;
 import crush.instrument.FieldGainProvider;
 import crush.instrument.Response;
 import crush.telescope.apex.*;

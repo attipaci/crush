@@ -25,7 +25,6 @@ package crush.devel;
 import crush.*;
 import jnum.Util;
 import jnum.data.image.Data2D;
-import jnum.data.image.GridMap2D;
 import jnum.math.SphericalCoordinates;
 import jnum.util.*;
 

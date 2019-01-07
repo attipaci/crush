@@ -22,11 +22,9 @@
  ******************************************************************************/
 // Copyright (c) 2009,2010 Attila Kovacs
 
-package crush.instrument;
+package crush;
 
 import java.util.*;
-
-import crush.Channel;
 
 public class ChannelDivision<ChannelType extends Channel> extends Vector<ChannelGroup<ChannelType>> {
 	/**

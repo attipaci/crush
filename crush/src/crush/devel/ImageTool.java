@@ -23,8 +23,6 @@
 package crush.devel;
 
 import crush.*;
-import crush.astro.AstroImage;
-import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import jnum.Constant;
 import jnum.Unit;

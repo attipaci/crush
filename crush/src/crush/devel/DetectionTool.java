@@ -44,18 +44,17 @@ package crush.devel;
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-// (C)2007 Attila Kovacs <attila[AT]sigmyne.com>
 
 import java.util.*;
 
 import crush.CRUSH;
-import crush.astro.AstroMap;
+
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.image.region.Region2D;
 import jnum.data.image.region.SourceCatalog;
-import jnum.util.ConfidenceCalculator;
+
 
 
 //noise-peaks

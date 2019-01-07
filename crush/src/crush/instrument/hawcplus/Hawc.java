@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.ChannelDivision;
-import crush.instrument.ChannelGroup;
 import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
 import crush.telescope.sofia.SofiaInstrument;
@@ -484,8 +482,8 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
 
 
     @Override
-    public boolean slim(boolean reindex) {
-        boolean slimmed = super.slim(reindex);
+    public boolean slim(int discardFlags, boolean reindex) {
+        boolean slimmed = super.slim(discardFlags, reindex);
         if(slimmed) createDarkSquidLookup();
         return slimmed;
     }

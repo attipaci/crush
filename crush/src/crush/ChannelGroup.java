@@ -22,13 +22,11 @@
  ******************************************************************************/
 
 
-package crush.instrument;
+package crush;
 
 import java.lang.reflect.*;
 import java.util.*;
 
-import crush.CRUSH;
-import crush.Channel;
 import jnum.Copiable;
 import jnum.data.Statistics;
 
@@ -128,12 +126,24 @@ implements Copiable<ChannelGroup<ChannelType>> {
     }
 
 
-    public boolean slim() {
-        final int fromSize = size();
-        final int pattern = Channel.FLAG_DEAD | Channel.FLAG_DISCARD;
-        for(int i=fromSize; --i >= 0; ) if(get(i).isFlagged(pattern)) remove(i);
-        trimToSize();
-        return size() < fromSize;
+    public boolean slim(int discardFlags) {
+        final int nc = size();
+        
+        boolean hasFlagged = false;
+        for(ChannelType channel : this) if(channel.isFlagged(discardFlags)) {
+            hasFlagged = true;
+            break;
+        }
+       
+        if(!hasFlagged) return false;
+        
+        ArrayList<ChannelType> keep = new ArrayList<ChannelType>(nc);
+        for(int i=0; i<nc; i++) if(get(i).isUnflagged(discardFlags)) keep.add(get(i));
+
+        clear(); 
+        addAll(keep);
+        
+        return true;
     }
 
     public void order(final Field field) {	

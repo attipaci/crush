@@ -27,9 +27,6 @@ import java.io.*;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.ChannelDivision;
-import crush.instrument.ChannelGroup;
-import crush.instrument.ChannelLookup;
 import crush.instrument.GridIndexed;
 import crush.instrument.InstantFocus;
 import crush.instrument.PixelLayout;

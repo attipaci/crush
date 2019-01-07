@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import crush.Channel;
+import crush.ChannelGroup;
 import crush.Integration;
-import crush.instrument.ChannelGroup;
 
 
 public class MultiFilter extends VariedFilter {

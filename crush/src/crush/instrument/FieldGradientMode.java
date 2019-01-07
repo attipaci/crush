@@ -27,6 +27,7 @@ package crush.instrument;
 import java.lang.reflect.*;
 
 import crush.Channel;
+import crush.ChannelGroup;
 import crush.CorrelatedMode;
 
 public class FieldGradientMode extends CorrelatedMode {

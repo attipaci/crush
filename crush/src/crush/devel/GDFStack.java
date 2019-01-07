@@ -26,15 +26,13 @@ import java.io.*;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import crush.astro.AstroMap;
+
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.data.DataPoint;
 import jnum.data.image.FlatGrid2D;
-import jnum.data.image.GridMap2D;
-import jnum.data.image.Data2D.Task;
 import jnum.data.image.region.GaussianSource;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;

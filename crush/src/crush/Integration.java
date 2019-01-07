@@ -29,8 +29,6 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 import crush.filters.*;
-import crush.instrument.ChannelDivision;
-import crush.instrument.ChannelGroup;
 import crush.instrument.Response;
 import crush.motion.Chopper;
 import crush.motion.Chopping;
@@ -665,7 +663,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
     public void slim(int threads) {
-        if(instrument.slim(false)) {
+        if(instrument.slim(Channel.FLAG_DEAD | Channel.FLAG_DISCARD, false)) {
             new Fork<Void>() {
                 @Override
                 protected void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
@@ -2611,11 +2609,18 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         out.println("# Window Size: " + windowSize + " samples");
         out.println("# PSD unit: 'Jy/sqrt(Hz)'");
         out.println();
-        out.println("# f(Hz)\t PSD(ch=1)...");
-
+        
+        // Column headers...
+        out.println("#       \tChannel PSD (labeled by channel IDs):");
+        out.print("# f(Hz) ");
+        
+        final int nc = instrument.size();
+        for(int i=0; i<nc; i++) out.print("\t" + instrument.get(i).getID());
+        out.println();
+        
         for(int f=1; f<spectrum[0].length; f++) {
             out.print(Util.e3.format(f*df));
-            for(Channel channel : instrument) out.print("\t" + Util.e3.format(spectrum[channel.index][f]));
+            for(int i=0; i<nc; i++) out.print("\t" + Util.e3.format(spectrum[i][f]));
             out.println();
         }
 

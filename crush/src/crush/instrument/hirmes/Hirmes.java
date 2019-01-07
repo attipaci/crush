@@ -26,8 +26,6 @@ package crush.instrument.hirmes;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.ChannelDivision;
-import crush.instrument.ChannelGroup;
 import crush.sourcemodel.IntensityMap;
 import crush.sourcemodel.SpectralCube;
 import crush.telescope.sofia.SofiaInstrument;
@@ -361,8 +359,8 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
 
     @Override
-    public boolean slim(boolean reindex) {
-        boolean slimmed = super.slim(reindex);
+    public boolean slim(int discardFlags, boolean reindex) {
+        boolean slimmed = super.slim(discardFlags, reindex);
         if(slimmed) createDarkSquidLookup();
         return slimmed;
     }

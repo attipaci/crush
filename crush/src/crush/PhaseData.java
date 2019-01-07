@@ -26,7 +26,6 @@ package crush;
 import java.io.Serializable;
 import java.text.NumberFormat;
 
-import crush.instrument.ChannelGroup;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 

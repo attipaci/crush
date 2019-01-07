@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.14";
+    private final static String revision = "devel.15";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -225,6 +225,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     
     public void readConfigFile(String fileName) throws IOException {
         super.readConfig(fileName);
+        if(instrument != null) instrument.registerConfigFile(fileName);
     }
     
     @Override
@@ -240,34 +241,26 @@ public class CRUSH extends Configurator implements BasicMessaging {
         configDepth++;
 
         try { 
-            String path = getConfigPath() + File.separator + fileName;
-            super.readConfig(path); 
-            if(instrument != null) instrument.registerConfigFile(path);
+            readConfigFile(getConfigPath() + File.separator + fileName);
             found = true;
         }
         catch(IOException e) {}
 
         try { 
-            String path = userConfPath + fileName;
-            super.readConfig(path); 
-            if(instrument != null) instrument.registerConfigFile(path);
+            readConfigFile(userConfPath + fileName);
             found = true;
         }
         catch(IOException e) {}
 
         try { 
-            String path = instrument.getConfigPath() + fileName;
-            super.readConfig(path); 
-            if(instrument != null) instrument.registerConfigFile(path);
+            readConfigFile(instrument.getConfigPath() + fileName);
             found = true;
         }
         catch(IOException e) { }
 
         // read the instrument overriderrs (if any).
         try { 
-            String path = userConfPath + instrument.getName() + File.separator + fileName;
-            super.readConfig(path); 
-            if(instrument != null) instrument.registerConfigFile(path);
+            readConfigFile(userConfPath + instrument.getName() + File.separator + fileName);
             found = true;
         }
         catch(IOException e) {}
@@ -433,7 +426,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
-    public void updateRuntimeConfig() {
+    private void updateRuntimeConfig() {
         setOutpath();
 
         maxThreads = Runtime.getRuntime().availableProcessors();
@@ -469,7 +462,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(oldSourceExecutor != null) oldSourceExecutor.shutdown();
     }
 
-    public void setOutpath() {
+    private void setOutpath() {
         File workFolder = new File(instrument.getOutputPath());	
         if(workFolder.exists()) return;	
 

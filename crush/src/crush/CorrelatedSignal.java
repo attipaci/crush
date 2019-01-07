@@ -26,7 +26,6 @@ package crush;
 import java.util.Arrays;
 import java.util.Collection;
 
-import crush.instrument.ChannelGroup;
 import crush.instrument.Overlap;
 import jnum.ExtraMath;
 import jnum.data.DataPoint;
