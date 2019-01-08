@@ -100,11 +100,11 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             invertChop = hasOption("chopper.invert");
 
             // The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
-            iTS = hdu.findColumn("Timestamp");   
-            iSN = hdu.findColumn("FrameCounter");
+            iTS = findColumn("Timestamp");   
+            iSN = findColumn("FrameCounter");
 
-            iJump = hdu.findColumn("FluxJumps");
-            iDAC = hdu.findColumn("SQ1Feedback");
+            iJump = findColumn("FluxJumps");
+            iDAC = findColumn("SQ1Feedback");
 
             // Ignore coordinate info for 'lab' data...
             if(isLab) {
@@ -112,38 +112,51 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                 return;
             }
 
-            iStat = hdu.findColumn("Flag");
+            iStat = findColumn("Flag");
 
-            iAZ = hdu.findColumn("AZ");
-            iEL = hdu.findColumn("EL");
+            iAZ = findColumn("AZ");
+            iEL = findColumn("EL");
 
             // The tracking center in the basis coordinates of the scan (usually RA/DEC)
-            iRA = hdu.findColumn("RA");
-            iDEC = hdu.findColumn("DEC");
+            iRA = findColumn("RA");
+            iDEC = findColumn("DEC");
 
             if(hirmesScan.isNonSidereal) {
-                iORA = hdu.findColumn("NonSiderealRA");
-                iODEC = hdu.findColumn("NonSiderealDec");
+                iORA = findColumn("NonSiderealRA");
+                iODEC = findColumn("NonSiderealDec");
             }
 
-            iLST = hdu.findColumn("LST");
+            iLST = findColumn("LST");
 
-            iAVPA = hdu.findColumn("SIBS_VPA");
-            iTVPA = hdu.findColumn("TABS_VPA");
-            iCVPA = hdu.findColumn("Chop_VPA");
+            iAVPA = findColumn("SIBS_VPA");
+            iTVPA = findColumn("TABS_VPA");
+            iCVPA = findColumn("Chop_VPA");
 
-            iLON = hdu.findColumn("LON");
-            iLAT = hdu.findColumn("LAT");  
+            iLON = findColumn("LON");
+            iLAT = findColumn("LAT");  
 
-            iChopR = hdu.findColumn("sofiaChopR");
-            iChopS = hdu.findColumn("sofiaChopS");
+            iChopR = findColumn("sofiaChopR");
+            iChopS = findColumn("sofiaChopS");
 
-            iPWV = hdu.findColumn("PWV");
+            iPWV = findColumn("PWV");
             
-            iLOS = hdu.findColumn("LOS");
-            iRoll = hdu.findColumn("ROLL");
+            iLOS = findColumn("LOS");
+            iRoll = findColumn("ROLL");
         }
 
+        /**
+         * Used for supporting both old simulation files (all caps column names) 
+         * and new simulation and CDH files (mixed case column names).
+         * 
+         * 
+         * @param colName   The standard mixed case column name used by CDH (e.g. <code>NonSiderealRA</code>).
+         * @return          FITS column index (zero-based), or -1 if no column name matches.
+         */
+        private int findColumn(String colName) {   
+            int idx = hdu.findColumn(colName);
+            return idx < 0 ? hdu.findColumn(colName.toUpperCase()) : idx;
+        }
+        
         private synchronized void configure(Object[] row) {
             if(isConfigured) return;
 
