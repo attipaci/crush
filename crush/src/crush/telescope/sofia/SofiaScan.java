@@ -612,6 +612,41 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         c.add(new HeaderCard("SIBS_DY", siOffset.y(), "(pixels) SIBS pointing increment in Y."));
 
     }
+    
+    /**
+     * Checks if this scan should be discarded from the reduction, and returns an appropriate description of the reason
+     * why it is not.
+     * 
+     * @return      The descriptive reason wht this scan should not be reduced, or <code>null</code> if no such reason
+     *              is identified.
+     */
+    public String getDiscardReason() {
+        if(hasOption("gyrocorrect")) if(hasOption("gyrocorrect.max")) {
+            double limit = option("gyrocorrect.max").getDouble() * Unit.arcsec;
+            if(gyroDrifts.getMax() > limit) return "Scan " + getID() + " has too large gyro drifts.";
+        }
+        return null;
+    }
+    
+    /**
+     * Checks if a given scan can be co-reduced with this one, and returns an appropriate description of a mismatch
+     * if not.
+     * 
+     * @param scan      The scan to check against this one.
+     * @return          A description on how the given scan is a mismatch to this one, or <code>null</code> if the 
+     *                  given scan can be co-reduced with this one.
+     */
+    public String getMismatchDescription(SofiaScan<?> scan) {
+        SofiaInstrument<?> instrument = getInstrument();
+        
+        if(!instrument.isWavelengthConsistent(scan.getInstrument().instrumentData.wavelength))
+            return "Scan " + scan.getID() + " is at too different of a wavelength.";
+
+        if(!instrument.isConfigConsistent(scan.getInstrument().instrumentData.instrumentConfig))
+            return "Scan " + scan.getID() + " is in different instrument configuration.";
+
+        return null;
+    }
 
 
     public static String defaultFITSDate = "1970-01-01T00:00:00.0";

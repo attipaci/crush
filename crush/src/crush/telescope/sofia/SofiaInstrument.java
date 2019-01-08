@@ -288,40 +288,40 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
     @Override
     public void validate(Vector<Scan<?>> scans) throws Exception {
-        SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0);         
+        if(scans.size() <= 1) return; // Always reduce single scans (and proceed on empty sets).
+
+        for(int i=scans.size(); --i >= 0; )  {
+            SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);
+            String discardReason = scan.getDiscardReason();
+            if(discardReason != null) {
+                warning(discardReason + " Removing from set.");
+                scans.remove(i);
+            }
+        }
+
+        if(scans.size() <= 1) return; // No more checks for single scans or empty sets.
+
+        SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0); 
 
         if(scans.size() == 1) {
             if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
         }
-        else for(int i=scans.size(); --i >= 1; ) {
-            SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);
-
-            if(!isWavelengthConsistent(scan.getInstrument().instrumentData.wavelength)) {
-                warning("Scan " + scans.get(i).getID() + " is at too different of a wavelength. Removing from set.");
+        else for(int i=scans.size(); --i >= 0; ) {
+            SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);            
+            String mismatch = firstScan.getMismatchDescription(scan);
+            if(mismatch != null) {
+                warning(mismatch + " Removing from set.");
                 scans.remove(i);
             }
-
-            if(!isConfigConsistent(scan.getInstrument().instrumentData.instrumentConfig)) {
-                warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
-                scans.remove(i);                
-            }  
-
-            if(scan.hasOption("gyrocorrect")) if(scan.hasOption("gyrocorrect.max")) {
-                double limit = scan.option("gyrocorrect.max").getDouble() * Unit.arcsec;
-                if(scan.gyroDrifts.getMax() > limit) {
-                    warning("Scan " + scans.get(i).getID() + " has too large gyro drifts. Removing from set.");
-                    scans.remove(i);
-                }
-            }
         }
-        
+
         super.validate(scans);
     }
 
     protected boolean isConfigConsistent(String instrumentConfig) {
         return instrumentConfig.equals(instrumentData.instrumentConfig);
     }
-    
+
     protected boolean isWavelengthConsistent(double wavelength) {
         return wavelength == instrumentData.wavelength;
     }

@@ -61,11 +61,14 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.15";
+    private final static String revision = "devel.16";
 
     public static String home = ".";
     public static boolean debug = false;
-
+    
+    public static int maxThreads = 1;
+    public static volatile ExecutorService executor;
+    
     
     public Instrument<?> instrument;
     public Vector<Scan<?>> scans = new Vector<Scan<?>>();
@@ -73,8 +76,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public String[] commandLine;
     
 
-    public static int maxThreads = 1;
-    public static volatile ExecutorService executor, sourceExecutor;
+    public volatile ExecutorService sourceExecutor;
     
     public int parallelScans = 1;
     public int parallelTasks = 1;
@@ -378,7 +380,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(source != null) {
             source.createFrom(scans);
             source.setExecutor(sourceExecutor);
-            source.setParallel(CRUSH.maxThreads);
+            source.setParallel(maxThreads);
             setObjectOptions(source.getSourceName());
         }
         else {

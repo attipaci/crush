@@ -413,6 +413,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     
     @Override
     protected boolean isWavelengthConsistent(double wavelength) {
+        if(instrumentData == null) return false;
         return Math.abs(wavelength - instrumentData.wavelength) < 0.1 * instrumentData.wavelength;
     }
    

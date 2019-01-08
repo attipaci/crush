@@ -121,6 +121,12 @@ implements Copiable<ChannelGroup<ChannelType>> {
     }
     
     
+    public ArrayList<String> getIDs() { 
+        ArrayList<String> ids = new ArrayList<String>(size());
+        for(int i=0; i<size(); i++) ids.add(get(i).getID());
+        return ids;
+    }
+    
     public void kill(final int flagPattern) {
         for(Channel channel : this) if(channel.isFlagged(flagPattern)) channel.flag(Channel.FLAG_DEAD);
     }

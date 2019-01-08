@@ -9,6 +9,9 @@
 
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
 
+	[TWEAK] {HIRMES} Read both old sim (all caps) and new sim/CDH column
+	names (Steve Maher).
+
 	[TWEAK] 'write.spectrum' now writes proper channel column headers 
 	containing channel IDs.
 
