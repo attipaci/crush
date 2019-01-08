@@ -52,7 +52,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	public HorizontalFrame copy(boolean withContents) {
 		HorizontalFrame copy = (HorizontalFrame) super.copy(withContents);
 		
-		if(horizontal != null) copy.horizontal = (HorizontalCoordinates) horizontal.copy();
+		if(horizontal != null) copy.horizontal = horizontal.copy();
 		if(horizontalOffset != null) copy.horizontalOffset = horizontalOffset.copy();
 		
 		return copy;
@@ -129,9 +129,10 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	public void project(final Vector2D position, final AstroProjector projector) {
 		if(projector.isHorizontal()) {
 			projector.setReferenceCoords();
-			getHorizontalOffset(position, projector.offset);
-			projector.getCoordinates().addNativeOffset(projector.offset);
-			projector.project();
+			final Vector2D offset = projector.getOffset();
+			getHorizontalOffset(position, offset);
+			projector.getCoordinates().addNativeOffset(offset);
+			projector.reproject();
 		} 
 		// TODO handle native coordinates...
 		else super.project(position, projector);		
@@ -169,7 +170,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		// This assumes that the object is tracked on sky...
 		// Uses the scanning offsets, on top of the tracking coordinate of the scan...
 		if(getScan().isTracking) {
-			if(equatorial == null) equatorial = (EquatorialCoordinates) getScan().equatorial.clone();
+			if(equatorial == null) equatorial = getScan().equatorial.clone();
 			equatorial.setNativeLongitude(getScan().equatorial.x() + (PA.cos() * horizontalOffset.x() - PA.sin() * horizontalOffset.y()) / getScan().equatorial.cosLat());
 			equatorial.setNativeLatitude(getScan().equatorial.y() + (PA.cos() * horizontalOffset.y() + PA.sin() * horizontalOffset.x()));	
 		}

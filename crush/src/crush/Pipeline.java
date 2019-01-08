@@ -35,7 +35,9 @@ public class Pipeline implements Runnable, Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -4031114728363827458L;
-
+	
+	private Exception exception;
+	
 	CRUSH crush;
 	
 	List<Scan<?>> scans = new ArrayList<Scan<?>>();
@@ -61,6 +63,8 @@ public class Pipeline implements Runnable, Serializable {
 	
 	public int getThreadCount() { return threadCount; }
 
+	public Exception getException() { return exception; }
+	
 	public boolean hasOption(String name) {
 		return crush.hasOption(name);
 	}
@@ -75,10 +79,10 @@ public class Pipeline implements Runnable, Serializable {
 	public void run() {
 		try { iterate(); }
 		catch(InterruptedException e) { CRUSH.warning(this, "Interrupted!"); }
-		catch(Exception e) { 
-			CRUSH.error(this, e); 
-			CRUSH.info(this, "Exiting.");
-			System.exit(1);
+		catch(Exception e) {
+		    this.exception  = e;
+		    CRUSH.error(this, e); 
+		    for(Scan<?> scan : scans) for(Integration<?> integration : scan) crush.checkout(integration);
 		}
 	}
 	

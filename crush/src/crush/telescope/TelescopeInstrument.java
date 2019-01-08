@@ -42,7 +42,7 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     private static final long serialVersionUID = 4331535366684833861L;
     public Mount mount;
     
-
+    private SphericalProjection projection;
     
     
     public TelescopeInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
@@ -53,13 +53,14 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
         super(name, layout);
     }
     
+    
     @Override
     public AstroProjector getProjectorInstance(Coordinate2D reference) {
         return new AstroProjector(getProjection((SphericalCoordinates) reference)); 
     }
     
     public SphericalProjection getProjection(SphericalCoordinates reference) {
-        SphericalProjection projection = null;
+        if(projection != null) return projection;
         
         try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
         catch(Exception e) { projection = new Gnomonic(); }

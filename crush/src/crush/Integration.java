@@ -50,7 +50,6 @@ import jnum.math.Range2D;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
-import jnum.projection.Projection2D;
 import jnum.projection.Projector2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
@@ -278,8 +277,12 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         System.gc();
 
         isValid = true;
-
-        if(hasOption("speedtest")) speedTest();
+        
+        if(hasOption("speedtest")) {
+            speedTest();
+            isValid = false;
+        }
+       
     }
 
     public void jackknife() {
@@ -2158,36 +2161,17 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
     // TODO parallelize...
-    public void checkForNaNs(final Iterable<? extends Channel> channels, final int from, int to) {
+    public void checkForNaNs(final Iterable<? extends Channel> channels, final int from, int to) throws IllegalStateException {
         comments.append("?");
 
         to = Math.min(to, size());
 
-        for(int t=to; --t >= from; ) {
-            final Frame exposure = get(t);
-
-            if(exposure != null) for(final Channel channel : channels) {
-
-                if(Float.isNaN(exposure.data[channel.index])) {
-                    comments.append("NaN: " + exposure.index + "," + channel.index);
-                    error(comments.toString());
-                    System.exit(1);
-                }
-
-                if(Float.isInfinite(exposure.data[channel.index])) {
-                    comments.append("Inf: " + exposure.index + "," + channel.index);
-                    error(comments.toString());
-                    System.exit(1);
-                }
-
-                /*
-				if(exposure.data[channel.index] > 10.0) {
-					comments += "Big: " + exposure.index + "," + channel.index;
-					error(comments);
-					System.exit(1);
-				}
-                 */
-            }
+        for(Frame exposure : this) if(exposure != null) for(final Channel channel : channels) {
+            if(Float.isNaN(exposure.data[channel.index]))
+                throw new IllegalStateException(comments + "> NaN: " + exposure.index + "," + channel.index);
+                
+            if(Float.isInfinite(exposure.data[channel.index])) 
+                throw new IllegalStateException(comments + "> Inf: " + exposure.index + "," + channel.index);
         }
 
     }
@@ -2873,7 +2857,6 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 + "# ArrayList: " + df.format((double) b/iters) + " ms\t(inverted: " + df.format((double) e/iters) + " ms)\n"
                 + "# Vector:    " + df.format((double) d/iters) + " ms");
 
-        System.exit(0);
     }
 
     public void detectChopper() {
@@ -3397,7 +3380,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     }
     
     
-    public Range2D searchCorners(final Collection<? extends Pixel> pixels, final Projection2D<?> projection) {
+    public Range2D searchCorners(final Collection<? extends Pixel> pixels, final Projector2D<?> p) {
         if(pixels.size() == 0) return null;
 
         if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + instrument.size());
@@ -3410,22 +3393,22 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             protected void init() {
                 super.init();
                 range = new Range2D();
-                projector = instrument.getProjectorInstance(scan.getReferenceCoordinates());
+                projector = p.clone();
             }
 
             @Override
-            protected void process(FrameType exposure) {    
+            protected void process(FrameType exposure) {     
                 for(Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);
 
                     // Check to make sure the sample produces a valid position...
                     // If not, then flag out the corresponding data...
-                    if(Double.isNaN(projector.offset.x()) || Double.isNaN(projector.offset.y())) {
+                    if(projector.getOffset().isNaN()) {
                         for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
                     }
                     else {
-                        if(range == null) range = new Range2D(projector.offset);
-                        else range.include(projector.offset);
+                        if(range == null) range = new Range2D(projector.getOffset());
+                        else range.include(projector.getOffset());
                     }
                 }
             }

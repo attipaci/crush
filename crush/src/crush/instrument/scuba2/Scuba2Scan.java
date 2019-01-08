@@ -377,7 +377,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		else if(trackingSystem.equals("APP")) {
 			trackingClass = EquatorialCoordinates.class;
 			apparent = new EquatorialCoordinates(lon, lat, JulianEpoch.forMJD(getMJD()));
-			equatorial = (EquatorialCoordinates) apparent.clone();
+			equatorial = apparent.clone();
 			equatorial.precess(CoordinateEpoch.J2000);
 			info("Apparent: " + apparent.toString(1));
 			info("Equatorial: " + equatorial.toString(1));

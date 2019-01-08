@@ -106,7 +106,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
 
     
     public void calcApparent() {
-        apparent = (EquatorialCoordinates) equatorial.clone();
+        apparent = equatorial.clone();
         if(toApparent == null) calcPrecessions(equatorial.epoch);
         toApparent.precess(apparent);
     }
@@ -150,8 +150,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
             if(!sourceCoords.epoch.equals(equatorial.epoch)) sourceCoords.precess(equatorial.epoch);
         }
         else {
-            sourceCoords = (EquatorialCoordinates) equatorial.clone();
-            reference = (EquatorialCoordinates) equatorial.clone();
+            sourceCoords = equatorial.clone();
+            reference = equatorial.clone();
             ((CelestialCoordinates) source.getCoordinates()).toEquatorial(sourceCoords);
             ((CelestialCoordinates) sourceModel.getReference()).toEquatorial(reference);
         }

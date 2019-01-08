@@ -58,7 +58,7 @@ public abstract class TelescopeFrame extends Frame {
     public TelescopeFrame copy(boolean withContents) {
         TelescopeFrame copy = (TelescopeFrame) super.copy(withContents);
         
-        if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
+        if(equatorial != null) copy.equatorial = equatorial.copy();
         if(chopperPosition != null) copy.chopperPosition = chopperPosition.copy();
 
         return copy;
@@ -174,20 +174,24 @@ public abstract class TelescopeFrame extends Frame {
         if(projector.isFocalPlane()) {
             projector.setReferenceCoords();
             // Deproject SFL focal plane offsets...
-            getFocalPlaneOffset(fpOffset, projector.offset);
-            projector.getCoordinates().addNativeOffset(projector.offset);
-            projector.project();
+            final Vector2D offset = projector.getOffset();
+            getFocalPlaneOffset(fpOffset, offset);
+            projector.getCoordinates().addNativeOffset(offset);
+            projector.reproject();
         }
         else if(getScan().isNonSidereal) {
             projector.setReferenceCoords();
             // Deproject SFL native offsets...
-            getEquatorialNativeOffset(fpOffset, projector.offset);
-            projector.getEquatorial().addNativeOffset(projector.offset);
-            projector.projectFromEquatorial();
+            final EquatorialCoordinates eq = projector.getEquatorial();
+            Vector2D offset = projector.getOffset();
+            getEquatorialNativeOffset(fpOffset, offset);
+            eq.addNativeOffset(offset);
+            projector.setEquatorial(eq);
         }
         else {
-            getEquatorial(fpOffset, projector.getEquatorial());     
-            projector.projectFromEquatorial();
+            final EquatorialCoordinates eq = projector.getEquatorial();
+            getEquatorial(fpOffset, eq);     
+            projector.setEquatorial(eq);
         }
     
     }   

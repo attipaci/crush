@@ -168,7 +168,7 @@ public class PolKa extends Laboca implements Oscillating {
 		if(hasAnalyzer()) info("Analyzer grid orientation is " + analyzerIDs[analyzerPosition]);
 	}
 	
-	public void setAnalyzer(char c) {
+	public void setAnalyzer(char c) throws IllegalArgumentException {
 		switch(Character.toUpperCase(c)) {
 		case 'N' : 
 			analyzerPosition = ANALYZER_NONE;
@@ -185,10 +185,9 @@ public class PolKa extends Laboca implements Oscillating {
 			break;
 		default :
 		    analyzerPosition = ANALYZER_UNKNOWN;
-			error("Polarization analyzer position is undefined.");
+		    error("Polarization analyzer position is undefined.");
 			CRUSH.suggest(this, "     * Set the 'analyzer' option to 'H' or 'V' to specify. Exiting.");
-			System.exit(1);
-			break;
+			throw new IllegalArgumentException("Polarization analyzer position is undefined.");
 		}
 	}
 	

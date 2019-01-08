@@ -201,7 +201,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {
         if(isValid(objectCoords)) {
             info("Referencing scan to object coordinates OBJRA/OBJDEC.");
-            return (EquatorialCoordinates) objectCoords.copy();
+            return objectCoords.copy();
         }
         else if(isRequestedValid(header)) {
             info("Referencing scan to requested coordinates.");
@@ -209,7 +209,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         }
         else if(isValid(telescope.boresightEquatorial)) {
             warning("Referencing scan to initial telescope boresight TELRA/TELDEC.");
-            return (EquatorialCoordinates) telescope.boresightEquatorial.copy();
+            return telescope.boresightEquatorial.copy();
         }
 
         warning("Referencing scan to initial scan position.");
@@ -276,7 +276,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         info("Observed on " + date + " at " + startTime + " by " + observer);
 
         if(isRequestedValid(header)) {
-            equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();  
+            equatorial = telescope.requestedEquatorial.copy();  
             calcPrecessions(equatorial.epoch);
         }
         else {
@@ -411,7 +411,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
                     0.5 * (first.objectEq.DEC() + last.objectEq.DEC()),
                     first.objectEq.epoch
                     );  
-            equatorial = (EquatorialCoordinates) objectCoords.copy();
+            equatorial = objectCoords.copy();
         }
 
         horizontal = new HorizontalCoordinates(
@@ -615,7 +615,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     
     /**
      * Checks if this scan should be discarded from the reduction, and returns an appropriate description of the reason
-     * why it is not.
+     * why it is not suitable.
      * 
      * @return      The descriptive reason wht this scan should not be reduced, or <code>null</code> if no such reason
      *              is identified.

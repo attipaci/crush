@@ -130,7 +130,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	}
 	
 	
-	private File fromSDF(String sdfName) throws IOException {
+	private File fromSDF(String sdfName) throws InterruptedException, IOException {
 		// If it's an SDF, check if an equivalent FITS exists also...
 		// If so, then we can skip the SDF, and wait for the FITS to be read...
 		File fitsFile = new File(getFitsName(sdfName));
@@ -173,10 +173,9 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		}
 		catch(InterruptedException e) {
 			CRUSH.warning(this, "Interrupted!");
-			System.exit(1);
+			throw(e);
 		}
 
-		return null;
 	}
 	
 }

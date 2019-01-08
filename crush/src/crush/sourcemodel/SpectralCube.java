@@ -87,12 +87,13 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     }
     
     @Override
-    public SpectralCube copy(boolean withContents) {
+    public SpectralCube copy(boolean withContents) throws OutOfMemoryError {
         SpectralCube copy = (SpectralCube) super.copy(withContents);
 
         try { copy.cube = cube.copy(withContents); }
         catch(OutOfMemoryError e) { 
             runtimeMemoryError("Ran out of memory while making a copy of the spectral cube.");
+            throw(e);
         }
 
         copy.spectralUnit = spectralUnit.copy();

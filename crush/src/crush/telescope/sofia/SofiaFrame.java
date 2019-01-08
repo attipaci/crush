@@ -56,8 +56,8 @@ public class SofiaFrame extends HorizontalFrame {
     public SofiaFrame copy(boolean withContents) {
         SofiaFrame copy = (SofiaFrame) super.copy(withContents);
         
-        if(objectEq != null) copy.objectEq = (EquatorialCoordinates) objectEq.copy();
-        if(site != null) copy.site = (GeodeticCoordinates) site.copy();
+        if(objectEq != null) copy.objectEq = objectEq.copy();
+        if(site != null) copy.site = site.copy();
         
         return copy;
     }
@@ -73,9 +73,10 @@ public class SofiaFrame extends HorizontalFrame {
     public void project(final Vector2D position, final AstroProjector projector) {
         if(projector.getCoordinates() instanceof TelescopeCoordinates) {
             projector.setReferenceCoords();
-            getNativeOffset(position, projector.offset);
-            projector.getCoordinates().addNativeOffset(projector.offset);
-            projector.project();
+            final Vector2D offset = projector.getOffset();
+            getNativeOffset(position, offset);
+            projector.getCoordinates().addNativeOffset(offset);
+            projector.reproject();
         } 
         else super.project(position, projector);        
     }    

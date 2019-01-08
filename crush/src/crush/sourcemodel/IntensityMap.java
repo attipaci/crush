@@ -104,12 +104,15 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
 
     @Override
-    public IntensityMap copy(boolean withContents) {
+    public IntensityMap copy(boolean withContents) throws OutOfMemoryError {
         IntensityMap copy = (IntensityMap) super.copy(withContents);
 
         if(map != null) {
             try { copy.map = map.copy(withContents); }
-            catch(OutOfMemoryError e) { runtimeMemoryError("Ran out of memory while making a copy of the source map."); }
+            catch(OutOfMemoryError e) { 
+                runtimeMemoryError("Ran out of memory while making a copy of the source map."); 
+                throw(e);
+            }
             copy.map.setGrid(getGrid());
         }
         
@@ -368,8 +371,9 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
     public Coordinate2D getPeakCoords() {
         Projector2D<?> projector = getProjectorInstance();
-        getGrid().getOffset(getPeakIndex(), projector.offset);
-        projector.deproject();
+        Vector2D offset = projector.getOffset();
+        getGrid().getOffset(getPeakIndex(), offset);
+        projector.setOffset(offset);
         return projector.getCoordinates();
     }
 

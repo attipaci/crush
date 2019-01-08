@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.16";
+    private final static String revision = "devel.17";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -188,11 +188,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     
-    private void parseArgument(String arg) {
+    private void parseArgument(String arg) throws OutOfMemoryError {
         if(arg.charAt(0) == '-') setOption(arg.substring(1));
         else {
             try { read(arg); }
-            catch(OutOfMemoryError e) { exit(1); }
             catch(Exception e) {}
         }
     }
@@ -391,7 +390,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     }
 
-    private void initPipelines() {
+    private void initPipelines() throws Exception {
         updateRuntimeConfig();
 
         String parallelMode = "hybrid";
@@ -428,7 +427,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
-    private void updateRuntimeConfig() {
+    private void updateRuntimeConfig() throws Exception {
         setOutpath();
 
         maxThreads = Runtime.getRuntime().availableProcessors();
@@ -464,7 +463,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(oldSourceExecutor != null) oldSourceExecutor.shutdown();
     }
 
-    private void setOutpath() {
+    private void setOutpath() throws Exception {
         File workFolder = new File(instrument.getOutputPath());	
         if(workFolder.exists()) return;	
 
@@ -483,13 +482,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
             if(!workFolder.mkdirs()) {
                 error("Output path could not be created: unknown error.");
                 suggest(this, "       * Try change 'outpath'.");
-                exit(1);
+                throw(new IOException("Output path could not be created: unknown error."));
             }
         }
         catch(SecurityException e) {
             error("Output path could not be created: " + e.getMessage());
             suggest(this, "       * Try change 'outpath'.");
-            exit(1);
+            throw(e);
         }
     }
 
@@ -709,13 +708,17 @@ public class CRUSH extends Configurator implements BasicMessaging {
         notifyAll();
     }
 
-    public synchronized void summarize() throws InterruptedException {
+    public synchronized void summarize() throws Exception {
         // Go in order.
         // If next one disappears from queue then print summary
         // else wait();
 
         for(Scan<?> scan : scans) for(Integration<?> integration : scan) {
             while(queue.contains(integration)) wait();
+            
+            // Check for exceptions...
+            for(Pipeline p : pipelines) if(p.getException() != null) throw p.getException();
+            
             summarize(integration);
             notifyAll();
         }	
@@ -871,7 +874,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 "     -poll          Poll the currently set options.\n" +
                 "     -conditions    List all conditional settings.\n");
         
-        System.exit(0);
     }
 
     public String getReleaseVersion() {  

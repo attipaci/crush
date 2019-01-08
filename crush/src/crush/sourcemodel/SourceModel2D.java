@@ -77,6 +77,8 @@ public abstract class SourceModel2D extends SourceModel {
     public boolean allowIndexing = true;
 
     private int indexShiftX, indexMaskY;
+    
+    private Projector2D<?> projectorTemplate;
 
     
     public SourceModel2D(Instrument<?> instrument) {
@@ -143,14 +145,14 @@ public abstract class SourceModel2D extends SourceModel {
 
 
     public final Projection2D<?> getProjection() { return grid.getProjection(); }
+   
     
-    public final Projector2D<?> getProjectorInstance() { return getInstrument().getProjectorInstance(getReference()); }
-    
-    
-    public final void setProjection(Projection2D<?> projection) {
-        getGrid().setProjection((Projection2D) projection);
+    public final void setProjector(Projector2D<?> projector) {
+        this.projectorTemplate = projector;
+        getGrid().setProjection((Projection2D) projector.getProjection());
     }
    
+    public Projector2D<?> getProjectorInstance() { return projectorTemplate.clone(); }
 
     @Override
     public final Coordinate2D getReference() {
@@ -196,8 +198,8 @@ public abstract class SourceModel2D extends SourceModel {
         info("Initializing Source Map.");	
     
         Coordinate2D ref = getFirstScan().getPositionReference(hasOption("system") ? option("system").getValue() : "equatorial");
-        setProjection(getInstrument().getProjectorInstance(ref).getProjection());
-
+        setProjector(getInstrument().getProjectorInstance(ref));
+        
         setSize();
 
         if(allowIndexing) if(hasOption("indexing")) {
@@ -274,11 +276,13 @@ public abstract class SourceModel2D extends SourceModel {
                 if(exposure == null) return;
                 boolean valid = false;
 
+                Vector2D offset = projector.getOffset();
+                
                 for(Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);
                     for(Channel channel : pixel) {
-                        if(Math.abs(projector.offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-                        else if(Math.abs(projector.offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+                        if(Math.abs(offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+                        else if(Math.abs(offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
                         else valid = true;
                     }
                 }
@@ -294,7 +298,7 @@ public abstract class SourceModel2D extends SourceModel {
     public Range2D searchCorners() throws Exception {
         final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
         final boolean fixSize = hasOption("map.size");
-
+       
         Range2D range = new Range2D();
         
         if(fixSize) {
@@ -315,7 +319,7 @@ public abstract class SourceModel2D extends SourceModel {
                 scan.range = new Range2D();
                    
                 for(Integration<?> integration : scan) {
-                    Range2D r = integration.searchCorners(integration.getInstrument().getLayout().getPerimeterPixels(), getProjection());
+                    Range2D r = integration.searchCorners(integration.getInstrument().getLayout().getPerimeterPixels(), projectorTemplate);
                     if(r != null) scan.range.include(r);
                 }
                 range.include(scan.range);
@@ -369,7 +373,7 @@ public abstract class SourceModel2D extends SourceModel {
 
                 for(final Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);
-                    getGrid().getIndex(projector.offset, index);
+                    getGrid().getIndex(projector.getOffset(), index);
 
                     if(CRUSH.debug) {
                         if(index.i() < 0 || index.i() >= sizeX() || index.j() < 0 || index.j() >= sizeY()) {
@@ -389,7 +393,7 @@ public abstract class SourceModel2D extends SourceModel {
     public final void getIndex(final Frame exposure, final Pixel pixel, final Projector2D<?> projector, final Index2D index) {
         if(exposure.sourceIndex == null) {
             exposure.project(pixel.getPosition(), projector);
-            getGrid().getIndex(projector.offset, index);    
+            getGrid().getIndex(projector.getOffset(), index);    
         }
         else {
             final int linearIndex = exposure.sourceIndex[pixel.getIndex()];
@@ -411,7 +415,7 @@ public abstract class SourceModel2D extends SourceModel {
 
 
  
-    public void setSize() throws Exception {
+    public void setSize() throws Exception, OutOfMemoryError {
       
         // Figure out what offsets the corners of the map will have...
         Range2D range = searchCorners(); 
@@ -419,7 +423,7 @@ public abstract class SourceModel2D extends SourceModel {
         if(CRUSH.debug) debug("map range: " + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
                 +  Util.f1.format(range.getYRange().span() / Unit.arcsec) + " arcsec");
 
-
+        
         double defaultResolution = getInstrument().getPointSize() / 5.0;
         Vector2D delta = new Vector2D(defaultResolution, defaultResolution);
 
@@ -455,11 +459,9 @@ public abstract class SourceModel2D extends SourceModel {
          
         if(sizeX < 0 || sizeY < 0) throw new IllegalStateException("Negative image size: " + sizeX + " x " + sizeY);
 
-        try { 
-            checkForStorage(sizeX, sizeY);	
-            setSize(sizeX, sizeY);
-        }
-        catch(OutOfMemoryError e) { createMemoryError(sizeX, sizeY); }
+        checkForStorage(sizeX, sizeY);	
+        
+        setSize(sizeX, sizeY);
     }
 
   
@@ -474,10 +476,9 @@ public abstract class SourceModel2D extends SourceModel {
                 "     allow Java to access over 2GB.\n\n" +
                 "   * Reduce the number of parallel threads in the reduction by increasing\n" +
                 "     the idle CPU cores with the 'reservecpus' option.\n");
-        System.exit(1);
     }
     
-    public void createMemoryError(int sizeX, int sizeY) {
+    public void createMemoryError(int sizeX, int sizeY) throws OutOfMemoryError {
 
         Vector2D resolution = getGrid().getResolution();
         double diagonal = ExtraMath.hypot(sizeX * resolution.x(), sizeY * resolution.y());
@@ -523,12 +524,12 @@ public abstract class SourceModel2D extends SourceModel {
                 "     option to Java in 'wrapper.sh'.");
        
         CRUSH.suggest(this, new String(buf));
-
-        System.exit(1);
+        
+        throw new OutOfMemoryError("Will not fit source model (" + sizeX + "x" + sizeY + ") in RAM available to JVM.");
     }
 
     // Check for minimum required storage (without reduction overheads)
-    protected void checkForStorage(int sizeX, int sizeY) {
+    protected void checkForStorage(int sizeX, int sizeY) throws OutOfMemoryError {
         Runtime runtime = Runtime.getRuntime();
         long max = runtime.maxMemory();
         long used = runtime.totalMemory() - runtime.freeMemory();

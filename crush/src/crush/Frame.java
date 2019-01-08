@@ -272,8 +272,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	public void project(final Vector2D fpOffset, final Projector2D<?> projector) {
 	    if(projector == null) return;
-	    projector.offset.copy(fpOffset);
-	    projector.project();	    
+	    projector.setOffset(fpOffset);	    
 	}
 	
 	

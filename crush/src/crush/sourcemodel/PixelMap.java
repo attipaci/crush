@@ -225,7 +225,7 @@ public class PixelMap extends SourceModel2D {
 		}
 	}
 	
-	// TODO for non AstroMap and non spherical coordinates...
+
 	public void calcPixelData(boolean smooth) {
 		float[] peaks = new float[getInstrument().storeChannels];
 		float[] pixelPeak = new float[pixelMap.length];
