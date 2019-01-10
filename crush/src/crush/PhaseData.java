@@ -112,10 +112,7 @@ public class PhaseData implements Serializable {
 		}.process();
 		
 		
-		for(final Channel channel : channels) {
-			weight[channel.index] *= channel.weight;
-			if(channel instanceof PhaseWeighting) weight[channel.index] *= ((PhaseWeighting) channel).getRelativePhaseWeight();
-		}
+		for(final Channel channel : channels) weight[channel.index] *= channel.weight;
 		
 		parms.apply(channels, start.index, to);		
 	}

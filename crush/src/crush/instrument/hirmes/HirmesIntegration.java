@@ -384,9 +384,6 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
     private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
         
-        // TODO
-        // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
-        // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
         getInstrument().new Fork<Void>() {
             @Override
             protected void process(final HirmesPixel channel) {

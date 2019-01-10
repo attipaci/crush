@@ -27,6 +27,7 @@ package crush.telescope.apex;
 import crush.*;
 import crush.instrument.SingleColorLayout;
 import crush.instrument.SingleColorPixel;
+import crush.sourcemodel.ChopNodPhotometry;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
@@ -226,7 +227,7 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	
 	@Override
 	public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
-		if(hasOption("chopped")) return new APEXChoppedPhotometry(this);
+		if(hasOption("chopped")) return new ChopNodPhotometry(this);
 		return super.getSourceModelInstance(scans);
 	}
 	

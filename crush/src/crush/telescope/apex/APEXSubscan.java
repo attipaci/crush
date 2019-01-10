@@ -30,6 +30,7 @@ import java.io.*;
 
 import crush.fits.HDUReader;
 import crush.motion.Chopper;
+import crush.motion.ChopperPhases;
 import crush.motion.Chopping;
 import crush.telescope.GroundBasedIntegration;
 import crush.telescope.TelescopeFrame;
@@ -39,7 +40,6 @@ import jnum.Util;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
-import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -51,7 +51,6 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	private static final long serialVersionUID = 2929947229904002745L;
 	public int nodPhase = 0;
 	protected Thread thread;
-	protected WeightedPoint[] tempPhase;
 	private Chopper chopper;
 	
 	double pwv = Double.NaN;
@@ -133,98 +132,10 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		double tolerance = getInstrument().getPointSize() / 5.0;
 		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * getInstrument().getPointSize();
 		
-		
-		markChopped(left, right, tolerance);
-		
-		tempPhase = WeightedPoint.createArray(chopper.phases.size());		
+		new ChopperPhases(this, chopper).mark(left, right, tolerance);	
 	}
 	
 	
-	public void markChopped(Vector2D left, Vector2D right, double tolerance) {
-		// Flag pixels that chop on source
-		// left and right are the pixel positions, where, if there's a pixel, it will have the source
-		// in the left or right beams...
-		//info("on phase is " + subscan[i][k].onPhase);
-		
-	    StringBuffer buf = new StringBuffer();
-	    
-		buf.append("Marking Chopper Phases... ");
-	
-		for(Pixel pixel : getInstrument().getPixels()) {
-			Vector2D position = pixel.getPosition();
-			
-			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
-				channel.sourcePhase |= TelescopeFrame.CHOP_LEFT;
-				buf.append(" L" + channel.getID());
-			}
-			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
-				channel.sourcePhase |= TelescopeFrame.CHOP_RIGHT;
-				buf.append(" R" + channel.getID()); 
-			}
-			else for(Channel channel : pixel) channel.sourcePhase &= ~TelescopeFrame.CHOP_FLAGS;
-		}
-		
-		info(new String(buf));
-		
-		chopper.phases = new PhaseSet(this);
-		
-		int usable = 0;
-		
-		// Flag frames according to chopper phase ---> left, right, transit.
-		PhaseData current = new PhaseData(this);
-
-		int transitFlag = TelescopeFrame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
-		
-		for(TelescopeFrame exposure : this) if(exposure != null) {
-			exposure.unflag(TelescopeFrame.CHOP_FLAGS);
-				
-			if(Math.abs(exposure.chopperPosition.x() + chopper.amplitude) < tolerance) {
-				exposure.flag(TelescopeFrame.CHOP_LEFT);
-				if(current.phase != TelescopeFrame.CHOP_LEFT) {
-					current = new PhaseData(this);
-					current.phase = TelescopeFrame.CHOP_LEFT;
-					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
-					current.start = exposure;
-					current.end = exposure;
-					if(current.phase != 0) chopper.phases.add(current);
-				}
-				else current.end = exposure;
-				usable++;
-			}
-			else if(Math.abs(exposure.chopperPosition.x() - chopper.amplitude) < tolerance) {
-				exposure.flag(TelescopeFrame.CHOP_RIGHT);
-				if(current.phase != TelescopeFrame.CHOP_RIGHT) {
-					current = new PhaseData(this);
-					current.phase = TelescopeFrame.CHOP_RIGHT;
-					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
-					current.start = exposure;
-					current.end = exposure;
-					if(current.phase != 0) chopper.phases.add(current);
-				}
-				else current.end = exposure;
-				usable++;
-			}
-			else exposure.flag(transitFlag);
-		}
-		
-		chopper.efficiency = ((double) usable / size());
-		
-		CRUSH.values(this, "Chopper parameters: " + chopper);
-		
-		chopper.phases.validate();
-		
-		// Discard transit frames altogether...
-		for(int i=size(); --i >=0; ) {
-			final Frame exposure = get(i);
-			if(exposure != null) if(exposure.isFlagged(TelescopeFrame.CHOP_TRANSIT)) set(i, null);
-		}
-		
-		removeOffsets(false);
-		
-		// Get the initial phase data...
-		updatePhases();
-		
-	}
 	
 	@Override
 	public void validate() {

@@ -42,7 +42,7 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     private static final long serialVersionUID = 4331535366684833861L;
     public Mount mount;
     
-    private SphericalProjection projection;
+    private SphericalProjection projection; // Set by the first call to getProjection()
     
     
     public TelescopeInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
@@ -60,13 +60,12 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     }
     
     public SphericalProjection getProjection(SphericalCoordinates reference) {
-        if(projection != null) return projection;
+        if(projection == null) {       
+            try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
+            catch(Exception e) { projection = new Gnomonic(); }
         
-        try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
-        catch(Exception e) { projection = new Gnomonic(); }
-        
-        projection.setReference(reference);
-        
+            projection.setReference(reference);
+        }
         return projection;
     }
     

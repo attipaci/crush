@@ -3059,7 +3059,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         if(isPhaseModulated()) if(weighting.hasOption("phases")) {
             PhaseSet phases = ((PhaseModulated) this).getPhases();
-            if(phases != null) phases.getWeights();
+            if(phases != null) phases.deriveRelativeChannelWeights();
         }
     }
 

@@ -23,9 +23,8 @@
 package crush.motion;
 
 import java.io.Serializable;
-import jnum.text.TableFormatter;
 
-import crush.PhaseSet;
+import jnum.text.TableFormatter;
 import jnum.Copiable;
 import jnum.Unit;
 import jnum.Util;
@@ -43,7 +42,7 @@ public class Chopper implements Serializable, Cloneable, Copiable<Chopper>, Tabl
 	public double efficiency = Double.NaN;
 	public double angle = Double.NaN;
 	public Vector2D offset = new Vector2D();
-	public PhaseSet phases;
+	public ChopperPhases phases;
 	
 	@Override
 	public Chopper clone() {

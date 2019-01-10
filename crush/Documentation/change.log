@@ -1,6 +1,8 @@
 
 2.50-a1
 
+	[FIX] {APEX} Small fixes to photometry weighting.
+
 	[FIX] 'lab' mode fix to skip trying to precess when there is no
 	telescope data available.
 
@@ -8,6 +10,10 @@
 	coordinate epoch is unknown (-9999.0, or "UNKNOWN" in FITS).
 
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
+
+	[TWEAK] Improved how projections are handled in 2D models, and fixed
+	a bug introduced in earlier development versions, where scans with
+	different reference centers resulted in errors.
 
 	[TWEAK] {HIRMES} Read both old sim (all caps) and new sim/CDH column
 	names (Steve Maher).
@@ -24,6 +30,14 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[API] Re-organize how photometry, and phase-modulated data in general,
+	are handled. ChopNodPhotometry is now non-specific (used to be APEX 
+	only), and Photometry can be extended e.g. to provide support to
+	HIRMES laser calibration.
+
+	[API] Eliminate System.exit() calls when running CRUSH via the new API.
+	Instead appropriate Exceptions and Errors are thrown.
 
 	[API] Eliminate extraneous Instrument generic typing from Scan and
 	Integration. At the same time getInstrument() and getScan() overrides

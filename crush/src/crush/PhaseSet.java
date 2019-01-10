@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -30,7 +30,7 @@ import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 
 
-public class PhaseSet extends ArrayList<PhaseData> {
+public abstract class PhaseSet extends ArrayList<PhaseData> {
     /**
      * 
      */
@@ -42,6 +42,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
     public double[] channelParms;
 
+    private double[] relativePhaseWeights;
 
     Dependents integrationDeps;
     int generation = 0;	
@@ -50,7 +51,9 @@ public class PhaseSet extends ArrayList<PhaseData> {
     public PhaseSet(Integration<?> integration) {
         this.integration = integration;	
         integrationDeps = new Dependents(integration, "phases");
-        channelParms = new double[integration.getInstrument().size()];
+        channelParms = new double[getInstrument().size()];
+        relativePhaseWeights = new double[getInstrument().size()];
+        Arrays.fill(relativePhaseWeights, 1.0);
     }
 
     public PhaseSignal getSignal(Mode mode) {
@@ -65,6 +68,45 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
     public Integration<?> getIntegration() { return integration; }
 
+    public Instrument<?> getInstrument() { return getIntegration().getInstrument(); }
+    
+    
+    public final double getRelativeWeight(Channel channel) {
+        return relativePhaseWeights[channel.index];    
+    }
+    
+    private void setRelativePhaseWeight(Channel channel, double w) {
+        relativePhaseWeights[channel.index] = w;    
+    }    
+    
+    public void deriveRelativeChannelWeights() {
+        getIntegration().comments.append(",P");
+        for(Channel channel : getInstrument()) deriveRelativeWeightFor(channel); 
+    }
+    
+    
+    private void deriveRelativeWeightFor(Channel channel) {    
+        channel.unflag(Channel.FLAG_PHASE_DOF);
+         
+        // Get the raw relative channel weights from the phase data.
+        double wr = deriveRawRelativeWeightFor(channel);
+        
+        if(Double.isNaN(wr)) {
+            channel.flag(Channel.FLAG_PHASE_DOF);
+            return;
+        }
+        
+        // Do not allow relative phaseWeights to become larger than 1.0
+        if(wr > 1.0) wr = 1.0;        
+        
+        setRelativePhaseWeight(channel, wr);
+    }
+    
+    
+    public abstract double deriveRawRelativeWeightFor(Channel channel);
+
+    
+    
     public PhaseDependents getPhaseDependents(String name) {
         return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
     }
@@ -72,8 +114,11 @@ public class PhaseSet extends ArrayList<PhaseData> {
     public void update(ChannelGroup<?> channels) {
         integration.comments.append(":P");
 
-        for(PhaseData phase : this) phase.update(channels, integrationDeps);	
-
+        for(PhaseData phase : this)
+            phase.update(channels, integrationDeps);	
+        
+        deriveRelativeChannelWeights();
+        
         generation++;
     }
 
@@ -91,14 +136,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
         if(signals.containsKey(mode)) signals.get(mode).syncGains();
     }
 
-    public void getWeights() {
-        integration.comments.append(",P");
 
-        for(Channel channel : integration.getInstrument()) if(channel instanceof PhaseWeighting) 
-            ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
-    }
-
-  
 
     public void despike(double level) { 
         integration.comments.append(",P");
@@ -144,9 +182,12 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
     public double getMeanLevel(Channel channel, int phaseValue) {
         double sum = 0.0, sumw = 0.0;
+        final double wr = getRelativeWeight(channel);
+        
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
-            sum += p.weight[channel.index] * p.value[channel.index];
-            sumw += p.weight[channel.index];
+            final double w = wr * p.weight[channel.index];
+            sum += w * p.value[channel.index];
+            sumw += w;
         }
         return sum / sumw;
     }
@@ -164,8 +205,11 @@ public class PhaseSet extends ArrayList<PhaseData> {
     public double getRMSNoise(Channel channel, int phaseValue, double level) {
         double sum = 0.0;
         int n=0;
+        
+        final double wr = getRelativeWeight(channel);
+        
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
-            double dev = p.value[channel.index] * Math.sqrt(p.weight[channel.index]);
+            double dev = p.value[channel.index] * Math.sqrt(wr * p.weight[channel.index]);
             sum += dev * dev;
             n++;
         }
@@ -174,10 +218,12 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
     public double getMedianNoise(Channel channel, int phaseValue, double level) {
         double[] var = new double[size()];
+        
+        final double wr = getRelativeWeight(channel);
 
         int k = 0;
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
-            double dev = p.value[channel.index] * Math.sqrt(p.weight[channel.index]);
+            double dev = p.value[channel.index] * Math.sqrt(wr * p.weight[channel.index]);
             var[k++] = dev * dev;
         }
         return k > 1 ? Statistics.Inplace.median(var, 0, k) / Statistics.medianNormalizedVariance : Double.NaN;
