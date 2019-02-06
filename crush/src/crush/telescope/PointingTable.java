@@ -80,7 +80,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			Entry pointing = new Entry();
 			try { 
 				pointing.id = row.get("id").getValue();
-				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));			
+				AstroTime time = AstroTime.forStandardDate(pointing.id);			
 				
 				double MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 					

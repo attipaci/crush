@@ -127,12 +127,32 @@ implements Copiable<ChannelGroup<ChannelType>> {
         return ids;
     }
     
-    public void kill(final int flagPattern) {
+    public ArrayList<Integer> getFixedIndices() {
+        ArrayList<Integer> indices = new ArrayList<Integer>(size());
+        for(int i=0; i<size(); i++) indices.add(get(i).getFixedIndex());
+        return indices;
+    }
+    
+    /**
+     * Flags channels as dead (with {@link Channel#FLAG_DEAD}) if they have any of the bit-wise flags enabled matching
+     * the specified pattern.
+     * 
+     * @param flagPattern   The bit-wise flag pattern. Channels that have any of the specified flag bits enabled will be marked
+     *                      with {@link Channel#FLAG_DDEAD}.
+     */
+    public void killFlagged(final int flagPattern) {
         for(Channel channel : this) if(channel.isFlagged(flagPattern)) channel.flag(Channel.FLAG_DEAD);
     }
 
-
-    public boolean slim(int discardFlags) {
+    /**
+     * Removes channels from this group whose flags match any of the bitwise flags in the specified pattern.
+     * 
+     * 
+     * @param discardFlags  The bit-wise flag pattern. Channels that have any of the specified flag bits enabled 
+     *                      will be removed from the group.
+     * @return              <code>true</code> if matching channels have been found and removed, otherwise <code>false</code>.
+     */
+    public boolean removeFlagged(int discardFlags) {
         final int nc = size();
         
         boolean hasFlagged = false;
@@ -148,6 +168,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
         clear(); 
         addAll(keep);
+        trimToSize();
         
         return true;
     }

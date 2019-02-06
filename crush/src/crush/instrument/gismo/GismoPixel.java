@@ -25,13 +25,13 @@
 package crush.instrument.gismo;
 
 
-import crush.instrument.SingleColorPixel;
+import crush.Channel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class GismoPixel extends SingleColorPixel {
+public class GismoPixel extends Channel {
 	/**
 	 * 
 	 */
@@ -47,16 +47,10 @@ public class GismoPixel extends SingleColorPixel {
 		col = zeroIndex % 8;
 		
 		// mux & pin filled when reading 'wiring.dat'
-		
-		calcPosition();
 	}
 	
 
 
-	public void calcPosition() {
-		// ALt/Az maps show this to be correct...
-		position = getPosition(((Gismo) instrument).pixelSize, row, col);
-	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
 		return new Vector2D(size.x() * col, -size.y() * row);

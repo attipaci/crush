@@ -50,8 +50,14 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	 */
 	private static final long serialVersionUID = 2929947229904002745L;
 	public int nodPhase = 0;
+
+	
+	//public String bandID;
+	
 	protected Thread thread;
 	private Chopper chopper;
+	
+	
 	
 	double pwv = Double.NaN;
 	
@@ -191,8 +197,16 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 
 	    public DataTable(TableHDU<?> hdu) throws FitsException { 
 	        super(hdu); 
+ 
 	        int iData = hdu.findColumn("DATA");
 	        channels = table.getSizes()[iData];
+	        
+	        APEXInstrument<? extends Channel> instrument = getInstrument();
+	        
+	        instrument.populate(channels);
+	        if(instrument.getLayout() != null) instrument.getLayout().assignChannels();
+	        instrument.validate();
+	        
 	        data = (float[]) table.getColumn(iData);
 	    }
 
@@ -490,9 +504,18 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 			
 	public void fitsRCP() {
 		info("Using RCP data contained in the FITS.");
-		for(APEXContinuumPixel pixel : getInstrument()) pixel.position = (Vector2D) pixel.fitsPosition.clone();
+		for(Pixel pixel : getInstrument().getPixels()) pixel.setPosition(((APEXPixel) pixel).fitsPosition.copy());
 	}
 
+	@Override
+    public String getID() {
+	    StringBuffer id = new StringBuffer(super.getID());
+	    APEXInstrument<? extends Channel> instrument = getInstrument();
+	    if(instrument.activeBands.length > 1) id.append("|B" + getInstrument().band);
+	    if(instrument.sideband != null) id.append("|" + instrument.sideband);
+	    return new String(id);
+	}
+	
 	@Override
     public int getPhase() { return nodPhase; }
 	

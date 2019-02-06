@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,14 +23,17 @@
 
 package crush.instrument.hawcplus;
 
-import java.util.Arrays;
+
+import java.io.IOException;
+import java.util.List;
 import java.util.StringTokenizer;
 
-import crush.instrument.SingleColorLayout;
+import crush.instrument.GridIndexed;
+import crush.instrument.SingleEndedLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class HawcLayout extends SingleColorLayout<HawcPixel> { 
+public class HawcLayout extends SingleEndedLayout implements GridIndexed { 
     /**
      * 
      */
@@ -43,24 +46,18 @@ public class HawcLayout extends SingleColorLayout<HawcPixel> {
     
     private double[] polZoom;
     
-    public HawcLayout copyFor(Hawc hawc) {
-        HawcLayout copy = (HawcLayout) super.copyFor(hawc);
-        
-        if(pixelSize != null) copy.pixelSize = pixelSize.copy();
-        if(subarrayOffset != null) copy.subarrayOffset = Vector2D.copyOf(subarrayOffset);
-        if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
-        if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
-        
-        return copy;
+    public HawcLayout(Hawc instrument) {
+        super(instrument);
     }
     
+    @Override
     public Vector2D getPixelSize() { return pixelSize; }
     
     @Override
     public Hawc getInstrument() { return (Hawc) super.getInstrument(); }
     
     @Override
-    public void initialize() {
+    public void validate() {
         Hawc hawc = getInstrument();
         
         // The subarrays orientations
@@ -83,7 +80,7 @@ public class HawcLayout extends SingleColorLayout<HawcPixel> {
         polZoom[Hawc.T_ARRAY] = hasOption("zoom.t") ? option("zoom.t").getDouble() : 1.0;
         
         // The default pixelSizes...
-        Vector2D pixelSize = new Vector2D(hawc.array.pixelSize, hawc.array.pixelSize);
+        pixelSize = new Vector2D(hawc.array.pixelSize, hawc.array.pixelSize);
 
         // Set the pixel size...
         if(hasOption("pixelsize")) {
@@ -94,17 +91,17 @@ public class HawcLayout extends SingleColorLayout<HawcPixel> {
         }
 
         hawc.array.pixelSize = Math.sqrt(pixelSize.x() * pixelSize.y());
-        
-        setNominalPixelPositions(pixelSize);
 
+        super.validate();
+        
         // TODO load bias gains? ...
     }
     
 
-    private void setNominalPixelPositions(Vector2D size) {  
+    @Override
+    public void setDefaultPixelPositions() {  
         Hawc hawc = getInstrument();
-        
-        pixelSize = size;
+
 
         hawc.info("Boresight pixel from FITS is " + hawc.array.boresightIndex);
 
@@ -124,7 +121,12 @@ public class HawcLayout extends SingleColorLayout<HawcPixel> {
         setReferencePosition(center);
     }
 
-    
+
+    @Override
+    public void readRCP(String fileName)  throws IOException {
+        super.readRCP(fileName);
+        getInstrument().registerConfigFile(fileName);
+    }
 
     public Vector2D getSIBSPosition(int sub, double row, double col) {
         Vector2D v = new Vector2D(col, 39.0 - row); // X, Y
@@ -138,9 +140,24 @@ public class HawcLayout extends SingleColorLayout<HawcPixel> {
         return v;
     }
 
-    
-    
 
+
+    // TODO... currently treating all subarrays as non-overlapping -- which is valid for point sources...
+    @Override
+    public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
+        addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+        for(int sub=1; sub < Hawc.subarrays; sub++) {
+            final int subOffset = sub * Hawc.subarrayPixels;
+            for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + subOffset);
+        }
+    }
+
+
+    @Override
+    public final int rows() { return Hawc.rows; }
+
+    @Override
+    public final int cols() { return Hawc.subarrayCols; }
 
     
 }

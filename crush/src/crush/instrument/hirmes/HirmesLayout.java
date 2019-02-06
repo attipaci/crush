@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,10 +23,13 @@
 
 package crush.instrument.hirmes;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import crush.Channel;
-import crush.instrument.SingleColorLayout;
+import crush.Instrument;
+import crush.Pixel;
+import crush.instrument.SingleEndedLayout;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import jnum.Unit;
@@ -38,12 +41,13 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements FitsHeaderEditing {
-
+public class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
     /**
      * 
      */
     private static final long serialVersionUID = -1476710269379169494L;
+    
+    
     double plateScale = defaultPlateScale;
     Vector2D loresPixelSize;                // (arcsec)
     Vector2D[] hiresPixelSize = new Vector2D[Hirmes.hiresCols];      // (arcsec)
@@ -53,6 +57,12 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
     Vector2D[] subarrayPixelOffset;         // (lowres pixels)
     double[] subarrayOrientation;   
     Vector2D hiresFocalPlaneOffset;         // (mm) Hires-array offset, calculated from subarrayPixelOffset & loresPixelSpacing
+
+    
+    public HirmesLayout(Instrument<? extends Channel> instrument) {
+        super(instrument);
+        // TODO Auto-generated constructor stub
+    }
 
 
     public HirmesLayout copyFor(Hirmes hirmes) {
@@ -70,9 +80,9 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
 
     @Override
     public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
-
+    
     @Override
-    public void initialize() {
+    public void validate() {
         // The subarrays orientations
         subarrayOrientation = new double[Hirmes.subarrays];
         subarrayOrientation[Hirmes.LORES_BLUE_SUBARRAY] = hasOption("rotation.blue") ? option("rotation.blue").getDouble() * Unit.deg : 0.0;
@@ -88,9 +98,8 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
         hiresFocalPlaneOffset = subarrayPixelOffset[Hirmes.HIRES_SUBARRAY].copy();
         hiresFocalPlaneOffset.multiplyByComponents(loresPixelSpacing);
 
-        setNominalPixelPositions();
-
-
+        super.validate();
+        
         final int blindFlag = hasOption("blinds") ? Channel.FLAG_BLIND : Channel.FLAG_DEAD;
 
         Vector2D imageAperture = hasOption("imaging.aperture") ? option("imaging.aperture").getDimension2D(Unit.arcsec) : defaultImagingAperture.copy(); 
@@ -99,24 +108,25 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
 
         Hirmes hirmes = getInstrument();
 
-        for(HirmesPixel pixel : hirmes) {
-            if(pixel.detArray != hirmes.detArray) pixel.flag(Channel.FLAG_DEAD);
-            else if(pixel.isDark()) pixel.flag(blindFlag);
-            else if(pixel.sub == Hirmes.HIRES_SUBARRAY) {
-                if(pixel.subcol != hirmes.hiresColUsed) pixel.flag(blindFlag);
+        for(HirmesPixel channel : hirmes) {   
+            if(channel.detArray != hirmes.detArray) channel.flag(Channel.FLAG_DEAD);
+            else if(channel.isDark()) channel.flag(blindFlag);
+            else if(channel.sub == Hirmes.HIRES_SUBARRAY) {
+                if(channel.subcol != hirmes.hiresColUsed) channel.flag(blindFlag);
             }
             else if(hirmes.mode == Hirmes.IMAGING_MODE) {
-                if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) pixel.flag(blindFlag);
-                if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) pixel.flag(blindFlag);
+                Pixel pixel = channel.getPixel();
+                if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) channel.flag(blindFlag);
+                if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) channel.flag(blindFlag);
             }
         }
-
 
     }
 
 
 
-    private void setNominalPixelPositions() { 
+    @Override
+    public void setDefaultPixelPositions() { 
         Hirmes hirmes = getInstrument();
         
         // Set the pixel sizes...
@@ -147,6 +157,14 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
 
         // Set the pointing center...
         setReferencePosition(center);
+    }
+
+    
+
+    @Override
+    public void readRCP(String fileName)  throws IOException {
+        super.readRCP(fileName);
+        getInstrument().registerConfigFile(fileName);
     }
 
 
@@ -213,7 +231,7 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
         c.add(SofiaData.makeCard("CRY", focalPlaneReference.y() / Unit.mm, "(mm) Focal plane center y"));
     }
 
-    
+
 
     final static Vector2D loresPixelSpacing = new Vector2D(1.180 * Unit.mm, 1.180 * Unit.mm);
 
@@ -223,7 +241,8 @@ public class HirmesLayout extends SingleColorLayout<HirmesPixel> implements Fits
     final static double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
 
     final static double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
-    final static Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);  
+    final static Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);
+
 
 
 

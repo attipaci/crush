@@ -23,6 +23,8 @@
 package crush.instrument;
 
 import crush.Channel;
+import crush.Pixel;
+import jnum.math.Vector2D;
 
 public class SkyGradient extends ZeroMeanGains {
 	/**
@@ -30,6 +32,7 @@ public class SkyGradient extends ZeroMeanGains {
 	 */
 	private static final long serialVersionUID = 5605187091928172211L;
 	private boolean horizontal = true;
+
 	
 	private SkyGradient(boolean isHorizontal) {
 		this.horizontal = isHorizontal;
@@ -37,9 +40,12 @@ public class SkyGradient extends ZeroMeanGains {
 	
 	@Override
 	public double getRelativeGain(Channel c) throws Exception {
-		SingleColorPixel pixel = (SingleColorPixel) c;
-		if(pixel.position == null) return Double.NaN;
-		return (horizontal ? pixel.position.x() : pixel.position.y());
+	    final Pixel pixel = c.getPixel();
+	    if(pixel == null) return Double.NaN;
+	    
+	    final Vector2D position = pixel.getPosition();
+		if(position == null) return Double.NaN;
+		return (horizontal ? position.x() : position.y());
 	}
 
 	@Override

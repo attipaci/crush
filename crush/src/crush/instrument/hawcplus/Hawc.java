@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.GridIndexed;
-import crush.instrument.PixelLayout;
 import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
@@ -41,7 +39,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
+public class Hawc extends SofiaInstrument<HawcPixel> {
     /**
      * 
      */
@@ -66,15 +64,24 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
 
 
     public Hawc() {
-        super("hawc+", new HawcLayout(), pixels);
+        super("hawc+", pixels);
     }
 
     @Override
     public String getFileID() { return "HAW"; }
     
     @Override
+    protected HawcLayout getLayoutInstance() { return new HawcLayout(this); }
+    
+    @Override
     public HawcLayout getLayout() { return (HawcLayout) super.getLayout(); }
 
+    @Override
+    public Vector2D getSIPixelSize() { return getLayout().getPixelSize(); }
+
+
+
+    
     @Override
     public void setOptions(Configurator options) {
         super.setOptions(options);
@@ -129,8 +136,8 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    protected void initDivisions() {
-        super.initDivisions();
+    protected void createDivisions() {
+        super.createDivisions();
 
         try { addDivision(getDivision("polarrays", HawcPixel.class.getField("pol"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); }	
@@ -170,8 +177,8 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    protected void initGroups() {
-        super.initGroups();
+    protected void createGroups() {
+        super.createGroups();
 
         subarrayGroups = new ArrayList<ChannelGroup<HawcPixel>>(subarrays);
         for(int pol=0; pol < polArrays; pol++) for(int sub=0; sub < polSubarrays; sub++) {
@@ -184,8 +191,8 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    protected void initModalities() {
-        super.initModalities();
+    protected void createModalities() {
+        super.createModalities();
 
         addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPolImbalance()));
 
@@ -440,7 +447,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     }
 
     @Override
-    public void validate(Scan<?> scan) {
+    public void configure() {
 
         darkSquidCorrection = hasOption("darkcorrect");
 
@@ -475,9 +482,13 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
         if(!hasOption("filter")) getOptions().setOption("filter " + instrumentData.wavelength + "um");	
         info("HAWC+ Filter set to " + option("filter").getValue());
 
-        super.validate(scan);
-
+        super.configure();
+    }
+    
+    @Override
+    public void validate() {
         createDarkSquidLookup();
+        super.validate();
     }
 
 
@@ -494,25 +505,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
         for(HawcPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.index;
     }
 
-    // TODO... currently treating all subarrays as non-overlapping -- which is valid for point sources...
-    @Override
-    public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-        PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
-        for(int sub=1; sub < subarrays; sub++) {
-            final int subOffset = sub * subarrayPixels;
-            for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + subOffset);
-        }
-    }
 
-
-    @Override
-    public final int rows() { return rows; }
-
-    @Override
-    public final int cols() { return subarrayCols; }
-
-    @Override
-    public final Vector2D getSIPixelSize() { return getLayout().getPixelSize(); }
 
 
     /**
@@ -641,9 +634,5 @@ public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     static final int T_ARRAY = 1;
 
     public static final Vector2D defaultBoresightIndex = new Vector2D(33.5, 19.5);
-
-    
-    
-    
 }
 

@@ -1883,17 +1883,6 @@
 			(e.g. for loggig via 'log'). Else, the NEFD estimate
 			will be based on the timestream noise alone. 
 
-:: neighbours.radius=X	@Expert
-			@Since: 2.15
-			Specifies the local neighbourhood of a pixel relative 
-			to the beam-size, within which other pixels are used 
-			for a localized flux correction of the photometry. Not 
-			setting this option, or a value of 0.0 will disable 
-			neighbour-based photometry corrections.
-			The setting has no effect outside of photometry 
-			reductions.
-			@See: 'phases', 'chopped'
-		
 :: nochopper		@Instrument: SHARC-2, MAKO
 			@Advanced
 			@Since:2.16-1

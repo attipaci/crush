@@ -73,9 +73,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		double threshold = 0.4 * getInstrument().getMinBeamFWHM();
 		double sumP = 0.0, sumM = 0.0;
 		int nP = 0, nM = 0;
-		
-		
-		
+			
 		for(FrameType frame : this) if(frame != null) {
 			sumP += frame.chopperPosition.x();
 			nP++;			
@@ -110,7 +108,6 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		final double level = 0.5 * (sumP / nP + sumM / nM);
 		
 		CRUSH.values(this, "--> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", res: " + Util.f1.format(level / Unit.arcsec) + "\".");
-		
 
 		for(FrameType frame : this) if(frame != null) frame.chopperPosition.subtractX(level);
 		
@@ -235,7 +232,6 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	
 	@Override
 	public String getASCIIHeader() {
-	 
 		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / getScan().horizontal.sinLat());
 		double Tload = getScan().getAmbientKelvins();
 		

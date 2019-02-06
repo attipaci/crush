@@ -45,7 +45,6 @@ import nom.tam.util.Cursor;
 import crush.CRUSH;
 import crush.Channel;
 import crush.Scan;
-import crush.instrument.PixelLayout;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Constant;
@@ -71,14 +70,14 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         FitsFactory.setLongStringsEnabled(true);
     }
 
-    public SofiaInstrument(String name, PixelLayout<? super ChannelType> layout) {
-        super(name, layout);
+    public SofiaInstrument(String name) {
+        super(name);
         mount = Mount.NASMYTH_COROTATING;
     }
 
 
-    public SofiaInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
-        super(name, layout, size);
+    public SofiaInstrument(String name, int size) {
+        super(name, size);
     }
 
     @SuppressWarnings("unchecked")
@@ -122,12 +121,6 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     @Override
     public void loadChannelData(String fileName) throws IOException {
         super.loadChannelData(fileName);
-        registerConfigFile(fileName);
-    }
-
-    @Override
-    public void readRCP(String fileName)  throws IOException {
-        super.readRCP(fileName);
         registerConfigFile(fileName);
     }
 
@@ -288,9 +281,9 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
     @Override
     public void validate(Vector<Scan<?>> scans) throws Exception {
-        if(scans.size() <= 1) return; // Always reduce single scans (and proceed on empty sets).
+        if(scans.size() < 1) return; // proceed on empty sets.
 
-        for(int i=scans.size(); --i >= 0; )  {
+        if(scans.size() > 1) for(int i=scans.size(); --i >= 0; )  {
             SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);
             String discardReason = scan.getDiscardReason();
             if(discardReason != null) {
@@ -299,12 +292,12 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
             }
         }
 
-        if(scans.size() <= 1) return; // No more checks for single scans or empty sets.
+        if(scans.size() < 1) return; // proceed on empty sets.
 
         SofiaScan<?> firstScan = (SofiaScan<?>) scans.get(0); 
 
         if(scans.size() == 1) {
-            if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
+            if(firstScan.getObservingTime() < 3.3 * Unit.min) firstScan.setSuggestPointing();
         }
         else for(int i=scans.size(); --i >= 0; ) {
             SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);            
@@ -336,6 +329,11 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         return Math.sqrt(angularSize.x() * angularSize.y() / (physicalSize.x() * physicalSize.y()));
     }
 
+    /**
+     * Returns the rectangular pixel size projected on sky (in the natural angular units, i.e. radians).
+     * 
+     * @return  The rectangular pixel size on sky (in radians).
+     */
     public abstract Vector2D getSIPixelSize();
 
     @Override

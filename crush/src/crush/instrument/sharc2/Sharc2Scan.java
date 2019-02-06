@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
+
 
 package crush.instrument.sharc2;
 
@@ -64,7 +64,6 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		return new Sharc2Integration(this);
 	}
 	
-	
 	@Override
 	public void calcHorizontal() {
 		super.calcHorizontal();
@@ -103,7 +102,8 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		sharc2.parseDSPHDU((BinaryTableHDU) HDU[2]);
 		sharc2.parsePixelHDU((BinaryTableHDU) HDU[3]);
 		sharc2.parseDataHeader(firstDataHDU.getHeader());
-		sharc2.validate(this);
+		sharc2.configure();
+		sharc2.validate();
 		
 		Sharc2Integration integration = new Sharc2Integration(this);
 		integration.read(HDU, i);
@@ -169,7 +169,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		info(">>> Fix: Assuming early JSharc data format.");
 		info(">>> Fix: Source coordinates obtained from antenna stream.");
 		
-		getInstrument().prematureFITS = true;
+		getInstrument().earlyFITS = true;
 		double epoch = header.getDoubleValue("EQUINOX", 2000.0);
 		header = data.getHeader();
 		float RA = ((float[]) data.getElement(0, data.findColumn("RA")))[0];

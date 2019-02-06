@@ -31,6 +31,6 @@ public interface GridIndexed extends GeometricIndexed {
 	
 	public int cols();
 	
-	public Vector2D getSIPixelSize();
+	public Vector2D getPixelSize();
 	
 }

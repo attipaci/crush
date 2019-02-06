@@ -335,9 +335,7 @@ public class ChopperPhases extends PhaseSet {
         integration.removeOffsets(false);
         
         // Get the initial phase data...
-        integration.updatePhases();
-      
+        integration.updatePhases();      
     }
-    
-       
+        
 }

@@ -272,7 +272,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             info("Bootstrapping pixel weights (" + instrument.mappingChannels + " active channels).");
         }
 
-        instrument.calcOverlap(scan.getPointSize());
+        instrument.calcOverlaps(scan.getPointSize());
 
         System.gc();
 
@@ -299,7 +299,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void setIteration(int i, int rounds) {
         CRUSH.setIteration(instrument.getOptions(), i, rounds);  
-        instrument.calcOverlap(scan.getPointSize());
+        instrument.calcOverlaps(scan.getPointSize());
     }
 
     public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE_MODELING) * instrument.samplingInterval; }

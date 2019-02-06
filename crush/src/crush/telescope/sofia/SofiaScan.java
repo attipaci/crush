@@ -464,15 +464,20 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     protected void read(BasicHDU<?>[] hdu, boolean readFully) throws Exception {	
         parseHeader(new SofiaHeader(hdu[0].getHeader()));
 
-        getInstrument().readData(hdu);
-        getInstrument().validate(this);	
+        SofiaInstrument<? extends Channel> instrument = getInstrument();
+        
+        instrument.readData(hdu);
+        instrument.configure();	
+        instrument.validate();
 
         clear();
 
         addIntegrationsFrom(hdu);
 
-        getInstrument().samplingInterval = get(0).getInstrument().samplingInterval;
-        getInstrument().integrationTime = get(0).getInstrument().integrationTime;
+        SofiaInstrument<? extends Channel> firstInstrument = get(0).getInstrument();
+        
+        instrument.samplingInterval = firstInstrument.samplingInterval;
+        instrument.integrationTime = firstInstrument.integrationTime;
     }
 
     public abstract void addIntegrationsFrom(BasicHDU<?>[] hdu) throws Exception;

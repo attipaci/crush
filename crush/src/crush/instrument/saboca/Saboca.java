@@ -26,7 +26,6 @@ package crush.instrument.saboca;
 
 import crush.*;
 import crush.instrument.NonOverlapping;
-import crush.instrument.SingleColorPixel;
 import crush.telescope.apex.*;
 import jnum.Unit;
 import jnum.io.LineParser;
@@ -49,16 +48,16 @@ public class Saboca extends APEXInstrument<SabocaPixel> implements NonOverlappin
 	}
 	
 	@Override
-    protected void initDivisions() {
-		super.initDivisions();
+    protected void createDivisions() {
+		super.createDivisions();
 		
 		try { addDivision(getDivision("squids", SabocaPixel.class.getField("squid"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { error(e); }
 	}
 	
 	@Override
-    protected void initModalities() {
-		super.initModalities();
+    protected void createModalities() {
+		super.createModalities();
 		
 		try { addModality(new CorrelatedModality("squids", "q", divisions.get("squids"), SabocaPixel.class.getField("squidGain"))); }
 		catch(NoSuchFieldException e) { error(e); }
@@ -74,7 +73,8 @@ public class Saboca extends APEXInstrument<SabocaPixel> implements NonOverlappin
 
 	@Override
 	public void flagInvalidPositions() {
-		for(SingleColorPixel pixel : this) if(pixel.position.length() > 3.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
+		for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 3.0 * Unit.arcmin)
+		    for(Channel channel : pixel) channel.flag(Channel.FLAG_BLIND);
 	}
 
 	@Override
@@ -82,8 +82,9 @@ public class Saboca extends APEXInstrument<SabocaPixel> implements NonOverlappin
 		return super.getChannelDataHeader() + "\tGsquid";
 	}
 	
+	
 	@Override
-	public void readWiring(String fileName) throws IOException {
+    protected void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
 		final ChannelLookup<SabocaPixel> lookup = new ChannelLookup<SabocaPixel>(this);

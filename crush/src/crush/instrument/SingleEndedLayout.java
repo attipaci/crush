@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,29 +23,41 @@
 
 package crush.instrument;
 
-import java.util.List;
+import java.util.ArrayList;
 
+import crush.Channel;
+import crush.Instrument;
 import crush.Pixel;
 
-public class SingleColorLayout<ChannelType extends SingleColorPixel> extends PixelLayout<ChannelType> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3711770466718770949L;
+public abstract class SingleEndedLayout extends PixelLayout {
 
-	@Override
-	public int getPixelCount() {
-		return getInstrument().size();
-	}
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -783638243575903810L;
 
-	@Override
-	public List<? extends Pixel> getPixels() {
-		return getInstrument();
-	}
-
-	@Override
-	public List<? extends Pixel> getMappingPixels(int keepFlags) {
-		return getInstrument().getObservingChannels().createGroup().discard(~keepFlags);
-	}
-
+    public SingleEndedLayout(Instrument<? extends Channel> instrument) {
+        super(instrument);
+    }
+   
+    
+    @Override
+    public void validate() {
+        final Instrument<?> instrument = getInstrument();
+        final int nc = instrument.size();
+        
+        ArrayList<Pixel> pixels = getPixels();
+        pixels.clear();
+        pixels.ensureCapacity(nc);
+        
+        for(int i=0; i<nc; i++) {
+            Channel channel = instrument.get(i);
+            Pixel pixel = getPixelInstance(channel.getFixedIndex(), channel.getID());
+            pixel.add(channel);
+            pixels.add(pixel);
+        } 
+        
+        super.validate();
+    }
+    
 }

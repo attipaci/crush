@@ -33,7 +33,6 @@ import crush.instrument.InstantFocus;
 import crush.instrument.NonOverlapping;
 import crush.instrument.Overlap;
 import crush.instrument.PixelLayout;
-import crush.instrument.Rotating;
 import crush.instrument.SkyGradient;
 import crush.motion.AccelerationResponse;
 import crush.motion.ChopperResponse;
@@ -44,7 +43,6 @@ import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Unit;
-import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
@@ -64,7 +62,25 @@ import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-
+/**
+ * A class that captures an instrument's state (properties) at a given point in time, such as for a chunk of contiguous
+ * stream of data, such as a scan or an integration, together with its own set of configuration options.
+ * <p>
+ * 
+ * Every scan/integration should have a fully independent <code>Instrument</code> object (with all their channels and properties
+ * also being fully independent) s.t. modifications to one scan/integration will not affect another.
+ * Independent instrument states may be derived from one another, using {@link #copy()}, migrating
+ * all properties of one instrument to another indepenent one. 
+ * <p>
+ * 
+ * Instruments primarily consists of a number of detector channels, which provide timestream data (see {@link Frame}).
+ * These channels may be organized into various {@link ChannelGroup}s and {@link Pixel}s, after the channels have
+ * been fully populated (see {@link #createEnsembles()}, {@link #createLayout()}). 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ * @param <ChannelType>
+ */
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
 implements TableFormatter.Entries, BasicMessaging {	
     /**
@@ -72,9 +88,8 @@ implements TableFormatter.Entries, BasicMessaging {
      */
     private static final long serialVersionUID = -7651803433436713372L;
 
-    private Configurator options, startupOptions;
-    private PixelLayout<? super ChannelType> layout;
-    private double rotation;
+    private Configurator options, initialOptions;
+    private PixelLayout layout;
 
     private double frequency;
     private double resolution;
@@ -94,75 +109,17 @@ implements TableFormatter.Entries, BasicMessaging {
 
     private Object parent;
 
-    public boolean isInitialized = false, isValid = false;
+    public boolean hasEnsembles = false, isValid = false;
     private boolean standardWeights = false;
 
-    public Instrument(String name, PixelLayout<? super ChannelType> layout) {
+    public Instrument(String name) {
         super(name);
-        setLayout(layout);
-        startupOptions = options;
+        initialOptions = options;
     }
 
-    public Instrument(String name, PixelLayout<? super ChannelType> layout, int size) {
+    public Instrument(String name, int size) {
         super(name, size);
-        setLayout(layout);
         storeChannels = size;
-    }
-    
-
-    public void setParent(Object o) { this.parent = o; }
-
-    public Object getParent() { return parent; }
-    
-    @Override
-    public boolean add(ChannelType channel) {
-        channel.index = size();
-        return super.add(channel);
-    }
-
-    public void setLayout(PixelLayout<? super ChannelType> layout) {
-        this.layout = layout;
-        if(layout != null) layout.setInstrument(this);
-    }
-
-    public PixelLayout<?> getLayout() { return layout; }
-
-    // Load the static instrument settings, which are not meant to be date-dependent...
-    public void setOptions(Configurator options) {
-        this.options = options;
-
-        isValid = false;
-        isInitialized = false;
-        startupOptions = null;
-    }
-    
-    public Configurator getOptions() {
-        return options;
-    }
-
-    public Configurator getStartupOptions() { return startupOptions; }
-
-
-    public String getOutputPath() {
-        if(hasOption("outpath")) return option("outpath").getPath();
-        return ".";
-    }
-    
-
-    public Projector2D<?> getProjectorInstance(Coordinate2D reference) {      
-        return new Projector2D<Coordinate2D>(new DefaultProjection2D(reference));      
-    }
-    
-    
-    public Grid2D<?> getGridInstance() { return new FlatGrid2D(); }
-    
-    // TODO check for incompatible scans
-    public void validate(Vector<Scan<?>> scans) throws Exception {
-        if(hasOption("jackknife.alternate")) {
-            notify("JACKKNIFE! Alternating scans.");
-            for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
-                for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
-        }  
     }
 
     @Override
@@ -172,62 +129,160 @@ implements TableFormatter.Entries, BasicMessaging {
         for(Channel channel : copy) channel.instrument = copy;
 
         if(options != null) copy.options = options.copy();
-        
-        if(layout != null) copy.layout = layout.copyFor(copy);
+
+        if(layout != null) copy.layout = null;
 
         // TODO this needs to be done properly???
         copy.groups = null;
         copy.divisions = null;
         copy.modalities = null;
-        
+
+        if(hasEnsembles) {
+            copy.hasEnsembles = false;
+            copy.createEnsembles();
+        }
+
+        if(layout != null) copy.layout = layout.copyFor(copy);
+
         if(overlapPointSize > 0.0) {
             copy.overlapPointSize = Double.NaN;
-            copy.calcOverlap(overlapPointSize);
-        }
-        
-        if(isInitialized) {
-            copy.isInitialized = false;
-            copy.initialize();
+            copy.calcOverlaps(overlapPointSize);
         }
 
         return copy;
     }
+    
+    
 
-    protected void initialize() {
-        initGroups();
-        initDivisions();
-        initModalities();       
-        
-        isInitialized = true;
+    public void setParent(Object o) { this.parent = o; }
+
+    public Object getParent() { return parent; }
+
+
+    // Load the static instrument settings, which are not meant to be date-dependent...
+    public void setOptions(Configurator options) {
+        this.options = options;
+
+        isValid = false;
+        hasEnsembles = false;
+        initialOptions = null;
+    }
+
+    public Configurator getOptions() {
+        return options;
+    }
+
+    public Configurator getInitialOptions() { return initialOptions; }
+
+
+    public String getOutputPath() {
+        if(hasOption("outpath")) return option("outpath").getPath();
+        return ".";
     }
 
 
-    public void validate(Scan<?> scan) {
-        startupOptions = options.copy();
+    public Projector2D<?> getProjectorInstance(Coordinate2D reference) {      
+        return new Projector2D<Coordinate2D>(new DefaultProjection2D(reference));      
+    }
 
-        reindex();
-        
-        initLayout();
-        
-        loadChannelData();   
-         
-        flagChannels();
-              
-        initialize();
+
+    public Grid2D<?> getGridInstance() { return new FlatGrid2D(); }
+
+    
+    protected abstract PixelLayout getLayoutInstance();
+
+    
+    public PixelLayout createLayout() {
+        layout = getLayoutInstance(); 
+        return layout;
+    }
+
+    
+    public PixelLayout getLayout() { return layout; }
+
+    
+    protected final void createEnsembles() {
+        if(isEmpty()) return;
+
+        createGroups();
+        createDivisions();
+        createModalities(); 
+
+        hasEnsembles = true;
+    }
+    
+    @Override
+    public boolean add(ChannelType channel) {
+        channel.index = size();
+        return super.add(channel);
+    }
+
+
+
+    /**
+     * Applies configurations settings based on its own {@link Configurator} options. Typically one should
+     * configure the instrument <i>after</i> reading the stored configuration from files (so that they can 
+     * override the stored information) but <i>before</i> reading actual data, since the interpretation of 
+     * the data may depend on the specified instrument options.
+     *             
+     * @see #setOptions(Configurator)
+     * @see #setObjectOptions(String)
+     * @see #setDateOptions(double)
+     * @see #setMJDOptions(double)
+     * @see #setFitsHeaderOptions(Header)
+     * @see #setOption(String)
+     */
+    public void configure() {
+        initialOptions = options.copy();
+
+        if(hasOption("beam")) setResolution(option("beam").getDouble() * getSizeUnit().value());
 
         if(hasOption("frequency")) frequency = option("frequency").getDouble() * Unit.Hz;
         else if(hasOption("wavelength")) frequency = Constant.c / (option("wavelength").getDouble() * Unit.um);
-            
+
         if(hasOption("resolution")) setResolution(option("resolution").getDouble() * getSizeUnit().value());
         if(hasOption("gain")) gain = option("gain").getDouble();
 
-        if(layout != null) layout.validate(options);
+        isValid = true;
+    }
+
+
+    /**
+     * Validates this instrument state for the given scan, populating all fields and properties given the
+     * options for the instrument, and loading appropriate configuration files.
+     * <p>
+     * 
+     * The instrument should be populated with all canonical channels prior to calling this method.
+     * <p>
+     * 
+     * If the pixel layout has not been initialized, this will call {@link #getLayoutInstance()} as necessary
+     * before proceeding to validate it or the existing layout with {@link PixelLayout#validate()}.
+     * <p>
+     * 
+     * After the validation the instrument should have all its canonical channels and pixels added and
+     * configured. Pruning of these may happen at a later stage, during {@link Integration#validate()}, if the 
+     * <code>noslim</code> option isn't set.
+     * <p>
+     *    
+     */
+    public void validate() {
+        if(isEmpty()) return;
+
+        reindex(); 
         
-        if(hasOption("scramble")) scramble();
+        if(layout == null) createLayout();
+        layout.validate();
+
+        createEnsembles();
+
+        loadChannelData();   
+
+        flagChannels();
 
         if(hasOption("flatweights")) flattenWeights();
 
-        if(hasOption("uniform")) uniformGains();
+        if(hasOption("uniform")) for(Channel channel : this) channel.uniformGains();
+
         if(hasOption("gainnoise")) {
             Random random = new Random();
             double level = option("gainnoise").getDouble();
@@ -235,7 +290,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
 
         if(hasOption("sourcegains")) {
-            info("Incorporationg pixel coupling into correlated signal gains.");
+            info("Merging channel couplings into correlated signal gains.");
             for(Channel channel : this) {
                 channel.gain *= channel.coupling;
                 channel.coupling = 1.0;
@@ -247,10 +302,10 @@ implements TableFormatter.Entries, BasicMessaging {
             warning("Normalization failed: " + e.getMessage());
             if(CRUSH.debug) CRUSH.trace(e);
         }
-        
+
         if(hasOption("source.fixedgains")) {
-            fixedSourceGains();
             info("Will use static source gains.");
+            fixedSourceGains();
         }
 
         if(hasOption("jackknife.channels")) jackknife();
@@ -261,16 +316,14 @@ implements TableFormatter.Entries, BasicMessaging {
             if(Double.isNaN(channel.variance)) channel.variance = channel.weight > 0.0 ? 1.0 / channel.weight : 0.0;
         }	
         census();
-
+        
         if(CRUSH.debug) {
             debug("mapping channels: " + mappingChannels);
-            debug("mapping pixels: " + getMappingPixels(~sourcelessChannelFlags()).size());
+            debug("mapping pixels: " + getMappingPixels(~getSourcelessChannelFlags()).size());
         }
-  
-     
-        isValid = true;
     }
     
+
     public void jackknife() {
         notify("JACKKNIFE: Randomly inverted channels in source.");
         for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
@@ -281,16 +334,16 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("flag")) flagChannels(option("flag").getList()); 
 
         if(options.containsKey("flag")) flagFields(options.option("flag"));
-        
+
         for(Channel channel : this) if(channel.weight == 0.0) channel.flag(Channel.FLAG_DEAD);
-        
+
         setChannelFlagDefaults();
     }
-    
+
     protected void setChannelFlagDefaults() {
         // Set DEAD / BLIND channel defaults...
         final int discardFlags = Channel.FLAG_DEAD | Channel.FLAG_DISCARD;
-        
+
         for(Channel channel : this) {
             if(channel.isFlagged(discardFlags)) 
                 channel.coupling = channel.gain = channel.weight = channel.variance = 0.0;
@@ -300,44 +353,24 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
 
-    public void scramble() {
-        notify("!!! Scrambling pixel position data (noise map only) !!!");
+    public int getSourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
 
-        List<? extends Pixel> pixels = getPixels();
-
-        Vector2D temp = null;
-
-        int switches = (int) Math.ceil(pixels.size() * ExtraMath.log2(pixels.size()));
-
-        for(int n=switches; --n >= 0; ) {
-            int i = (int) (pixels.size() * Math.random());
-            int j = (int) (pixels.size() * Math.random());
-            if(i == j) continue;
-
-            Vector2D pos1 = pixels.get(i).getPosition();
-            if(pos1 == null) return;
-
-            Vector2D pos2 = pixels.get(j).getPosition();
-            if(pos2 == null) return;
-
-            if(temp == null) temp = pos1.copy();
-            else temp.copy(pos1);
-
-            pos1.copy(pos2);
-            pos2.copy(temp);
-        }	    
-    }
-
-    public int sourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
-
-    public float normalizeArrayGains() throws Exception {
+    protected float normalizeArrayGains() throws Exception {
         info("Normalizing relative channel gains.");    
         CorrelatedMode array = (CorrelatedMode) modalities.get("obs-channels").get(0);
         return array.normalizeGains();
     }
-    
-   
 
+
+    // TODO check for incompatible scans
+    public void validate(Vector<Scan<?>> scans) throws Exception {
+        if(hasOption("jackknife.alternate")) {
+            notify("JACKKNIFE! Alternating scans.");
+            for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
+                for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
+        }  
+    }
+    
     public void registerConfigFile(String fileName) {}
 
     public abstract String getTelescopeName();
@@ -364,17 +397,10 @@ implements TableFormatter.Entries, BasicMessaging {
         return Unit.counts;		
     }
 
-    public void setMJDOptions(double MJD) {
-        if(!options.containsKey("mjd")) return;
-
-        Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
-
-        for(String rangeSpec : settings.keySet()) 
-            if(Range.from(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));		
-    }
-
 
     public void setDateOptions(double MJD) {
+        setMJDOptions(MJD);
+        
         if(!options.containsKey("date")) return;
 
         Hashtable<String, Vector<String>> settings = option("date").conditionals;
@@ -398,6 +424,15 @@ implements TableFormatter.Entries, BasicMessaging {
             }
             catch(ParseException e) { warning(e); }
         }
+    }
+    
+    private void setMJDOptions(double MJD) {
+        if(!options.containsKey("mjd")) return;
+
+        Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
+
+        for(String rangeSpec : settings.keySet()) 
+            if(Range.from(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));        
     }
 
     public void setSerialOptions(int serialNo) {
@@ -477,7 +512,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public String getDataLocationHelp() {
         return "";
     }
-    
+
     public String getMapConfigHelp() {
         return "";
     }
@@ -489,7 +524,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public String getReductionModesHelp() {
         return "";
     }
-    
+
     public boolean hasOption(String name) {
         return options.hasOption(name);
     }
@@ -511,7 +546,6 @@ implements TableFormatter.Entries, BasicMessaging {
         scan.read(descriptor, true);
         return scan;
     }
-
 
     public void flagFields(Configurator option) {
         for(String name : option.getKeys(false)) if(option.hasOption(name)) flagField(name, option.option(name).getList());   
@@ -606,28 +640,31 @@ implements TableFormatter.Entries, BasicMessaging {
 
     protected void loadChannelData() {
         if(hasOption("pixeldata")) {
-            Configurator c = option("pixeldata");
-            if(!c.getValue().equalsIgnoreCase("write")) {
-                try { loadChannelData(c.getPath()); }
-                catch(IOException e) { warning("Cannot read pixel data. Using default gains & flags."); }
-            }
+            try { loadChannelData(option("pixeldata").getPath()); }
+            catch(IOException e) { warning("Cannot read pixel data. Using default gains & flags."); }
         }	
-
+        
+        
         if(hasOption("wiring")) { 
-            try { readWiring(option("wiring").getPath()); }	
-            catch(IOException e) {
-                warning("Cannot read wiring data. Specific channel divisions not established.");
-                return;
-            }
+            try { readWiring(option("wiring").getPath()); } 
+            catch(IOException e) { warning("Cannot read wiring data. Specific channel divisions not established."); }
         }
     }
 
-    public void readWiring(String fileName) throws IOException {}
+    /**
+     * Subclasses may use this method to populate channel fields from data placed in files. This method is
+     * called with the argument set by the <code>wiring</code> configuration option.
+     * 
+     * 
+     * @param fileName      The path/name of the file containing the channel field data.
+     * @throws IOException  If the file cannot be found / read.
+     */
+    protected void readWiring(String fileName) throws IOException {}
 
     public double getFrequency() { return frequency; }
-    
+
     protected void setFrequency(double Hz) { frequency = Hz; }
-    
+
     public double getResolution() { return resolution; }
 
     public void setResolution(double value) { resolution = value; }
@@ -673,7 +710,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public int getNonDetectorFlags() { return Channel.FLAG_DEAD; }
 
-    protected void initGroups() {
+    protected void createGroups() {
         groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 
         addGroup("all", createGroup());
@@ -695,7 +732,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
     }
 
-    protected void initDivisions() {
+    protected void createDivisions() {
         divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
 
         addDivision(new ChannelDivision<ChannelType>("all", groups.get("all")));
@@ -719,7 +756,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
     }
 
-    protected void initModalities() {
+    protected void createModalities() {
         modalities = new Hashtable<String, Modality<?>>();
 
         try { addModality(new CorrelatedModality("all", "Ca", divisions.get("all"), Channel.class.getField("gain"))); }
@@ -739,22 +776,22 @@ implements TableFormatter.Entries, BasicMessaging {
 
         try { addModality(modalities.get("obs-channels").new CoupledModality("sky", "Cs", Channel.class.getField("coupling"))); }
         catch(NoSuchFieldException e) { error(e); }
- 
+
         try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", Channel.class.getField("nonlinearity"))); } 
         catch(NoSuchFieldException e) { error(e); }
-        
+
         // Gradients
         CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
-        
+
         CorrelatedMode gx = common.new CoupledMode(new SkyGradient.X());
         gx.name = "gradients:x";
         CorrelatedMode gy = common.new CoupledMode(new SkyGradient.Y());
         gy.name = "gradients:y";
-        
+
         CorrelatedModality gradients = new CorrelatedModality("gradients", "G");
         gradients.add(gx);
         gradients.add(gy);
-        
+
         addModality(gradients);
 
         // Add pointing response modes...
@@ -849,9 +886,6 @@ implements TableFormatter.Entries, BasicMessaging {
         for(Channel channel : this) channel.weight = w;
     }
 
-    public void uniformGains() {
-        for(Channel channel : this) channel.uniformGains();
-    }
 
     public void uniformGains(Field field) throws IllegalAccessException {
         for(Channel channel : this) field.setDouble(channel, 1.0);		
@@ -916,37 +950,16 @@ implements TableFormatter.Entries, BasicMessaging {
         sampleWeights();
     }
 
-    
-    protected void initLayout() {
-        rotation = 0.0;
-        layout.initialize();
-        
-        if(hasOption("rcp")) {
-            try { readRCP(option("rcp").getPath()); }
-            catch(IOException e) { warning("Cannot update pixel RCP data. Using values from FITS."); }
-        }
-        
-        
-        // Apply instrument rotation...
-        if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
-        
-        // Instruments with a rotator should apply explicit rotation after pixel positions are finalized...
-        if(this instanceof Rotating) {
-            double angle = ((Rotating) this).getRotation();
-            if(angle != 0.0) rotate(angle);
-        }   
-        
-    }
-    
+
+
+
     // The pixel data file should contain the blind channel information as well...
     // create the channel groups based on the wiring scheme.
-
     public void loadChannelData(String fileName) throws IOException {
         info("Loading pixel data from " + fileName);
 
         final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 
-        
         // Channels not contained in the data file are assumed dead...
         for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
 
@@ -972,108 +985,20 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(integrationTime > 0.0) sampleWeights();
     }
-    
 
 
-    public void readRCP(String fileName)  throws IOException {      
-        info("Reading RCP from " + fileName);
-        
-        // Channels not in the RCP file are assumed to be blind...
-        for(ChannelType channel : this) {
-            channel.flag(Channel.FLAG_BLIND);
-        }
-        
-        final Hashtable<String, Pixel> idLookup = layout.getPixelLookup(); 
-        final boolean useGains = hasOption("rcp.gains");
-            
-        if(useGains) info("Initial Source Gains set from RCP file.");
-        
-        new LineParser() {
-
-            @Override
-            protected boolean parse(String line) throws Exception {
-                SmartTokenizer tokens = new SmartTokenizer(line);
-                int columns = tokens.countTokens();
-                Pixel pixel = idLookup.get(tokens.nextToken());
-                
-                if(pixel == null) return false;
-          
-                if(pixel instanceof Channel) {
-                    Channel channel = (Channel) pixel;
-                    double sourceGain = tokens.nextDouble();
-                    double coupling = (columns == 3 || columns > 4) ? sourceGain / tokens.nextDouble() : sourceGain / channel.gain;
-
-                    if(useGains) channel.coupling = coupling;
-                    if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
-                }
-
-                Vector2D position = pixel.getPosition();
-                position.setX(tokens.nextDouble() * Unit.arcsec);
-                position.setY(tokens.nextDouble() * Unit.arcsec);
-                return true;
-            }
-            
-        }.read(fileName);
-        
-        
-        flagInvalidPositions();
-        
-        if(hasOption("rcp.center")) {
-            Vector2D offset = option("rcp.center").getVector2D();
-            offset.scale(Unit.arcsec);
-            for(Pixel pixel : getPixels()) pixel.getPosition().subtract(offset);
-        }
-        
-        if(hasOption("rcp.rotate")) {
-            double angle = option("rcp.rotate").getDouble() * Unit.deg;
-            for(Pixel pixel : getPixels()) pixel.getPosition().rotate(angle);
-        }
-        
-        if(hasOption("rcp.zoom")) {
-            double zoom = option("rcp.zoom").getDouble();
-            for(Pixel pixel : getPixels()) pixel.getPosition().scale(zoom);
-        }
-        
-    }
-    
-
-    public String getRCPHeader() { return "ch\t[Gpnt]\t[Gsky]ch\t[dX\"]\t[dY\"]"; }
-    
-    public void printPixelRCP(PrintStream out, String header)  throws IOException {
-        out.println("# CRUSH Receiver Channel Parameter (RCP) Data File.");
-        out.println("#");
-        if(header != null) out.println(header);
-        out.println("#");
-        out.println("# " + getRCPHeader());
-        
-        for(Pixel pixel : getMappingPixels(~sourcelessChannelFlags())) 
-            if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
-                out.println(pixel.getRCPString());
-    }
-
-    public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
-        readRCP(rcpFileName);
-        initLayout();
-        loadChannelData(pixelFileName);
-        printPixelRCP(System.out, null);
-    }
-    
+  
     public void flagInvalidPositions() {
         for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 1 * Unit.deg) 
             for(Channel channel : pixel) channel.flag(Channel.FLAG_BLIND);
     }
-  
+
 
     public abstract int maxPixels();
-    
-    protected void setPointing(Scan<?> scan) {
-        if(hasOption("point")) return;
-        info("Setting 'point' option to obtain pointing/calibration data.");
-        setOption("point");
-        scan.getInstrument().setOption("point");     
-    }
-    
-    
+
+
+
+
 
 
 
@@ -1094,8 +1019,17 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public abstract Scan<?> getScanInstance();
 
+    /**
+     * This is a convenience method for populating the instrument with a fixed number of channels.
+     * Channels contained within this instrument prior to the call will be discarded, so only
+     * the channels added by this method will be part of the instrument after the call.
+     * It calls {@link #getChannelInstance(int)} in sequence 1 ... <code>channels</code>.
+     * 
+     * @param channels      The number of channels to add to this instrument.
+     */
     public void populate(int channels) {
         clear();
+        ensureCapacity(channels);
         for(int i=0; i<channels; i++) add(getChannelInstance(i));
     }
 
@@ -1114,18 +1048,18 @@ implements TableFormatter.Entries, BasicMessaging {
             if(type.equals("null")) return null;
             return null;
         }
-        
+
         return null;
     }  
 
-    public int getPixelCount() { return layout.getPixelCount(); }
+    public final int getPixelCount() { return layout.getPixelCount(); }
 
-    public List<? extends Pixel> getPixels() { return layout.getPixels(); }
+    public final List<? extends Pixel> getPixels() { return layout.getPixels(); }
 
-    public List<? extends Pixel> getMappingPixels(int keepFlags) { return layout.getMappingPixels(keepFlags); }
+    public final List<? extends Pixel> getMappingPixels(int keepFlags) { return layout.getMappingPixels(keepFlags); }
 
 
-    /*
+    /**
      *  Returns the offset of the pointing center from the the rotation center for a given rotation...
      *  
      *  @param rotationAngle    
@@ -1135,41 +1069,24 @@ implements TableFormatter.Entries, BasicMessaging {
     public Vector2D getPointingOffset(double rotationAngle) {
         return new Vector2D();
     }
-        
-    
-    /*
-     * Returns the offset of the pointing center w.r.t. the optical axis in the natural focal-plane system of the instrument.
-     * 
-     * @return          The focal plane offset of the pointing center from the optical axis in the natural coordinate system
-     *                  of the instrument. 
-     * 
-     */
-    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
-    
-    
-    public double getRotationAngle() {
-        return rotation;
+
+
+
+    public final double getRotationAngle() {
+        return layout.getRotation();
     }
-     
+
     public void setRotationAngle(double angle) {
-        this.rotation = angle;
+        layout.setRotation(angle);
     }
-    
 
-
-    
-    
     public void rotate(double angle) {
-        if(Double.isNaN(angle)) return;
-        
-        info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
-        
-        getLayout().rotate(angle);
+        layout.rotate(angle);
     }
-    
 
-    
-   
+
+
+
     public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
         Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
         for(ChannelType channel : this) lookup.put(channel.getFixedIndex(), channel);
@@ -1237,7 +1154,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void printCorrelatedModalities(PrintStream out) {
-        if(!isInitialized) initialize();
+        if(!hasEnsembles) createEnsembles();
 
         List<String> names = listModalities();
         out.println("\nAvailable pixel divisions for " + getName() + ": \n");
@@ -1253,7 +1170,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void printResponseModalities(PrintStream out) {
-        if(!isInitialized) initialize();
+        if(!hasEnsembles) createEnsembles();
 
         List<String> names = listModalities();
         out.println("\nAvailable response modalities for " + getName() + ": \n");
@@ -1274,32 +1191,24 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     @Override
-    public final boolean slim(int discardFlags) {
+    public final boolean removeFlagged(int discardFlags) {
         return slim(discardFlags, true);
     }
 
     public boolean slim(int discardFlags, boolean reindex) {
-        if(super.slim(discardFlags)) {
-            // remove discarded channels from groups (and divisiongroups) also...
-            slimGroups();
-            if(reindex) reindex();
-            info("Slimmed to " + size() + " live pixels.");
-            return true;
-        }
-        return false;
+        if(!super.removeFlagged(discardFlags)) return false;
+        
+        if(reindex) reindex();
+        
+        // Re-create all groups / divisions / modalities from the reduced set of channels...
+        createEnsembles();
+      
+        if(layout != null) layout.slim(discardFlags);
+
+        info("Slimmed to " + size() + " live channels.");
+        return true;
     }
 
-    public void slimGroups() {
-        Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
-        for(String name : groups.keySet()) slimGroup(groups.get(name), lookup);
-        for(String name : divisions.keySet()) for(ChannelGroup<?> group : divisions.get(name)) slimGroup(group, lookup);  
-        for(String name : modalities.keySet()) for(Mode mode : modalities.get(name)) slimGroup(mode.getChannels(), lookup); 	
-    }
-
-    public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> indexLookup) {
-        for(int c=group.size(); --c >= 0; ) if(!indexLookup.containsKey(group.get(c).getFixedIndex())) group.remove(c);
-        group.trimToSize();
-    }
 
     @Override
     public ChannelGroup<ChannelType> discard(int flagPattern, int criterion) {
@@ -1318,6 +1227,10 @@ implements TableFormatter.Entries, BasicMessaging {
 
         for(Channel channel : this) {
             G[channel.index] = channel.coupling;
+
+            Pixel pixel = channel.getPixel();
+            if(pixel != null) G[channel.index] *= pixel.coupling;
+
             if(!fixedGains) G[channel.index] *= channel.gain;
             if(filterCorrected) G[channel.index] *= channel.sourceFiltering;
         }
@@ -1429,20 +1342,20 @@ implements TableFormatter.Entries, BasicMessaging {
 
         census();
     }
-   
+
 
     public double getSourceNEFD(double gain) {
         final double G[] = getSourceGains(true);
 
         double sumpw = 0.0;
-               
+
         for(Channel channel : this) {
             if(channel.isFlagged()) continue;
             if(G[channel.index] == 0.0) continue;
-            
+
             sumpw += G[channel.index] * G[channel.index] / channel.variance; 
         }
-        
+
         return Math.sqrt(integrationTime * mappingChannels / sumpw) / Math.abs(gain);
     }
 
@@ -1494,7 +1407,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void editImageHeader(List<Scan<?>> scans, Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        
+
         c.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
         c.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
         c.add(new HeaderCard("V2JY", janskyPerBeam(), "1 Jy/beam in instrument data units."));
@@ -1508,7 +1421,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public void addHistory(Header header, List<Scan<?>> scans) throws HeaderCardException {}
 
     // Sequential, because it is usually called from a parallel environment
-    public void calcOverlap(final double pointSize) {
+    public void calcOverlaps(final double pointSize) {
         if(this instanceof NonOverlapping) return;
 
         if(pointSize == overlapPointSize) return;
@@ -1521,7 +1434,7 @@ implements TableFormatter.Entries, BasicMessaging {
             protected void process(ChannelType channel) {
                 for(int k=channel.index; --k >= 0; ) {
                     final Channel other = get(k);
-                    final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+                    final Overlap<Channel> overlap = new Overlap<Channel>(channel, other, channel.overlap(other, pointSize));
                     if(overlap.isNull()) continue;
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
@@ -1554,7 +1467,7 @@ implements TableFormatter.Entries, BasicMessaging {
                     final Channel other = lookup.get(fixedIndex);
                     if(other == null) continue;
 
-                    final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+                    final Overlap<Channel> overlap = new Overlap<Channel>(channel, other, channel.overlap(other, pointSize));
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
                 }
@@ -1566,7 +1479,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public static Instrument<?> forName(String name) throws Exception {
         File file = new File(CRUSH.home + File.separator + "config" + File.separator + name.toLowerCase() + File.separator + "class");
-        
+
         if(!file.exists()) throw new IllegalArgumentException("Unknown instrument: '" + name + "'");
 
 
@@ -1586,13 +1499,12 @@ implements TableFormatter.Entries, BasicMessaging {
         if(name.equals("maxchannels")) return storeChannels;
         if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
         if(name.equals("sizeunit")) return getSizeUnit().name();
-        if(name.equals("rot")) return rotation / Unit.deg;
         if(name.equals("ptfilter")) return getAverageFiltering();
         if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();
         if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();
         if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnit().value();
         if(name.equals("stat1f")) return getOneOverFStat();
-        
+
         return layout.getTableEntry(name);        
     }
 
@@ -1630,7 +1542,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         CRUSH.suggest(getParent(), new String(buf));
     }
-    
+
 
 
     public int[] getInts() { return recycler.getIntArray(size()); }
@@ -1673,7 +1585,7 @@ implements TableFormatter.Entries, BasicMessaging {
     @Override
     public void error(Throwable e) { CRUSH.error(getParent(), e); }
 
-    
+
 
 
     public static void recycle(int[] array) { recycler.recycle(array); }
@@ -1692,7 +1604,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public final static int GAINS_SIGNED = 0;
     public final static int GAINS_BIDIRECTIONAL = 1;
-    
+
     // TODO no lookup access?
     public final static Unit arcsec = Unit.get("arcsec");
     public final static Unit arcmin = Unit.get("arcmin");

@@ -23,11 +23,11 @@
 
 package crush.instrument.scuba2;
 
-import crush.instrument.SingleColorPixel;
+import crush.Channel;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class Scuba2Pixel extends SingleColorPixel {
+public class Scuba2Pixel extends Channel {
 	/**
 	 * 
 	 */

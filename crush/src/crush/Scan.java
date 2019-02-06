@@ -141,12 +141,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
         if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));	
 
-        instrument.calcOverlap(getPointSize());
+        instrument.calcOverlaps(getPointSize());
     }
 
     public void setIteration(int i, int rounds) {
         CRUSH.setIteration(instrument.getOptions(), i, rounds);
-        instrument.calcOverlap(getPointSize());
+        instrument.calcOverlaps(getPointSize());
         for(Integration<?> integration : this) if(integration.getInstrument() != instrument) integration.setIteration(i, rounds);	
     }
 
@@ -164,7 +164,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
     public void setMJD(double MJD) {
         this.MJD = MJD;
         instrument.setDateOptions(MJD);
-        instrument.setMJDOptions(MJD);
     }
 
     public String getShortDateString() {
@@ -182,6 +181,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         instrument.setObjectOptions(sourceName);
     }	
 
+    public void setSuggestPointing() {
+        if(hasOption("point")) return;
+        info("Setting 'point' option to obtain pointing/calibration data.");
+        instrument.setOption("point");    
+    }
+    
 
     public Vector2D getPointingCorrection(Configurator option) {
         Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
@@ -329,7 +334,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         c.add(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
         c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        instrument.getStartupOptions().difference(global).editHeader(header);	
+        instrument.getInitialOptions().difference(global).editHeader(header);	
 
         return hdu;
     }

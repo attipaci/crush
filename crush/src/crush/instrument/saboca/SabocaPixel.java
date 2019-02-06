@@ -25,13 +25,12 @@
 package crush.instrument.saboca;
 
 import crush.*;
-import crush.telescope.apex.APEXContinuumPixel;
 import jnum.Util;
 import jnum.text.SmartTokenizer;
 
 
 
-public class SabocaPixel extends APEXContinuumPixel {
+public class SabocaPixel extends Channel {
 	/**
 	 * 
 	 */

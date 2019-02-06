@@ -221,19 +221,25 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		
 		int subscans = readScanInfo(getFits(dir + "SCAN" + ext));
 		
-		getInstrument().readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
-		getInstrument().validate(this);
+		APEXInstrument<? extends Channel> instrument = getInstrument();
+		
+		instrument.readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
+		instrument.configure();
 		clear();	
 		
-		for(int i=0; i<subscans; i++) {
+		int[] bands = instrument.activeBands;
+		
+		for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
 			try {
 				SubscanType subscan = getIntegrationInstance();
 
-				info("Integration {" + (i+1) + "}:");
 				subscan.integrationNo = i;
+				subscan.getInstrument().band = bands[j];
+				
+				info("Integration " + subscan.getID() + ":");
 				
 				subscan.readDataPar(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
-				subscan.readData(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
+				subscan.readData(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-" + bands[j] + ext));
 				if(readMonitor()) subscan.readMonitor(getFits(dir + (i+1) + File.separator + "MONITOR" + ext));
 				
 				add(subscan);
@@ -253,17 +259,23 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
     
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
-		getInstrument().readPar((BinaryTableHDU) hdu[2]);
-		getInstrument().validate(this);
+		
+		APEXInstrument<? extends Channel> instrument = getInstrument();
+		
+		instrument.readPar((BinaryTableHDU) hdu[2]);
+		instrument.configure();
 		clear();
 		
+		int[] bands = instrument.activeBands;
+		
 		int k=3;
-		for(int i=0; i<subscans; i++) {
+		for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
 			try {
 				SubscanType subscan = getIntegrationInstance();
 				subscan.integrationNo = i;
+				subscan.getInstrument().band = bands[j];
 				
-				info("Integration {" + (i+1) + "}:");
+				info("Integration " + subscan.getID() + ": ");
 				
 				// HDUs for each integration can come in any order, so check EXTNAME...
 				for(int m=0; m<3; m++, k++) {
@@ -275,6 +287,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 					else if(extName.equalsIgnoreCase("ARRAYDATA-MBFITS")) subscan.readData(table);
 					else if(extName.equalsIgnoreCase("MONITOR-MBFITS")) if(readMonitor()) subscan.readMonitor(table);
 				}
+
 				
 				add(subscan);
 			}

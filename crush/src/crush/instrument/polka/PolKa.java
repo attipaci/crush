@@ -106,7 +106,7 @@ public class PolKa extends Laboca implements Oscillating {
 	
 	
 	@Override
-	public void validate(Scan<?> scan) {
+	public void configure() {
 		info("Parsing waveplate settings: ");
 		
 		if(hasOption("waveplate.frequency")) waveplateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
@@ -147,7 +147,7 @@ public class PolKa extends Laboca implements Oscillating {
 		isHorizontalPolarization = hasOption("system") ? option("system").is("horizontal") : false;
 
 	
-		super.validate(scan);
+		super.configure();
 	}
 	
 	@Override

@@ -133,14 +133,21 @@ public class Mode implements Serializable {
      * @throws Exception
      */
     public float[] getGains(boolean validate) throws Exception {
-        if(gain == null) {
-            gain = new float[channels.size()];
+        
+        if(gainProvider != null) {
+            if(gain != null) if(gain.length != channels.size()) gain = null;
+            if(gain == null) gain = new float[channels.size()];
+            applyProviderGains(validate);
+        }
+  
+        else if(gain == null) {
+            gain = new float[channels.size()];    
             Arrays.fill(gain, 1.0F);
         }
-        else if(gain.length != channels.size()) 
-            throw new IllegalStateException("Gain array size differs from mode channels.");
         
-        if(gainProvider != null) applyProviderGains(validate);
+        else if(gain.length != channels.size()) 
+            throw new IllegalStateException("Gain array size mismatch in mode " + getName() + " (" + gain.length + " vs. " + channels.size() +").");
+        
         return gain;
     }
 

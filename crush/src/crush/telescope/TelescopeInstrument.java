@@ -26,7 +26,6 @@ package crush.telescope;
 
 import crush.Channel;
 import crush.Instrument;
-import crush.instrument.PixelLayout;
 import jnum.astro.AstroProjector;
 import jnum.data.image.SphericalGrid;
 import jnum.math.Coordinate2D;
@@ -45,12 +44,12 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     private SphericalProjection projection; // Set by the first call to getProjection()
     
     
-    public TelescopeInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
-        super(name, layout, size);
+    public TelescopeInstrument(String name, int size) {
+        super(name, size);
     }
 
-    public TelescopeInstrument(String name, PixelLayout<? super ChannelType> layout) {
-        super(name, layout);
+    public TelescopeInstrument(String name) {
+        super(name);
     }
     
     
@@ -76,13 +75,13 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     // Returns the offset of the pointing center from the the rotation center for a given rotation...
     @Override
     public Vector2D getPointingOffset(double rotationAngle) {
-        Vector2D offset = super.getPointingCenterOffset();
+        Vector2D offset = getLayout().getPointingCenterOffset();
         
         final double sinA = Math.sin(rotationAngle);
         final double cosA = Math.cos(rotationAngle);
         
         if(mount == Mount.CASSEGRAIN) {
-            Vector2D dP = getPointingCenterOffset();    
+            Vector2D dP = getLayout().getPointingCenterOffset();    
             offset.addX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
             offset.addY(dP.x() * sinA + dP.y() * (1.0 - cosA));
         }

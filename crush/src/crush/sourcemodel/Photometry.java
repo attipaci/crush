@@ -39,6 +39,8 @@ public abstract class Photometry extends SourceModel {
 
     public String sourceName;
     public double integrationTime;
+    
+    
     private Hashtable<String, DataPoint> fluxes;
 
 

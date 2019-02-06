@@ -27,10 +27,7 @@ import java.io.*;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.GridIndexed;
 import crush.instrument.InstantFocus;
-import crush.instrument.PixelLayout;
-import crush.instrument.SingleColorLayout;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
@@ -41,16 +38,15 @@ import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
-public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexed {
+public class Gismo extends TelescopeInstrument<GismoPixel> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3009881856872575936L;
 
 
-	public Vector2D nasmythOffset;
-	protected Vector2D arrayPointingCenter; // row,col
-	Vector2D pixelSize = GismoPixel.defaultSize;
+    Vector2D nasmythOffset;
+
 
 	double focusXOffset, focusYOffset, focusZOffset;
 	
@@ -60,54 +56,43 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	
 	
 	public Gismo() {
-	    super("gismo", new SingleColorLayout<GismoPixel>(), pixels);
+	    super("gismo", pixels);
         setResolution(16.7 * Unit.arcsec);
         
-        arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
-        
-        pixelSize = GismoPixel.defaultSize;
-    
         mount = Mount.LEFT_NASMYTH;
 		
 		// TODO calculate this?
 		integrationTime = samplingInterval = 0.1 * Unit.sec;
+		
+		createLayout();
 	}
 	
+
+
+    @Override
+    protected GismoLayout getLayoutInstance() {
+        return new GismoLayout(this);
+    }
+
+    @Override
+    public GismoLayout getLayout() {
+        return (GismoLayout) super.getLayout();
+    }
+
+    @Override
+    public GismoLayout createLayout() {
+        return (GismoLayout) super.createLayout();
+    }
+
 	
     public int pixels() { return pixels; }
-    
-    public Vector2D getDefaultPointingCenter() { return defaultPointingCenter; }
-    
-    @Override
-    public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-        PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
-    }
 
-
-    @Override
-    public int rows() {
-        return rows;
-    }
-
-
-    @Override
-    public int cols() {
-        return cols;
-    }
-    
-    @Override
-    public Vector2D getSIPixelSize() {
-        return pixelSize;
-    }
-    
 	
 	@Override
 	public Gismo copy() {
 		Gismo copy = (Gismo) super.copy();
 		
-		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
-		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		
 		copy.detectorBias = Util.copyOf(detectorBias);
 		copy.secondStageBias = Util.copyOf(secondStageBias);
@@ -134,8 +119,8 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	}
 
 	@Override
-    protected void initDivisions() {
-		super.initDivisions();
+    protected void createDivisions() {
+		super.createDivisions();
 		
 		try { addDivision(getDivision("mux", GismoPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
 			ChannelDivision<GismoPixel> muxDivision = divisions.get("mux");
@@ -165,8 +150,8 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 	}
 	
 	@Override
-    protected void initModalities() {
-		super.initModalities();
+    protected void createModalities() {
+		super.createModalities();
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));		
@@ -199,49 +184,9 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 
 	}
 	
-	@Override
-    protected void initLayout() {
-		// Update the pointing centers...
-		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
-		
-		Vector2D pixelSize = GismoPixel.defaultSize;
-		
-		// Set the pixel size...
-		if(hasOption("pixelsize")) {
-			pixelSize = new Vector2D();
-			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
-			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
-		}
-
-		setPlateScale(pixelSize);
-			
-		super.initLayout();
-	}
-	
-	public void setPlateScale(Vector2D size) {
-		pixelSize = size;
-		
-		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);			
-	
-		for(GismoPixel pixel : this) pixel.calcPosition();
-		
-		// Set the pointing center...
-		getLayout().setReferencePosition(center);
-	}
-	
-	// Calculates the offset of the pointing center from the nominal center of the array
-	@Override
-	public Vector2D getPointingCenterOffset() {
-		Vector2D offset = (Vector2D) arrayPointingCenter.clone();
-		final Vector2D pCenter = getDefaultPointingCenter();
-		offset.subtract(pCenter);
-		if(hasOption("rotation")) offset.rotate(option("rotation").getDouble() * Unit.deg);
-		return offset;
-	}
 	
 	@Override
-	public void readWiring(String fileName) throws IOException {
+    protected void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
 		final ChannelLookup<GismoPixel> lookup = new ChannelLookup<GismoPixel>(this);
@@ -272,8 +217,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 		focusYOffset = header.getDoubleValue("FOCUS_YO", Double.NaN) * Unit.mm;
 		focusZOffset = header.getDoubleValue("FOCUS_ZO", Double.NaN) * Unit.mm;
 
-		arrayPointingCenter.setX(header.getDoubleValue("PNTROW", 8.5));
-		arrayPointingCenter.setY(header.getDoubleValue("PNTCOL", 4.5));
+		getLayout().parseHeader(header);
 		
 		nasmythOffset = new Vector2D(
 				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),
@@ -307,10 +251,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 		Object[] row = hdu.getRow(0);
 		final int pixels = pixels();	
 		
-		if(!isEmpty()) clear();
-		ensureCapacity(pixels);
-		
-		for(int c = 0; c<pixels; c++) add(new GismoPixel(this, c));
+		populate(pixels);
 		
 		int iMask = hdu.findColumn("PIXMASK");
 		int iBias = hdu.findColumn("DETECTORBIAS");
@@ -408,7 +349,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
 					scans.add(firstScan);
 				}
 			}
-			else if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
+			else if(firstScan.getObservingTime() < 3.3 * Unit.min) firstScan.setSuggestPointing();
 		}
 		
 		for(int i=scans.size(); --i > 0; ) {
@@ -512,9 +453,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexe
     public static final int pixels = rows * cols;
     
 
-    public static Vector2D defaultSize;
-    
-    private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
+
 
 
 	

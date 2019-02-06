@@ -25,13 +25,12 @@ package crush.instrument.hirmes;
 
 
 import crush.Channel;
-import crush.instrument.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class HirmesPixel extends SingleColorPixel {
+public class HirmesPixel extends Channel {
     /**
      * 
      */
@@ -162,7 +161,7 @@ public class HirmesPixel extends SingleColorPixel {
         HirmesLayout layout = hirmes.getLayout();
         
         if(isFlagged(FLAG_BLIND)) {
-            focalPlanePosition = position = null;
+            getPixel().setPosition(focalPlanePosition = null);
             restFrequency = Double.NaN;
         }
         else {
@@ -170,13 +169,13 @@ public class HirmesPixel extends SingleColorPixel {
                     layout.getHiresFocalPlanePosition(subcol, subrow) :
                     layout.getFocalPlanePosition(sub, subrow, subcol);
                     
-            position = layout.getSIBSPosition(focalPlanePosition);
+            getPixel().setPosition(layout.getSIBSPosition(focalPlanePosition));
             restFrequency = hirmes.getRestFrequency(focalPlanePosition);
         }
     }
 
     public boolean isDark() {
-        return subcol < 0 || position == null;
+        return subcol < 0 || getPixel().getPosition() == null;
     }
         
     @Override

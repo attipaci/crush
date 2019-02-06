@@ -25,12 +25,11 @@
 package crush.instrument.laboca;
 
 import crush.*;
-import crush.telescope.apex.*;
 import jnum.Util;
 import jnum.text.SmartTokenizer;
 
 
-public class LabocaPixel extends APEXContinuumPixel {
+public class LabocaPixel extends Channel {
 	
 	/**
 	 * 

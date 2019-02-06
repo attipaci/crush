@@ -1,7 +1,22 @@
+>> port essential fixes to 2.43...
+	- AstroTime
+	- Sofia scan set validation
+	- jnum -> 0.24 fixes (AstroTime...)
+>> check Sharc2...
+>> check ChannelGroup.slim()...
+
 
 2.50-a1
 
+	[FIX] {SOFIA} Validating a set of scans returned prematurely for
+	single scan reductions. As such automatic pointing on short scans
+	did not trigger as expected.
+
 	[FIX] {APEX} Small fixes to photometry weighting.
+
+	[FIX] {SHARC2} Multiple scans filenames weren't constructed as
+	expected ranges, due to AstroTime parsing only the date part of
+	the FITS timestamp. Fixed. 
 
 	[FIX] 'lab' mode fix to skip trying to precess when there is no
 	telescope data available.
@@ -10,6 +25,9 @@
 	coordinate epoch is unknown (-9999.0, or "UNKNOWN" in FITS).
 
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
+
+	[DEPRECATE] Removed support for 'neighbours.radius' option that 
+	was at some point used in APEX chop-nod photometry.
 
 	[TWEAK] Improved how projections are handled in 2D models, and fixed
 	a bug introduced in earlier development versions, where scans with
@@ -31,6 +49,11 @@
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
 
+	[API] Better management of pixels, which are now essentially just
+	another dynamically created group of channels, managed by the
+	PixelLayout class. PixelLayout is where pixels positions are 
+	calculated or determined.
+
 	[API] Re-organize how photometry, and phase-modulated data in general,
 	are handled. ChopNodPhotometry is now non-specific (used to be APEX 
 	only), and Photometry can be extended e.g. to provide support to
@@ -50,6 +73,8 @@
 	crush.instrument and crush.telescope.
 
 	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
+
+	[CODE] {APEX} Channels / pixels are created dynamically from FITS.
 
 	[CODE] ChannelGroup.slim() switched to a more efficient algorithm.
 

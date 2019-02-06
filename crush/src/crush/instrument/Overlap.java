@@ -23,17 +23,16 @@
 
 package crush.instrument;
 
-import crush.Channel;
 import jnum.data.RealValue;
 
-public class Overlap extends RealValue {
+public class Overlap<Type> extends RealValue {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7567199967596593068L;
-	public Channel a, b;
+	public Type a, b;
 	
-	public Overlap(Channel a, Channel b, double overlap) {
+	public Overlap(Type a, Type b, double overlap) {
 		this.a = a;
 		this.b = b;
 		setValue(overlap);

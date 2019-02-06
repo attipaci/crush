@@ -74,7 +74,7 @@ public class PixelMap extends SourceModel2D {
 		// Set all pixel positions to zero...
 		for(Scan<?> scan : collection) for(Integration<?> integration : scan) {
 		    final Instrument<?> instrument = integration.getInstrument();
-			for(Pixel pixel : instrument.getMappingPixels(~instrument.sourcelessChannelFlags())) {
+			for(Pixel pixel : instrument.getMappingPixels(~instrument.getSourcelessChannelFlags())) {
 				pixel.getPosition().zero();
 				pixel.setIndependent(true);
 			}
@@ -128,7 +128,7 @@ public class PixelMap extends SourceModel2D {
 		
 		if(map == null) {	
 			map = template.copy(false);
-			map.setID(Integer.toString(i));
+			map.setID(pixel.getID());
 			pixelMap[i] = map;
 		}
 			
@@ -281,7 +281,7 @@ public class PixelMap extends SourceModel2D {
 		Instrument<?> instrument = getFirstScan().getInstrument();
 		for(Channel channel : instrument) channel.coupling = sourceGain[channel.index] / channel.gain;
 	
-		instrument.printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
+		instrument.getLayout().printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
 		
 		out.flush();
 		out.close();

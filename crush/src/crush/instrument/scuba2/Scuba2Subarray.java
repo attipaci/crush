@@ -71,7 +71,7 @@ public class Scuba2Subarray implements Cloneable {
 		position.set((isMirrored ? -1.0 : 1.0) * col, row);
 		position.rotate(orientation);
 		position.add(focalPlanePixelOffset);
-		position.scale(scuba2.physicalPixelSize);
+		position.scale(scuba2.getLayout().physicalPixelSize);
 	}
 	
 	public void setOptions() {

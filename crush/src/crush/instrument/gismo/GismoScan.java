@@ -111,7 +111,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 			
 				// Keep the pointing model referenced to the nominal array center even if
 				// pointing on a different location on the array...
-				model.addNasmythOffset(getInstrument().getPointingCenterOffset());	
+				model.addNasmythOffset(getInstrument().getLayout().getPointingCenterOffset());	
 				
 				if(option.hasOption("model.static")) model.setStatic(true);
 				
@@ -281,19 +281,21 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 		boolean isOldFormat = fitsVersion < 1.7;
 		
 		skipReconstructed = hasOption("skipfwfix");
+		Gismo instrument = getInstrument();
 		
 		if(isOldFormat) {
-			getInstrument().parseOldScanPrimaryHDU(HDU[0]);
+			instrument.parseOldScanPrimaryHDU(HDU[0]);
 			parseOldScanPrimaryHDU(HDU[0]);
-			getInstrument().parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
+			instrument.parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
 		}
 		else {
-			getInstrument().parseScanPrimaryHDU(HDU[0]);
+			instrument.parseScanPrimaryHDU(HDU[0]);
 			parseScanPrimaryHDU(HDU[0]);
-			getInstrument().parseHardwareHDU((BinaryTableHDU) HDU[1]);
+			instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
 		}
 		
-		getInstrument().validate(this);	
+		instrument.configure();	
+		instrument.validate();
 		clear();
 
 		GismoIntegration integration = new GismoIntegration(this);
@@ -534,7 +536,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 		
 		// Keep the pointing model referenced to the nominal array center even if
 		// pointing on a different location on the array...
-		observingModel.addNasmythOffset(getInstrument().getPointingCenterOffset());
+		observingModel.addNasmythOffset(getInstrument().getLayout().getPointingCenterOffset());
 		
 		isTracking = true;
 	}

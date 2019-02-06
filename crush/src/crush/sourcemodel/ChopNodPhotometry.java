@@ -48,9 +48,7 @@ public class ChopNodPhotometry extends PointPhotometry {
     public ChopNodPhotometry(APEXInstrument<?> instrument) {
         super(instrument);
     }
-
-    public APEXInstrument<?> getAPEXArray() { return (APEXInstrument<?>) getInstrument(); }
-
+    
 
     @Override
     public void process(Scan<?> scan) {		
@@ -97,9 +95,8 @@ public class ChopNodPhotometry extends PointPhotometry {
         final double[] sourceGain = instrument.getSourceGains(false);
         final ChopperPhases phases = (ChopperPhases) modulated.getPhases();
         final double transmission = T;
-
-        //final double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
-
+        
+        
         instrument.getObservingChannels().new Fork<Void>() {
 
             @Override
@@ -119,26 +116,7 @@ public class ChopNodPhotometry extends PointPhotometry {
 
                 WeightedPoint df = phases.getLROffset(channel);
                 double chi2 = phases.getLRChi2(channel, df.value());
-
-
-                /*
-                    ArrayList<APEXContinuumPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
-
-					try { pixel.writeLROffset(phases, 
-							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".dat",
-							neighbours, sourceGain); }
-					catch(IOException e) { error(e); }
-
-					try { pixel.writeLRSpectrum(phases, 
-							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".spec"); }
-					catch(IOException e) { error(e); }
-                 */
-
-                //df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
-                //chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
-
-
-
+         
                 if(hasOption("chirange")) {
                     Range r = option("chirange").getRange(true);
                     if(!r.contains(Math.sqrt(chi2))) {
@@ -179,7 +157,7 @@ public class ChopNodPhotometry extends PointPhotometry {
 
 
 
-    class Datum {
+    private class Datum {
         DataPoint L = new DataPoint();
         DataPoint R = new DataPoint();   
     }

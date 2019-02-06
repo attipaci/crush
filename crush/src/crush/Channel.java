@@ -46,8 +46,9 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	private static final long serialVersionUID = -5541239418892633654L;
 
 	public Instrument<?> instrument;
+	private Pixel pixel;
 	
-	private transient Collection<Overlap> overlaps;
+	private transient Collection<Overlap<Channel>> overlaps;
 	
 	transient float temp, tempG, tempWG, tempWG2;
 	
@@ -75,6 +76,12 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public int spikes = 0;
 	public int inconsistencies = 0; // such as jumps...
 	
+    /**
+     * Constructs a new pixel for the specified instrument.
+     * 
+     * @param instrument    The instrument state to which this pixel belongs.
+     * @param fixedIndex    An index that uniquely identifies the pixel between 0 and {@link Instrument#maxPixels()}.
+     */
 	public Channel(Instrument<?> instrument, int fixedIndex) {
 		this.instrument = instrument;
 		setFixedIndex(fixedIndex);
@@ -96,6 +103,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	@Override
 	public Channel copy() {
 		Channel copy = clone();
+		copy.pixel = null;    // TODO pixel assignment does not copy over, since its channels are decoupled after copy...
 		copy.overlaps = null; // TODO copies aren't perfect since overlaps don't copy over...
 		return copy;
 	}
@@ -176,21 +184,32 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public double getFrequency() { return instrument.getFrequency(); }
 	
-	public abstract double overlap(Channel channel, double pointSize);
+	public final Pixel getPixel() { return pixel; }
 	
-	public Collection<Overlap> getOverlaps() { return overlaps; }
+	public void setPixel(Pixel pixel) { this.pixel = pixel; }
 	
-	public void setOverlaps(Collection<Overlap> overlaps) { this.overlaps = overlaps; }
+	public Collection<Overlap<Channel>> getOverlaps() { return overlaps; }
+	
+	public void setOverlaps(Collection<Overlap<Channel>> overlaps) { this.overlaps = overlaps; }
 	
 	public void clearOverlaps() {
 		if(overlaps != null) overlaps.clear();
 	}
 	
-	public synchronized void addOverlap(Overlap overlap) {
+	public synchronized void addOverlap(Overlap<Channel> overlap) {
 		if(overlap.a != this && overlap.b != this) return;
-		if(overlaps == null) overlaps = new HashSet<Overlap>();
+		if(overlaps == null) overlaps = new HashSet<Overlap<Channel>>();
 		overlaps.add(overlap);		
 	}
+	
+	public double overlap(Channel other, double pointSize) {
+	    if(pixel == null) return 0.0;
+	    Pixel p2 = other.getPixel();
+	    if(p2 == null) return 0.0;
+	    return pixel.overlap(p2, pointSize) * colorOverlap(other);
+	}
+	
+	public double colorOverlap(Channel other) { return 1.0; }
 	
 	public int getCriticalFlags() {
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;
@@ -241,7 +260,6 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public final static int FLAG_SENSITIVITY = softwareFlags.next('n', "Noisy").value();
 	public final static int FLAG_DOF = softwareFlags.next('f', "Degrees-of-freedom.").value();
 	public final static int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
-	//public final static int FLAG_DISCONTINUITY
 	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();    
     public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
 

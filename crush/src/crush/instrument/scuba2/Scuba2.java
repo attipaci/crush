@@ -26,18 +26,12 @@ package crush.instrument.scuba2;
 import java.util.*;
 
 import crush.*;
-import crush.instrument.DistortionModel;
-import crush.instrument.GridIndexed;
-import crush.instrument.PixelLayout;
-import crush.instrument.SingleColorLayout;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
-import jnum.Unit;
 import jnum.Util;
-import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridIndexed {
+public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 	/**
 	 * 
 	 */
@@ -49,16 +43,9 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	String filter;
 	boolean shutterOpen, isMirrored;
 	
-	double physicalPixelSize;		// e.g. mm 
-	double plateScale;				// e.g. arcseconds / mm;
-	
-	Vector2D pointingCenter;
-	Vector2D pointingCorrection;
-	Vector2D userPointingOffset;
-	
 	
 	public Scuba2() {
-		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
+		super("scuba2", SUBARRAYS * Scuba2Subarray.PIXELS);
 		//integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
 		subarray = new Scuba2Subarray[SUBARRAYS];
@@ -67,10 +54,6 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	@Override
 	public Scuba2 copy() {
 		Scuba2 copy = (Scuba2) super.copy();
-		
-		if(pointingCenter != null) copy.pointingCenter = pointingCenter.copy();
-		if(pointingCorrection != null) copy.pointingCorrection = pointingCorrection.copy();
-		if(userPointingOffset != null) copy.userPointingOffset = userPointingOffset.copy();
 		
 		if(subarray != null) {
 			copy.subarray = new Scuba2Subarray[subarray.length];
@@ -98,8 +81,8 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	}
 
 	@Override
-    protected void initDivisions() {
-		super.initDivisions();
+    protected void createDivisions() {
+		super.createDivisions();
 		
 		try { addDivision(getDivision("subarrays", Scuba2Pixel.class.getField("subarrayNo"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { error(e); }
@@ -123,8 +106,8 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	}
 	
 	@Override
-    protected void initModalities() {
-		super.initModalities();
+    protected void createModalities() {
+		super.createModalities();
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), Scuba2Pixel.class.getField("subarrayGain"));		
@@ -157,54 +140,15 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	}
 	
 	@Override
-    protected void initLayout() {
-		calcPixelPositions();
-		super.initLayout();
-	}
+    protected Scuba2Layout getLayoutInstance() { return new Scuba2Layout(this); }
 	
-	public void calcPixelPositions() {	
-		physicalPixelSize = hasOption("pixelmm") ? option("pixelmm").getDouble() * Unit.mm : DEFAULT_PIXEL_SIZE;
-		double plateScale = hasOption("platescale") ? option("platescale").getDouble() * Unit.arcsec / Unit.mm : DEFAULT_PLATE_SCALE;
-		
-		DistortionModel distortion = hasOption("distortion") ? new DistortionModel(option("distortion")) : null;
-		if(distortion != null) {
-			distortion.setUnit(Unit.get("mm"));
-			info("Applying distortion model: " + distortion.getName());
-		}
-				
-		for(Scuba2Pixel pixel : this) {	
-			pixel.position = subarray[pixel.subarrayNo].getPhysicalPixelPosition(pixel.row % Scuba2.SUBARRAY_ROWS, pixel.col % Scuba2.SUBARRAY_COLS);
-			
-			// Apply the distortion model (if specified).
-			if(distortion != null) pixel.position = distortion.getValue(pixel.position);
-			
-			// scale to arcseconds
-			pixel.position.scale(plateScale);
-			
-			// pointing center offset...
-			if(pointingCenter != null) pixel.position.subtract(pointingCenter);
-		}
-		
-		if(hasOption("flip")) for(Scuba2Pixel pixel : this) pixel.position.scaleX(-1.0);
-		
-		if(hasOption("rotate")) {
-			double angle = option("rotate").getDouble() * Unit.deg;
-			for(Scuba2Pixel pixel : this) pixel.position.rotate(angle);
-		}
-		
-		if(hasOption("zoom")) {
-			double zoom = option("zoom").getDouble();
-			for(Scuba2Pixel pixel : this) pixel.position.scale(zoom);
-		}
-		
-		if(hasOption("skew")) {
-			double skew = option("skew").getDouble();
-			for(Scuba2Pixel pixel : this) { pixel.position.scaleX(skew); pixel.position.scaleY(1.0/skew); }
-		}
-		
-		
-		
-	}
+	@Override
+    public Scuba2Layout createLayout() { return (Scuba2Layout) super.createLayout(); }
+	
+	@Override
+    public Scuba2Layout getLayout() { return (Scuba2Layout) super.getLayout(); }
+	
+	
 	
 	public ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
 		ArrayList<Scuba2Pixel> pixels = new ArrayList<Scuba2Pixel>(Scuba2Subarray.PIXELS);
@@ -239,10 +183,6 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 		// nSubarray = (header.getStringValue("SUBARRAY"));
 		for(int i=0; i<subarray.length; i++) subarray[i] = new Scuba2Subarray(this, subarrayPrefix + (char)('a' + i));
 		
-		// INSTAP_X, Y instrument aperture offsets. Kinda like FAZO, FZAO?
-		pointingCenter = new Vector2D(header.getDoubleValue("INSTAP_X", 0.0), header.getDoubleValue("INSTAP_Y", 0.0));
-		pointingCenter.scale(-Unit.arcsec);
-		
 		filter = header.getStringValue("FILTER");
 		double shutter = header.getDoubleValue("SHUTTER");
 		shutterOpen = shutter > 0.0;
@@ -261,14 +201,8 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 				+ " ZOff=" + Util.f2.format(focusZOffset)
 		);		
 		
-		// DAZ, DEL total pointing corrections
-		pointingCorrection = new Vector2D(header.getDoubleValue("DAZ", 0.0), header.getDoubleValue("DEL", 0.0));
-		pointingCorrection.scale(Unit.arcsec);
-		
-		// UAZ, UEL pointing
-		userPointingOffset = new Vector2D(header.getDoubleValue("UAZ", 0.0), header.getDoubleValue("UEL", 0.0));
-		userPointingOffset.scale(Unit.arcsec);
-		
+        
+        getLayout().parseHeader(header);
 	}
 	
 	/*
@@ -344,30 +278,7 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridInde
 	public int maxPixels() { return SUBARRAYS * Scuba2Subarray.PIXELS; }
 	
 
-	@Override
-	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
-	}
 
-	@Override
-	public Vector2D getSIPixelSize() {
-		final double size = physicalPixelSize * plateScale;
-		return new Vector2D(size, size);
-	}
-
-	@Override
-	public int rows() {
-		return SUBARRAYS * SUBARRAY_ROWS;
-	}
-
-	@Override
-	public int cols() {
-		return SUBARRAY_COLS;
-	}
-	
-
-	public final static double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
-	public final static double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
 	
 	public final static int SUBARRAY_COLS = 40;
 	public final static int SUBARRAY_ROWS = 32;

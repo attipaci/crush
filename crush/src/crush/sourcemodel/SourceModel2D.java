@@ -259,7 +259,7 @@ public abstract class SourceModel2D extends SourceModel {
 
     private void flagOutside(final Integration<?> integration, final Vector2D fixedSize) {
         final Instrument<?> instrument = integration.getInstrument();
-        final Collection<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
+        final Collection<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.getSourcelessChannelFlags());
 
         new CRUSH.Fork<Void>(integration.size(), integration.getThreadCount()) {
             private Projector2D<?> projector;
@@ -346,7 +346,7 @@ public abstract class SourceModel2D extends SourceModel {
 
     public void createLookup(Integration<?> integration) {    
         final Instrument<?> instrument = integration.getInstrument();
-        final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
+        final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.getSourcelessChannelFlags());
         final int n = integration.getInstrument().getPixelCount();
 
         if(CRUSH.debug) debug("lookup.pixels " + pixels.size() + " : " + integration.getInstrument().size());
@@ -403,11 +403,8 @@ public abstract class SourceModel2D extends SourceModel {
         if(CRUSH.debug) {
             if(index.i() < 0 || index.i() >= sizeX() || index.j() < 0 || index.j() >= sizeY()) {
                 warning("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
-                        (exposure.sourceIndex == null ? 
-                                index : 
-                                    exposure.sourceIndex[pixel.getIndex()]
-                                )
-                        );
+                        (exposure.sourceIndex == null ? index : exposure.sourceIndex[pixel.getIndex()]));
+                
                 index.set(0, 0);
             }
         }
@@ -704,7 +701,6 @@ public abstract class SourceModel2D extends SourceModel {
                 for(Frame exposure : integration) if(exposure != null) if(exposure.tempC != 0.0F) {
                     localSource.getIndex(exposure, pixel, projector, index);
                     localSource.add(exposure, pixel, index, exposure.tempC, sourceGain);
-                    //localSource.add(exposure, pixel, index, (isMasked(index) ? exposure.tempC : filtering * exposure.tempC), sourceGain);
                 }
             }
 
@@ -813,7 +809,7 @@ public abstract class SourceModel2D extends SourceModel {
         double[] sourceGain = instrument.getSourceGains(false);	
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
 
-        final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
+        final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.getSourcelessChannelFlags());
 
         if(hasSourceOption("coupling")) {
             calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);

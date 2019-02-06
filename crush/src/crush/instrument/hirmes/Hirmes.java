@@ -65,12 +65,17 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     private double z = 0.0;                 // Doppler shift. 
 
     public Hirmes() {
-        super("hirmes", new HirmesLayout(), pixels);
+        super("hirmes", pixels);
     }
 
     @Override
     public String getFileID() { return "HIR"; }
 
+    @Override
+    public HirmesLayout getLayoutInstance() { return new HirmesLayout(this); }
+    
+    @Override
+    public HirmesLayout createLayout() { return (HirmesLayout) super.createLayout(); }
     
     @Override
     public HirmesLayout getLayout() { return (HirmesLayout) super.getLayout(); }
@@ -104,8 +109,8 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
     @Override
-    protected void initDivisions() {
-        super.initDivisions();
+    protected void createDivisions() {
+        super.createDivisions();
 
         try { addDivision(getDivision("subarrays", HirmesPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); }    
@@ -149,8 +154,8 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
  
     @Override
-    protected void initModalities() {
-        super.initModalities();
+    protected void createModalities() {
+        super.createModalities();
 
         try { 
             CorrelatedModality subMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HirmesPixel.class.getField("subGain")); 
@@ -211,6 +216,9 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
         
+        populate(pixels);
+        createLayout();
+        
         spectral = new SofiaSpectroscopyData(header);
         
         samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
@@ -257,18 +265,6 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         c.add(SofiaData.makeCard("GRATANGL", gratingAngle / Unit.deg, "Grating angle"));
         c.add(SofiaData.makeCard("FPIK", fpiConstant, "FPI dispecrison constant"));
         c.add(new HeaderCard("HIRESSUB", hiresColUsed, "[0-7] Hires col used."));
-    }
-    
-
-    @Override
-    protected void initLayout() {
-        clear();
-
-        ensureCapacity(pixels);
-        for(int c=0; c<pixels; c++) add(new HirmesPixel(this, c));       
-        
-        // TODO load bias gains? ...
-        super.initLayout();
     }
     
 
@@ -350,11 +346,10 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
      */
 
     @Override
-    public void validate(Scan<?> scan) {
+    public void validate() {
+        super.validate();
         darkSquidCorrection = hasOption("darkcorrect");
         createDarkSquidLookup();
-
-        super.validate(scan);
     }
 
 

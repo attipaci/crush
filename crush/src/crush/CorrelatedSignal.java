@@ -215,10 +215,10 @@ public class CorrelatedSignal extends Signal {
 				if(channel.isFlagged(skipFlags)) return;
 				
 				double phi = dependents.get(channel);
-				final Collection<Overlap> overlaps = channel.getOverlaps();
+				final Collection<Overlap<Channel>> overlaps = channel.getOverlaps();
 				
 				// Every pixel that sees the source contributes to the filtering...
-				if(overlaps != null) for(Overlap overlap : overlaps) {
+				if(overlaps != null) for(Overlap<Channel> overlap : overlaps) {
 					final Channel other = (overlap.a == channel) ? overlap.b : overlap.a; 
 					if(other.isFlagged(skipFlags)) continue;
 					phi += overlap.value() * dependents.get(other);

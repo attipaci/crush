@@ -25,13 +25,12 @@ package crush.instrument.hawcplus;
 
 
 import crush.Channel;
-import crush.instrument.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class HawcPixel extends SingleColorPixel {
+public class HawcPixel extends Channel {
 	/**
 	 * 
 	 */
@@ -69,8 +68,8 @@ public class HawcPixel extends SingleColorPixel {
 	
 
 	public void calcSIBSPosition() {
-	    if(isFlagged(FLAG_BLIND)) position = null;
-	    position = ((HawcLayout) instrument.getLayout()).getSIBSPosition(sub, subrow, col);
+	    if(isFlagged(FLAG_BLIND)) getPixel().setPosition(null);
+	    getPixel().setPosition(((HawcLayout) instrument.getLayout()).getSIBSPosition(sub, subrow, col));
 	}
 		
 	@Override

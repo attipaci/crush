@@ -172,13 +172,13 @@ public abstract class PointPhotometry extends Photometry {
         String fileName = coreName + ".dat";
 
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-        out.println("# CRUSH Photometry Data File");
+        out.println("# CRUSH Point Photometry Data File");
         out.println("# =============================================================================");
         out.println(getASCIIHeader());
         out.println();
 
         Unit Jy = new Unit("Jy/beam", getInstrument().janskyPerBeam());
-        out.println("# Final Combined Photometry:");
+        out.println("# Final Combined Point Photometry:");
         out.println("# =============================================================================");
         out.println("# [" + sourceName + "]");
         out.println("Flux    " + getFinalizedSourceFlux().toString(Jy));    
@@ -191,7 +191,7 @@ public abstract class PointPhotometry extends Photometry {
         out.println();
 
         if(scanFluxes != null && numberOfScans() > 1) {
-            out.println("# Photometry breakdown by scan:");
+            out.println("# Point Photometry breakdown by scan:");
             out.println("# =============================================================================");
             for(int i=0; i<numberOfScans(); i++) {
                 Scan<?> scan = getScan(i);
@@ -201,8 +201,6 @@ public abstract class PointPhotometry extends Photometry {
             }
 
         }
-
-
 
         out.close();
 

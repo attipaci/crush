@@ -117,7 +117,8 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		Scuba2 scuba2 = getInstrument();
 		scuba2.addPixelsFor(hasSubarray);
 		scuba2.parseScanPrimaryHDU(mainHDU);
-		scuba2.validate(this);	
+		scuba2.configure();	
+		scuba2.validate();
 		
 		// Count how many subarrays are active
 		subarrays = 0;

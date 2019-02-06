@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -24,6 +24,8 @@
 package crush.instrument;
 
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,74 +39,153 @@ import crush.Pixel;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 
-public abstract class PixelLayout<ChannelType extends Channel> implements Serializable, Cloneable, TableFormatter.Entries {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6144882903894123342L;
-	
-	private Instrument<? extends ChannelType> instrument;
-		
-	public void setInstrument(Instrument<? extends ChannelType> instrument) {
-		this.instrument = instrument;
-	}
-	
-	public Instrument <? extends ChannelType> getInstrument() { return instrument; }
-	
-	@SuppressWarnings("unchecked")
-    @Override
-	public PixelLayout<ChannelType> clone() {
-		try { return (PixelLayout<ChannelType>) super.clone(); }
-		catch(CloneNotSupportedException e) { return null; }
-	}
-	
-	public PixelLayout<ChannelType> copyFor(Instrument<? extends ChannelType> i)  {
-		PixelLayout<ChannelType> copy = clone();
-		copy.instrument = i;
-		return copy;
-	}
-	
-	public void initialize() {}
-	
-	public boolean hasOption(String key) {
-		return instrument.hasOption(key);
-	}
-	
-	public Configurator option(String key) {
-		return instrument.option(key);
-	}
-	
-	public void setDefaults() {   
+/**
+ * The abstract class that manages {@link Pixel}s in an {@link Instrument}. As such, the layout is integrally linked to
+ * a specific instrument state. 
+ * <p>
+ * 
+ * In general, it is advisable that 
+ * implementations of this class perform all the pixel position calculations (so they are easily followed in one place), 
+ * setting and updating pixel properties, and assigning the parent instrument's channels to pixels.
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
+public abstract class PixelLayout implements Cloneable, Serializable, TableFormatter.Entries {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6144882903894123342L;
 
-	}
-	
-	public void validate(Configurator options) {
-		if(hasOption("beam")) instrument.setResolution(option("beam").getDouble() * instrument.getSizeUnit().value());
-	}
-	
-	public abstract int getPixelCount();
-	
-	public abstract List<? extends Pixel> getPixels();
-
-	
+    private Instrument<? extends Channel> instrument;
+    private double rotation = 0.0;
     
-    public Hashtable<String, Pixel> getPixelLookup() {
-        Hashtable<String, Pixel> table = new Hashtable<String, Pixel>();
-        for(Pixel pixel : getPixels()) table.put(pixel.getID(), pixel);
-        return table;
+    private ArrayList<Pixel> pixels = new ArrayList<Pixel>();
+
+    public PixelLayout(Instrument<? extends Channel> instrument) {
+        this.instrument = instrument;
     }
+    
+    @Override
+    public PixelLayout clone() {
+        try { return (PixelLayout) super.clone(); }
+        catch(CloneNotSupportedException e) { return null; }
+    }
+    
+    public PixelLayout copyFor(Instrument<? extends Channel> instrument) {
+        PixelLayout copy = clone();
+             
+        copy.instrument = instrument;
+        copy.pixels = new ArrayList<Pixel>(pixels.size());
         
-	
-	
-	public abstract List<? extends Pixel> getMappingPixels(int keepFlags);
-	
+        final Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+        
+        for(int i=0; i<pixels.size(); i++) {
+            Pixel p1 = pixels.get(i);
+            Pixel p2 = p1.emptyCopy();
+            
+            for(Channel c1 : p1) {
+                Channel c2 = lookup.get(c1.getFixedIndex());
+                if(c2 != null) p2.add(c2);
+            }
+            
+            p2.trimToSize();       
+            copy.pixels.add(p2);
+        }
+        
+        copy.reindex();
+        
+        return copy;
+    }
+    
+    
+    public void validate() {   
+        reindex();
+        
+        setDefaultPixelPositions();
+        
+        for(Pixel pixel : pixels) pixel.validate();
+        
+        if(hasOption("rcp")) {
+            try { readRCP(option("rcp").getPath()); }
+            catch(IOException e) { instrument.warning("Cannot update pixel RCP data. Using values from FITS."); }
+        }
+
+        // Apply instrument rotation...
+        if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
+            
+        // Instruments with a rotator should apply explicit rotation after pixel positions are finalized...
+        if(instrument instanceof Rotating) rotate(((Rotating) instrument).getRotation());
+
+        if(hasOption("scramble")) scramble();
+        
+        if(hasOption("uniform")) for(Pixel pixel : pixels) pixel.coupling = 1.0;
+    }
+    
+    
+    
+    public abstract void setDefaultPixelPositions();
+
+    public Instrument <? extends Channel> getInstrument() { return instrument; }
+
+
+    public Pixel getPixelInstance(int fixedIndex, String id) {
+        return new Pixel(instrument, id, fixedIndex);
+    }
+    
+    public void reset() {
+        rotation = 0.0;
+    }
+
+    public boolean hasOption(String key) {
+        return instrument.hasOption(key);
+    }
+
+    public Configurator option(String key) {
+        return instrument.option(key);
+    }
+
+    public int getPixelCount() {
+        return pixels.size();
+    }
+
+    public ArrayList<Pixel> getPixels() {
+        return pixels;
+    }
+
+    public ArrayList<Pixel> getMappingPixels(int keepFlags) {
+        int discardFlags = ~keepFlags;
+        ArrayList<Pixel> mappingPixels = new ArrayList<Pixel>(pixels.size());
+        for(Pixel p : pixels) {
+            if(p.getPosition() == null) continue;
+            if(p.isFlagged(discardFlags)) continue;
+            
+            for(Channel channel : p) if(channel.isUnflagged(discardFlags)) {
+                mappingPixels.add(p);
+                break;
+            }
+        }
+        return mappingPixels;
+    }
+
+
+    public Hashtable<String, Pixel> getPixelLookup() {
+        Hashtable<String, Pixel> lookup = new Hashtable<String, Pixel>(pixels.size());
+        for(Pixel pixel : pixels) lookup.put(pixel.getID(), pixel);
+        return lookup;
+    }
+
 
     public final List<? extends Pixel> getPerimeterPixels() { 
         int sections = 0;
-        
 
         if(hasOption("perimeter")) {
             if(option("perimeter").getValue().equalsIgnoreCase("auto")) {
@@ -117,11 +198,11 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
         }
         return getPerimeterPixels(sections); 
     }
-    
+
 
     public final List<? extends Pixel> getPerimeterPixels(int sections) { 
-        final List<? extends Pixel> mappingPixels = getMappingPixels(~instrument.sourcelessChannelFlags());
-        
+        final List<? extends Pixel> mappingPixels = getMappingPixels(~instrument.getSourcelessChannelFlags());
+
         if(sections <= 0) return mappingPixels;
 
         if(mappingPixels.size() < sections) return mappingPixels;
@@ -154,9 +235,9 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
 
         return perimeter;
     }
-		
 
-    
+
+
 
 
     // How about different pointing and rotation centers?...
@@ -165,20 +246,23 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
     // center... (dP is the pointing rel. to rotation vector)
     // i.e. the effective array offsets change by:
     //  dP - dP.rotate(a-a0)
-    
+
     // For Cassegrain assume pointing at zero rotation (a0 = 0.0)
     // For Nasmyth assume pointing at same elevation (a = a0)
-    
-    public void rotate(double angle) {
-               
-        // Undo the prior rotation...
-        Vector2D priorOffset = instrument.getPointingOffset(instrument.getRotationAngle());
-        Vector2D newOffset = instrument.getPointingOffset(instrument.getRotationAngle() + angle);
 
+    public void rotate(double angle) {
+        if(Double.isNaN(angle)) return;
+        if(angle == 0.0) return;
         
+        instrument.info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+
+        // Undo the prior rotation...
+        Vector2D priorOffset = getPointingOffset(rotation);
+        Vector2D newOffset = getPointingOffset(rotation + angle);
+
         for(Pixel pixel : getPixels()) if(pixel.getPosition() != null) {
             Vector2D position = pixel.getPosition();
-            
+
             // Center positions on the rotation center...
             position.subtract(priorOffset);
             // Do the rotation...
@@ -186,10 +270,17 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
             // Re-center on the pointing center...
             position.add(newOffset);
         }
+        
+        rotation += angle;
     }
-    
-    
 
+
+    public final Vector2D getPointingOffset(double angle) { return getInstrument().getPointingOffset(angle); }
+    
+    public double getRotation() { return rotation; }
+
+    public void setRotation(double angle) { rotation = angle; }
+    
     public void setReferencePosition(Vector2D position) {
         Vector2D referencePosition = position.copy();
         for(Pixel pixel : getPixels()) {
@@ -197,34 +288,176 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
             if(v != null) v.subtract(referencePosition);
         }
     }
+    
+
+
+    /**
+     * Returns the offset of the pointing center w.r.t. the optical axis in the natural focal-plane system of the instrument.
+     * 
+     * @return          The focal plane offset of the pointing center from the optical axis in the natural coordinate system
+     *                  of the instrument. 
+     * 
+     */
+    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
+
+    
+    public void scramble() {
+        instrument.notify("!!! Scrambling pixel position data (noise map only) !!!");
+
+        List<? extends Pixel> pixels = getPixels();
+
+        Vector2D temp = null;
+
+        int switches = (int) Math.ceil(pixels.size() * ExtraMath.log2(pixels.size()));
+
+        for(int n=switches; --n >= 0; ) {
+            int i = (int) (pixels.size() * Math.random());
+            int j = (int) (pixels.size() * Math.random());
+            if(i == j) continue;
+
+            Vector2D pos1 = pixels.get(i).getPosition();
+            if(pos1 == null) return;
+
+            Vector2D pos2 = pixels.get(j).getPosition();
+            if(pos2 == null) return;
+
+            if(temp == null) temp = pos1.copy();
+            else temp.copy(pos1);
+
+            pos1.copy(pos2);
+            pos2.copy(temp);
+        }       
+    }
+    
 
     @Override
     public Object getTableEntry(String name) {
+        if(name.equals("rot")) return getRotation() / Unit.deg;
         return TableFormatter.NO_SUCH_DATA;        
     }
-   
+
+    public void reindex() {
+        for(int i=pixels.size(); --i >= 0; ) pixels.get(i).setIndex(i);
+    }
     
-    public static void addLocalFixedIndices(GridIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
+    public final boolean slim(int discardFlags) {
+        boolean removedChannels = false;
         
+        for(Pixel pixel : getPixels()) removedChannels |= pixel.removeFlagged(discardFlags);
+        
+        if(removedChannels) {
+            final int np = pixels.size();
+            final ArrayList<Pixel> slimmed = new ArrayList<Pixel>(np);
+            
+            for(int k=0; k<np; k++) {
+                final Pixel pixel = pixels.get(k);
+                if(!pixel.isEmpty()) slimmed.add(pixel);
+            }
+            
+            slimmed.trimToSize();
+            pixels.clear();
+            pixels.addAll(slimmed);
+            pixels.trimToSize();
+            reindex();
+        }
+        
+        return removedChannels;
+    }
+    
+
+
+    public void readRCP(String fileName)  throws IOException {      
+        instrument.info("Reading RCP from " + fileName);
+
+        final Hashtable<String, Pixel> idLookup = getPixelLookup(); 
+        final boolean useGains = hasOption("rcp.gains");
+
+        if(useGains) instrument.info("Initial gains are from RCP file.");
+
+        new LineParser() {
+
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                int columns = tokens.countTokens();
+                Pixel pixel = idLookup.get(tokens.nextToken());
+
+                if(pixel == null) return false;
+
+                double sourceGain = tokens.nextDouble();
+                double coupling = (columns == 3 || columns > 4) ? sourceGain / tokens.nextDouble() : sourceGain;
+
+                pixel.coupling = (sourceGain == 0.0) ? 0.0 : 1.0; // Default coupling gain...
+
+                if(useGains) pixel.coupling = coupling; 
+
+                Vector2D position = pixel.getPosition();
+                position.setX(tokens.nextDouble() * Unit.arcsec);
+                position.setY(tokens.nextDouble() * Unit.arcsec);
+                return true;
+            }
+
+        }.read(fileName);
+
+
+        instrument.flagInvalidPositions();
+
+        if(hasOption("rcp.center")) {
+            Vector2D offset = option("rcp.center").getVector2D();
+            offset.scale(Unit.arcsec);
+            for(Pixel pixel : getPixels()) pixel.getPosition().subtract(offset);
+        }
+
+        if(hasOption("rcp.rotate")) {
+            double angle = option("rcp.rotate").getDouble() * Unit.deg;
+            for(Pixel pixel : getPixels()) pixel.getPosition().rotate(angle);
+        }
+
+        if(hasOption("rcp.zoom")) {
+            double zoom = option("rcp.zoom").getDouble();
+            for(Pixel pixel : getPixels()) pixel.getPosition().scale(zoom);
+        }
+
+    }
+
+
+    
+    public String getRCPHeader() { return "ch\t[Gpnt]\t[Gsky]ch\t[dX\"]\t[dY\"]"; }
+
+    public void printPixelRCP(PrintStream out, String header)  throws IOException {
+        out.println("# CRUSH Receiver Channel Parameter (RCP) Data File.");
+        out.println("#");
+        if(header != null) out.println(header);
+        out.println("#");
+        out.println("# " + getRCPHeader());
+
+        for(Pixel pixel : getMappingPixels(~instrument.getSourcelessChannelFlags())) 
+            if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
+                out.println(pixel.getRCPString());
+    }
+
+
+    
+
+    public static void addLocalFixedIndices(GridIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
+
         final int row = fixedIndex / geometric.cols();
         final int col = fixedIndex % geometric.cols();
-        
-        final Vector2D pixelSize = geometric.getSIPixelSize();
+
+        final Vector2D pixelSize = geometric.getPixelSize();
         final int dc = (int)Math.ceil(radius / pixelSize.x());
         final int dr = (int)Math.ceil(radius / pixelSize.y());
-        
+
         final int fromi = Math.max(0, row - dr);
         final int toi = Math.min(geometric.rows()-1, row + dr);
-        
+
         final int fromj = Math.max(0, col - dc);
         final int toj = Math.min(geometric.cols()-1, col + dc);
-    
+
         for(int i=fromi; i<=toi; i++) for(int j=fromj; j<=toj; j++) if(!(i == row && j == col)) {
             final double r = ExtraMath.hypot((i - row) * pixelSize.y(), (j - col) * pixelSize.x());
             if(r <= radius) toIndex.add(i * geometric.cols() + j);
         }
-        
     }
 
-    
 }

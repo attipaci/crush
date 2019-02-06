@@ -28,7 +28,6 @@ import java.util.List;
 
 import crush.Channel;
 import crush.Instrument;
-import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
 
@@ -39,17 +38,21 @@ public class GenericInstrument extends Instrument<Channel> {
 	private static final long serialVersionUID = -7286113017649967311L;
 	private String telescope;
 	
-	private int pixels = 0;
-	
+	private int maxPixels;
 	
 	public GenericInstrument(String name, int size) {
-		super(name, null, size);
+		super(name, size);
+		maxPixels = size;
 	}
 
 	public GenericInstrument(String name) {
-		super(name, null);
+		super(name);
 	}
 
+	public void setMaxPixels(int n) {
+	    maxPixels = n;
+	}
+	
 	public void setTelescopeName(String value) { telescope = value; }
 	
 	@Override
@@ -72,29 +75,17 @@ public class GenericInstrument extends Instrument<Channel> {
 	public SourceModel getSourceModelInstance(List<Scan<?>> scans) {
 		return null;
 	}
-
-	@Override
-	public List<? extends Pixel> getMappingPixels(int keepFlags) {
-		return null;
-	}
-
-	public void setPixelCount(int n) {
-	    pixels = n;
-	}
 	
-	@Override
-	public int getPixelCount() {
-		return pixels;
-	}
 
-	@Override
-	public int maxPixels() {
-	    return pixels;
-	}
-	
-	@Override
-	public List<? extends Pixel> getPixels() {
-		return null;
-	}
+    @Override
+    public int maxPixels() {
+        return maxPixels;
+    }
+
+    @Override
+    protected PixelLayout getLayoutInstance() {
+        return null; // TODO
+    }
+
 
 }

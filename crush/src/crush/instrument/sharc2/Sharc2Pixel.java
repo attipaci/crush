@@ -20,18 +20,17 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.instrument.sharc2;
 
-import crush.instrument.SingleColorPixel;
+import crush.Channel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
 
-public class Sharc2Pixel extends SingleColorPixel {
+public class Sharc2Pixel extends Channel {
 	/**
 	 * 
 	 */
@@ -55,15 +54,8 @@ public class Sharc2Pixel extends SingleColorPixel {
 	public double getHardwareGain() {
 		return ((Sharc2) instrument).rowGain[row];
 	}
-	
-	public void calcPosition() {
-		// ALt/Az maps show this to be correct...
-		position = getPosition(((Sharc2) instrument).getSIPixelSize(), row, col);
-	}
-	
-	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(-size.x() * col, size.y() * row);
-	}
+
+
 		
 	@Override
 	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
@@ -77,12 +69,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f3.format(rowGain);
 	}
  
-	
-	public double getAreaFactor() {
-	    Vector2D size = ((Sharc2) instrument).getSIPixelSize();
-		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
-	}
-	
+
 	@Override
 	public void uniformGains() {
 		super.uniformGains();
@@ -95,6 +82,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 
 	public final static int FLAG_13HZ = softwareFlags.next('^', "13Hz pickup").value();
 	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+
 
   
 }
