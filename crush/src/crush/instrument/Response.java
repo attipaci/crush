@@ -26,6 +26,21 @@ import crush.Integration;
 import crush.Mode;
 import crush.Signal;
 
+
+/**
+ * A class for representing the common mode response of a group of detector channels to some known external stimulus,
+ * such as an electronic modulation, measured temperature variation, or telescope movememt.
+ * <p>
+ * 
+ * The removal of common mode responses involves the estimation of coupling gains to the known driving signal. 
+ * Following the gain estimation, the scaled imprint of the known driving signal is subtracted from the 
+ * timestreams of channels associated with this common mode response.
+ * <p>
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public abstract class Response extends Mode {
 
 	/**

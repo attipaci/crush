@@ -51,8 +51,11 @@ public class Sharc2Pixel extends Channel {
 	}
 	
 	@Override
-	public double getHardwareGain() {
-		return ((Sharc2) instrument).rowGain[row];
+    public Sharc2 getInstrument() { return (Sharc2) super.getInstrument(); }
+	
+	@Override
+	public double getReadoutGain() {
+		return getInstrument().rowGain[row];
 	}
 
 

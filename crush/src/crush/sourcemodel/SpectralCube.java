@@ -276,7 +276,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     @Override
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {    
         Observation2D plane = cube.getPlane(getFrequencyBin(exposure, channel));
-        plane.accumulateAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
+        plane.accumulateAt(index.i(), index.j(), exposure.data[channel.getIndex()], G, exposure.relativeWeight / channel.variance, dt);
     }
 
     public boolean isMasked(int i, int j, int k) {
@@ -301,6 +301,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     }
  
     protected void sync(Frame exposure, Channel channel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
+        final int c = channel.getIndex();
         final int k = getFrequencyBin(exposure, channel);
         Observation2D plane = cube.getPlane(k);
 
@@ -311,11 +312,11 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         final float baseValue = base.getPlane(k).getValid(index, 0.0F).floatValue();
 
         // Do not check for flags, to get a true difference image...
-        exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);  
+        exposure.data[c] -= fG * (sourceGain[c] * mapValue - syncGain[c] * baseValue);  
 
         // Do the blanking here...
-        if(isMasked(index.i(), index.j(), k)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
-        else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
+        if(isMasked(index.i(), index.j(), k)) exposure.sampleFlag[c] |= Frame.SAMPLE_SOURCE_BLANK;
+        else exposure.sampleFlag[c] &= ~Frame.SAMPLE_SOURCE_BLANK;
     }
 
     @Override

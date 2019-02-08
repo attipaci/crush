@@ -28,6 +28,7 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
+import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.math.Vector2D;
@@ -170,15 +171,11 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		info(">>> Fix: Source coordinates obtained from antenna stream.");
 		
 		getInstrument().earlyFITS = true;
-		double epoch = header.getDoubleValue("EQUINOX", 2000.0);
 		header = data.getHeader();
 		float RA = ((float[]) data.getElement(0, data.findColumn("RA")))[0];
 		float DEC = ((float[]) data.getElement(0, data.findColumn("DEC")))[0];
 		
-		equatorial = new EquatorialCoordinates(
-				RA * raUnit,
-				DEC * decUnit,
-				(epoch < 1984.0 ? "B" : "J") + epoch);
+		equatorial = new EquatorialCoordinates(RA * raUnit, DEC * decUnit, CoordinateEpoch.fromHeader(header));
 	}
 	
 	@Override

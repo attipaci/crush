@@ -36,6 +36,17 @@ import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 import jnum.parallel.ParallelTask;
 
+
+/**
+ * A class for representing a time-variable signal. It may be a known measured signal (such as an electronic bias,
+ * a temperature sensor's readout, or a telescope position, or a derivative of these). Alternatively, it may be
+ * a common mode signal derived from the detector data themselves (see {@link CorrelatedSignal}).
+ * <p>
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	/**
 	 * 

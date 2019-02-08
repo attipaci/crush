@@ -138,10 +138,12 @@ public class WhiteningFilter extends AdaptiveFilter {
     }
 
     private void calcMeanAmplitudes(Channel channel) {
+        final int c = channel.getIndex();
+        
         // If the filterResponse array does not exist, create it...
-        if(channelProfiles[channel.index] == null) {
-            channelProfiles[channel.index] = new float[nF];
-            Arrays.fill(channelProfiles[channel.index], 1.0F);
+        if(channelProfiles[c] == null) {
+            channelProfiles[c] = new float[nF];
+            Arrays.fill(channelProfiles[c], 1.0F);
         }
 
         final float[] data = getTempData();
@@ -182,7 +184,7 @@ public class WhiteningFilter extends AdaptiveFilter {
         final float[] profile = getProfile();
 
         Arrays.fill(profile, 1.0F); // To be safe initialize the scaling array here...
-        final float[] lastProfile = channelProfiles[channel.index];
+        final float[] lastProfile = channelProfiles[channel.getIndex()];
 
         // Calculate the median amplitude
         System.arraycopy(A, 0, temp, 0, A.length);	

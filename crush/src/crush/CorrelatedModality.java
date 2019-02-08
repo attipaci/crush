@@ -31,7 +31,19 @@ import crush.instrument.GainProvider;
 import jnum.Configurator;
 import jnum.math.Range;
 
-
+/**
+ * A class representing a collection of similar {@link CorrelatedMode}s, by some organizing principle. These modes typically
+ * form a disjoint set, whose channels may partially or fully span an {@link Instrument}. 
+ * <p>
+ * 
+ * Besides the hard-coded modalities created explicitly by {@link Instrument#createModalities()}, additional correlated modalities 
+ * are automatically created for {@link ChannelDivision}s specified at runtime via the <code>division</code> configuration option.
+ * <p>
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ * @param <ModeType>    The generic type of the correlated modes contained in this modality.
+ */
 public class CorrelatedModality extends Modality<CorrelatedMode> {
 	/**
 	 * 

@@ -38,23 +38,39 @@ import jnum.util.FlagSpace;
 import jnum.util.FlagBlock;
 
 
-
+/**
+ * A class that represents a detector channel in an {@link Instrument}, and its properties for the given <code>Instrument</code> state. 
+ * Channels can be uniquely identified either by a fixed index (starting from zero, and less than {@link Instrument#storeChannels}), or optionally also by a String ID.
+ * <p>
+ * 
+ * Channels of an <code>Instrument</code> can be grouped (see {@link ChannelGroup}) by their common properties (e.g. TES channels read out
+ * through the same SQUID mux can constitute such a group). {@link Pixel}s are also such a group of channels, which share the same
+ * physical location, and coupling. Thus, in monochromatic continuum cameras (e.g. SHARC-2, GISMO, or HAWC+) each pixel has exactly
+ * one channel, whereas spectroscopic or multicolor, or multipol instruments can have several or many channels per <code>Pixel</code>.
+ * The way channels are assigned to pixels, is managed by the {@link PixelLayout} class.
+ * <p>
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ *
+ */
 public abstract class Channel implements Serializable, Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5541239418892633654L;
 
-	public Instrument<?> instrument;
-	private Pixel pixel;
+	Instrument<?> instrument;
+    int index;                                     // This pixel's index in the parent instrument.
 	
+	private Pixel pixel;	
 	private transient Collection<Overlap<Channel>> overlaps;
+
+	transient float temp, tempG, tempWG, tempWG2;  // these are used as associated temporary variables during reduction.
 	
-	transient float temp, tempG, tempWG, tempWG2;
-	
-	public int index;
 	private int fixedIndex;
 	private int flag = 0;
+	
 	public int sourcePhase = 0;
 	
 	public double offset = 0.0; // At the readout stage! (as of 2.03)
@@ -84,7 +100,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
      */
 	public Channel(Instrument<?> instrument, int fixedIndex) {
 		this.instrument = instrument;
-		setFixedIndex(fixedIndex);
+		this.fixedIndex = fixedIndex;
 	}
 	
 	@Override
@@ -93,7 +109,6 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		catch(CloneNotSupportedException e) { return null; }		
 	}
 	
-	// By default, channels can be sorted by backend-index
 	@Override
 	public int compareTo(Channel channel) {
 		if(channel.fixedIndex == fixedIndex) return 0;
@@ -108,7 +123,13 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return copy;
 	}
 	
-	public boolean isValid() { return isFlagged(); }
+	/**
+	 * Returns the parent instrument's configuration/operating state to which this channel state belongs.
+	 * 
+	 * @return
+	 */
+	public Instrument<? extends Channel> getInstrument() { return instrument; }
+
 		
 	@Override
 	public final boolean isFlagged(final int pattern) {
@@ -145,6 +166,11 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		flag = 0;
 	}
 	
+	/**
+	 * Returns all the bit-wise flags for this channel.
+	 * 
+	 * @return     The up-to 32 bitwise flags for this channel as an integer.
+	 */
 	public final int getFlags() { return flag; }
 	
 	public double getFiltering(Integration<?> integration) {
@@ -152,23 +178,62 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return directFiltering * (1.0 - nDrifts / integration.size());
 	}
 	
+	/**
+	 * Add the fractional dependents, i.e. the relative weight that this channel contributes to the estimate of some parameter(s).
+	 * This is also equal, by definition, to the loss of degrees of freedom in that channel to to its contribution to the modeling.
+	 *
+	 * @param dp       The fractional dependence of some parameter(s) on this channel's contribution to their estimate.
+	 * 
+	 * @see Dependents
+	 */
 	public final synchronized void addDependents(double dp) {
 		dependents += dp;
 	}
-	
+
+	/**
+     * Removes the fractional dependents, i.e. the relative weight that this channel contributes to the estimate of some parameter(s).
+     * This is also equal, by definition, to the loss of degrees of freedom in that channel to to its contribution to the modeling.
+     *
+     * @param dp       The fractional dependence of some parameter(s) on this channel's contribution to their estimate.
+     * 
+     * @see Dependents
+     */
 	public final synchronized void removeDependents(double dp) {
 		dependents -= dp;
 	}
 	
+	/**
+	 * Returns the current index of this channel in the parent {@link Instrument}.
+	 * 
+	 * @return     the current index of this channel in the parent instrument.
+	 */
 	public final int getIndex() { return index; }
 	
+	/**
+     * Returns the universal 0-based index of this channel. The universal index of a channel ought to be smaller than the
+     * the total number of channels possible in the instrument.
+     * 
+     * @return     the current index of this channel in the parent instrument.
+     */
 	public final int getFixedIndex() { return fixedIndex; }
 	
-	public final void setFixedIndex(int i) { fixedIndex = i; }
-	
+	/**
+	 * Returns the standard string ID of this channel. If the channel was constructed without an explicit string ID, 
+	 * then it will be the automatic string ID that is equals to the decimal represenation of 1+{@link #getFixedIndex()}. I.e.
+	 * the implicit string ID of channels is 1-based, so that channel with fixed index 0 will have an implicit ID of "1".
+	 * 
+	 * @return     The explicit or implicit string ID of this channel.
+	 */
 	public String getID() { return Integer.toString(getFixedIndex() + 1); }
 	
-	public double getHardwareGain() {
+
+	/**
+	 * Returns the gain applied between the detector stage and the readout stage, if appropriate. By default, it will
+	 * return {@link Instrument.gain}.
+	 * 
+	 * @return
+	 */
+	public double getReadoutGain() {
 		return instrument.gain;
 	}
 	
@@ -182,11 +247,29 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return text;
 	}
 	
+	/**
+	 * Returns the center frequency (in standard SI units, i.e. Hz) of this channel.
+	 * 
+	 * @return     the center frequency (Hz) of this channel.
+	 */
 	public double getFrequency() { return instrument.getFrequency(); }
 	
+	/**
+	 * Returns the pixel to which this channel belongs, if it has been assigned as such by a {@link PixelLayout}, or <code>null</code>.
+	 * 
+	 * @return     The pixel to which this channel is belongs, or <code>null</code> if this channel does not belong to a pixel.
+	 */
 	public final Pixel getPixel() { return pixel; }
 	
-	public void setPixel(Pixel pixel) { this.pixel = pixel; }
+	
+	/** 
+	 * Sets the pixel to which this channel belongs. Normally only {@link Pixel#add(Channel)} or {@link Pixel#add(int, Channel)} 
+	 * should call this to ensure that the two-way references between a pixel and its channels are consistent.
+	 * 
+	 * @param pixel    The pixel to which this channel belongs.
+	 */
+	void setPixel(Pixel pixel) { this.pixel = pixel; }
+	
 	
 	public Collection<Overlap<Channel>> getOverlaps() { return overlaps; }
 	
@@ -227,13 +310,30 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		flag(criticalFlags & flagSpace.parse(tokens.nextToken()));	
 	}
 	
+	/**
+	 * Returns the spacial resolution of this pixel projected to the image plane.
+	 * 
+	 * @return     The underlying spacial resolution for this channel in the image plane. It is not to be confused with a 
+	 *             pixel's size. Rather it is the diffraction limited beam-size for this channel.
+	 */
 	public double getResolution() { return instrument.getResolution(); }
 	
+	/**
+	 * Reset all relative gains (such as extended gain and point source coupling) of this pixel to a default 1.0 value.
+	 * 
+	 */
 	public void uniformGains() {
 		gain = 1.0; 
 		coupling = 1.0;
 	}
 	
+	/**
+	 * Returns the field in this channel that matches the name.
+	 * 
+	 * @param name     The name of a field in this channel.
+	 * @return         The field object corresponding to the name, or <code>null</code> if this channel has no
+	 *                 accessible field by that name to the caller.
+	 */
 	public Field getFieldFor(String name) {
         Class<?> channelClass = getClass();
         

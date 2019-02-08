@@ -26,6 +26,34 @@ package crush;
 
 import java.util.*;
 
+
+/**
+ * A class that represent a collection of similar {@link ChannelGroup}s, which are typically grouped by the
+ * same organizing principle. These groups are typically a disjoint (non overlapping) set, which may partially
+ * or fully span the channels of an {@link Instrument}. For example, each readout MUX may have a corresponding 
+ * {@link ChannelGroup}, which together constitude a division based on MUX association.
+ * <p>
+ * 
+ * In other words, you may have a <code>ChannelDivision</code> named "muxes", which consists of a the
+ * channel groups "mux-1", "mux-2", "mux-3" ...
+ * <p>
+ * 
+ * Similarly, the correlated {@link Mode}s associated to the channel groups in the division, can be similarly
+ * grouped into a {@link Modality}, and can be decorrelated together during reduction 
+ * (see <code>correlated.&lt?&gt</code> option and sub-options in the GLOSSARY. 
+ * <p>
+ * 
+ * Channel divisions are typically created via {@link Instrument#createDivisions()}. Most divisions are
+ * hard-coded, and often pattern based using {@link Instrument#getDivision(String, java.lang.reflect.Field, int)}.
+ * But, divisions can also be defined in the runtime configuration via the <code>division</code> option.
+ * 
+ * 
+ * @see Modality 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ * @param <ChannelType>     The generic type of the channels contained within this division.
+ */
 public class ChannelDivision<ChannelType extends Channel> extends Vector<ChannelGroup<ChannelType>> {
 	/**
 	 * 

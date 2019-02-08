@@ -421,7 +421,7 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
             @Override
             protected void process(final HawcPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
-                for(final Frame exposure : HawcIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
+                for(final Frame exposure : HawcIntegration.this) if(exposure != null) if(exposure.data[channel.getIndex()] != 0.0) {
                     channel.unflag(Channel.FLAG_DISCARD);
                     return;
                 }
@@ -446,11 +446,13 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
     }
 
     private boolean fixJumps(final Channel channel, int from, final int to, float[] frameParms) { 
+        final int c = channel.getIndex();
+        
         //int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
-        byte jumpStart = (byte) 0;   
+        byte jumpStart = (byte) 0;  
 
         HawcFrame first = getFirstFrameFrom(from);
-        jumpStart = first.jumpCounter[channel.index];
+        jumpStart = first.jumpCounter[c];
         from = first.index;
 
         int n = 0;
@@ -461,14 +463,14 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
             // Once flagged, stay flagged...
             //exposure.sampleFlag[channel.index] &= clearFlag;
 
-            if(exposure.jumpCounter[channel.index] == jumpStart) continue;
+            if(exposure.jumpCounter[c] == jumpStart) continue;
 
             fixBlock(channel, from, t, frameParms);
             n++;
 
             // Make jumpStart ready for the next block
             from = t;
-            jumpStart = exposure.jumpCounter[channel.index];
+            jumpStart = exposure.jumpCounter[c];
         }
 
         if(from != first.index) {
@@ -485,13 +487,17 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
     }  
 
     private void flagBlock(final Channel channel, final int from, int to, int pattern) {
+        final int c = channel.getIndex();
+        
         while(--to >= from) {
             final Frame exposure = get(to);
-            if(exposure != null) exposure.sampleFlag[channel.index] |= pattern;
+            if(exposure != null) exposure.sampleFlag[c] |= pattern;
         }
     }
 
     private void levelBlock(final Channel channel, final int from, final int to, float[] frameParms) {
+        final int c = channel.getIndex();
+        
         double sum = 0.0, sumw = 0.0;
 
         int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
@@ -500,9 +506,9 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
             final Frame exposure = get(t);
             if(exposure == null) continue;
             if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+            if((exposure.sampleFlag[c] & excludeSamples) != 0) continue;
 
-            sum += exposure.relativeWeight * exposure.data[channel.index];
+            sum += exposure.relativeWeight * exposure.data[c];
             sumw += exposure.relativeWeight;
         }
         if(sumw == 0.0) return;
@@ -514,10 +520,10 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
         for(int t=to; --t >= from; ) {
             final Frame exposure = get(t);
             if(exposure == null) continue;
-            exposure.data[channel.index] -= ave;
+            exposure.data[c] -= ave;
 
             if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+            if((exposure.sampleFlag[c] & excludeSamples) != 0) continue;
 
             frameParms[t] += exposure.relativeWeight / sumw;
         }
@@ -559,12 +565,12 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
             @Override
             protected void process(HawcFrame frame) {
                 for(HawcPixel pixel : getInstrument()) if(pixel.jump != 0.0) {
-                    int nJumps = frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index];
+                    int nJumps = frame.jumpCounter[pixel.getIndex()] - first.jumpCounter[pixel.getIndex()];
                     // Check for wraparound...
                     if(nJumps > maxJump) nJumps -= HawcFrame.JUMP_RANGE;
                     else if(nJumps < -maxJump) nJumps += HawcFrame.JUMP_RANGE;
                     
-                    frame.data[pixel.index] -= pixel.jump * nJumps;
+                    frame.data[pixel.getIndex()] -= pixel.jump * nJumps;
                 }
             } 
         }.process();

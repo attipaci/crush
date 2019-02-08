@@ -70,13 +70,13 @@ public class PolKaFrame extends LabocaFrame {
 	public void loadWaveplateData() {
 		final PolKa polka = getScan().getInstrument();
 		
-		if(polka.frequencyChannel != null) waveplateFrequency = data[polka.frequencyChannel.index];	
+		if(polka.frequencyChannel != null) waveplateFrequency = data[polka.frequencyChannel.getIndex()];	
 		else waveplateFrequency = polka.waveplateFrequency;		
 		
-		if(polka.phaseChannel != null) waveplateAngle = data[polka.phaseChannel.index];
+		if(polka.phaseChannel != null) waveplateAngle = data[polka.phaseChannel.getIndex()];
 		else waveplateAngle = Constant.twoPi * (MJD - 54000.0) * Unit.day * waveplateFrequency;
 		
-		if(polka.offsetChannel != null) waveplateOffset = data[polka.offsetChannel.index];	
+		if(polka.offsetChannel != null) waveplateOffset = data[polka.offsetChannel.getIndex()];	
 		else waveplateOffset = Double.NaN;			
 	}
 	

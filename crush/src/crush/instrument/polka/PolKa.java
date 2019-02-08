@@ -67,9 +67,9 @@ public class PolKa extends Laboca implements Oscillating {
 	@Override
     public PolKa copy() {
 	    PolKa copy = (PolKa) super.copy();
-	    if(offsetChannel != null) copy.offsetChannel = copy.get(offsetChannel.index);
-	    if(phaseChannel != null) copy.phaseChannel = copy.get(phaseChannel.index);
-	    if(frequencyChannel != null) copy.frequencyChannel = copy.get(frequencyChannel.index);
+	    if(offsetChannel != null) copy.offsetChannel = copy.get(offsetChannel.getIndex());
+	    if(phaseChannel != null) copy.phaseChannel = copy.get(phaseChannel.getIndex());
+	    if(frequencyChannel != null) copy.frequencyChannel = copy.get(frequencyChannel.getIndex());
 	    return copy;
 	}
 	

@@ -36,13 +36,13 @@ public class HawcPixel extends Channel {
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
 	
-	public int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
-	public int fitsIndex, fitsRow, fitsCol;
-	public float jump = 0.0F;
-	public boolean hasJumps = false;
+	int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
+	int fitsIndex, fitsRow, fitsCol;
+	float jump = 0.0F;
+	boolean hasJumps = false;
 	
-	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
-	public double losGain = 1.0, rollGain = 1.0;
+	double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
+	double losGain = 1.0, rollGain = 1.0;
 	
 	int jumpCounter = 0;
 	
@@ -66,10 +66,12 @@ public class HawcPixel extends Channel {
 		if(subrow == Hawc.DARK_SQUID_ROW) flag(FLAG_BLIND);
 	}
 	
+	@Override
+    public Hawc getInstrument() { return (Hawc) super.getInstrument(); }
 
 	public void calcSIBSPosition() {
 	    if(isFlagged(FLAG_BLIND)) getPixel().setPosition(null);
-	    getPixel().setPosition(((HawcLayout) instrument.getLayout()).getSIBSPosition(sub, subrow, col));
+	    getPixel().setPosition(getInstrument().getLayout().getSIBSPosition(sub, subrow, col));
 	}
 		
 	@Override
@@ -87,7 +89,7 @@ public class HawcPixel extends Channel {
 	public String toString() {
 		return super.toString() 
 		        + "\t" + Util.f3.format(coupling) 
-		        + "\t" + Util.f3.format(((Hawc) instrument).subarrayGainRenorm[sub])
+		        + "\t" + Util.f3.format(getInstrument().subarrayGainRenorm[sub])
 		        + "\t" + Util.f3.format(muxGain) 
 		        + "\t" + getFixedIndex() 
 		        + "\t" + sub 

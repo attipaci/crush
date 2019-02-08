@@ -112,7 +112,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 			@Override
 			protected void process(LabocaFrame exposure) {
 				final double dT = temperatureSignal.valueAt(exposure);
-				if(!Double.isNaN(dT)) for(LabocaPixel pixel : getInstrument()) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
+				if(!Double.isNaN(dT)) for(LabocaPixel pixel : getInstrument()) exposure.data[pixel.getIndex()] -= pixel.temperatureGain * dT;
 			}			
 		}.process();
 		

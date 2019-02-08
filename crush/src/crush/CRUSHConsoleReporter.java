@@ -26,6 +26,15 @@ package crush;
 import jnum.data.LocalAverage;
 import jnum.reporting.ConsoleReporter;
 
+
+/**
+ * A default {@link Reporter} implementation for CRUSH, which prints CRUSH messages to the console, with some
+ * indentation to improve readability.
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public class CRUSHConsoleReporter extends ConsoleReporter {
 
     public CRUSHConsoleReporter(String id) {

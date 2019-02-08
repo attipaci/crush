@@ -448,7 +448,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
     @Override
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {
-        map.accumulateAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
+        map.accumulateAt(index.i(), index.j(), exposure.data[channel.getIndex()], G, exposure.relativeWeight / channel.variance, dt);
     }
 
 
@@ -474,7 +474,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
             protected void process(final Frame exposure) {
                 for(final Pixel pixel : pixels)  {
                     IntensityMap.this.getIndex(exposure, pixel, projector, index); 
-                    if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
+                    if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.getIndex()] |= sampleFlagPattern;
                 }
             }
         }.process();
@@ -499,12 +499,14 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
         final float baseValue = base.getValid(index, 0.0F).floatValue();
 
         for(final Channel channel : pixel) {
+            final int c = channel.getIndex();
+            
             // Do not check for flags, to get a true difference image...
-            exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);	
+            exposure.data[c] -= fG * (sourceGain[c] * mapValue - syncGain[c] * baseValue);	
 
             // Do the blanking here...
-            if(isMasked(index)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
-            else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
+            if(isMasked(index)) exposure.sampleFlag[c] |= Frame.SAMPLE_SOURCE_BLANK;
+            else exposure.sampleFlag[c] &= ~Frame.SAMPLE_SOURCE_BLANK;
         }
     }
 
@@ -548,14 +550,16 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
                             double baseValue = base.get(i,j).doubleValue();
 
                             for(final Channel channel : pixel) {
-                                if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+                                final int c = channel.getIndex();
+                                
+                                if((exposure.sampleFlag[c] & excludeSamples) != 0) continue;
 
-                                final double prior = fG * syncGain[channel.index] * baseValue;
-                                final double expected = fG * sourceGain[channel.index] * mapValue; 
-                                final double residual = exposure.data[channel.index] + prior - expected;  
+                                final double prior = fG * syncGain[c] * baseValue;
+                                final double expected = fG * sourceGain[c] * mapValue; 
+                                final double residual = exposure.data[c] + prior - expected;  
 
-                                sum[channel.index].add(exposure.relativeWeight * residual * expected);
-                                sum[channel.index].addWeight(exposure.relativeWeight * expected * expected);			
+                                sum[c].add(exposure.relativeWeight * residual * expected);
+                                sum[c].addWeight(exposure.relativeWeight * expected * expected);			
                             }
                         }	
                     }
@@ -587,7 +591,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
                 final DataPoint[] result = calcCoupling.getResult();
 
                 for(final Channel channel : integration.getInstrument()) {
-                    DataPoint increment = result[channel.index];
+                    DataPoint increment = result[channel.getIndex()];
                     if(increment.weight() <= 0.0) continue;
                     channel.coupling += (increment.value() / increment.weight()) * channel.coupling;
                 }

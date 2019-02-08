@@ -28,6 +28,7 @@ import java.util.List;
 
 import crush.Channel;
 import crush.Instrument;
+import crush.PixelLayout;
 import crush.Scan;
 import crush.SourceModel;
 

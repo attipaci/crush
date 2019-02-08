@@ -233,7 +233,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 			final Object[] row = hdu.getRow(exposure.index);
 			final float[][] data = (float[][]) row[iData];
 			for(int c=0; c<data.length; c++) data[c][0] = 0.0F;
-			for(Channel channel : getInstrument()) data[channel.getFixedIndex()][0] = exposure.data[channel.index];
+			for(Channel channel : getInstrument()) data[channel.getFixedIndex()][0] = exposure.data[channel.getIndex()];
 			hdu.setRow(exposure.index, row);
 		}	
 		

@@ -279,7 +279,7 @@ public class PixelMap extends SourceModel2D {
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
 		Instrument<?> instrument = getFirstScan().getInstrument();
-		for(Channel channel : instrument) channel.coupling = sourceGain[channel.index] / channel.gain;
+		for(Channel channel : instrument) channel.coupling = sourceGain[channel.getIndex()] / channel.gain;
 	
 		instrument.getLayout().printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
 		

@@ -1,4 +1,5 @@
->> port essential fixes to 2.43...
+>> port essential fixes back to 2.43...
+	- ChannelLookup fix.
 	- AstroTime
 	- Sofia scan set validation
 	- jnum -> 0.24 fixes (AstroTime...)
@@ -7,6 +8,9 @@
 
 
 2.50-a1
+
+	[FIX] {ChannelLookup} contains(String) did not do what it was supposed
+	to.
 
 	[FIX] {SOFIA} Validating a set of scans returned prematurely for
 	single scan reductions. As such automatic pointing on short scans
@@ -29,6 +33,9 @@
 	[DEPRECATE] Removed support for 'neighbours.radius' option that 
 	was at some point used in APEX chop-nod photometry.
 
+	[TWEAK] {ChannelLookup} Explicitly separated lookup functions by
+	String ID and integer fixed index.
+
 	[TWEAK] Improved how projections are handled in 2D models, and fixed
 	a bug introduced in earlier development versions, where scans with
 	different reference centers resulted in errors.
@@ -41,7 +48,7 @@
 
 	[PRUNE] Remove future support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2,
 	SHARC (first gen.), and MUSTANG-2. Legacy support for these instruments
-	is available via 2.43-1 and earlier releases.
+	is available via 2.43 and earlier releases.
 
 	[PRUNE] {GISMO} Remove support for processing SAE data. It was 
 	introduced as an experiment, but it did not prove of much use. There

@@ -24,8 +24,15 @@
 
 package crush;
 
+
+/**
+ * A generic interface for any object that represents some periodicity.
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public interface Periodic {
 	
-	public int getPeriod(int mode);
+	public int getPeriod(int signalMode);
 	
 }

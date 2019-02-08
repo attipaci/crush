@@ -127,7 +127,7 @@ public class ChopNodPhotometry extends PointPhotometry {
 
                 if(!Double.isNaN(chi2)) {
                     df.scaleWeight(Math.min(1.0, 1.0 / chi2));            
-                    df.scale(1.0 / (transmission * integration.gain * sourceGain[channel.index]));
+                    df.scale(1.0 / (transmission * integration.gain * sourceGain[channel.getIndex()]));
                     point.average(df);
                 }
 

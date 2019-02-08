@@ -21,7 +21,7 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.instrument;
+package crush;
 
 
 import java.io.IOException;
@@ -33,9 +33,8 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 
-import crush.Channel;
-import crush.Instrument;
-import crush.Pixel;
+import crush.instrument.GridIndexed;
+import crush.instrument.Rotating;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
@@ -86,7 +85,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         copy.instrument = instrument;
         copy.pixels = new ArrayList<Pixel>(pixels.size());
         
-        final Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+        final ChannelLookup<Channel> lookup = new ChannelLookup<Channel>(instrument);
         
         for(int i=0; i<pixels.size(); i++) {
             Pixel p1 = pixels.get(i);

@@ -57,10 +57,16 @@ import nom.tam.fits.*;
 
 /**
  * 
+ * A class that represents a contiguous set of frames (i.e. exposures) obtained during a streaming measurement, with
+ * a fixed observational setup, as captured by a single fixed {@link Instrument} state.
+ * <p>
+ * 
+ * @see Scan
+ * 
  * @author Attila Kovacs <attila@sigmyne.com>
  *
- * @param <InstrumentType>
- * @param <FrameType>
+ * @param <InstrumentType>  The generic type of {@link Instrument} that may produce this integration.
+ * @param <FrameType>       The generic {@link Frame} type contained in this integration.
  * 
  */
 public abstract class Integration<FrameType extends Frame> 
@@ -844,7 +850,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         for(int k=channels.size(); --k >= 0; ) {
             final Channel channel = channels.get(k);
-            final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
+            final double G = isDetectorStage ? channel.getReadoutGain() : 1.0;
             channel.offset += G * aveOffset[k].value();
 
             if(channel.inconsistencies > 0) inconsistentChannels++;

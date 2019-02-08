@@ -142,6 +142,9 @@ public class HirmesPixel extends Channel {
     
     
     @Override
+    public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
+    
+    @Override
     public double overlap(final Channel channel, double pointSize) {
        if(!(channel instanceof HirmesPixel)) return 0.0;
        
@@ -157,7 +160,7 @@ public class HirmesPixel extends Channel {
 
 
     public void calcSIBSPosition3D() {
-        Hirmes hirmes = (Hirmes) instrument; 
+        Hirmes hirmes = getInstrument(); 
         HirmesLayout layout = hirmes.getLayout();
         
         if(isFlagged(FLAG_BLIND)) {

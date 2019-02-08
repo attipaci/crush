@@ -281,8 +281,8 @@ public abstract class SourceModel2D extends SourceModel {
                 for(Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);
                     for(Channel channel : pixel) {
-                        if(Math.abs(offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-                        else if(Math.abs(offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+                        if(Math.abs(offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.getIndex()] |= Frame.SAMPLE_SKIP;
+                        else if(Math.abs(offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.getIndex()] |= Frame.SAMPLE_SKIP;
                         else valid = true;
                     }
                 }
@@ -586,8 +586,8 @@ public abstract class SourceModel2D extends SourceModel {
   
     protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double frameGain, final double[] sourceGain) {
         // The use of iterables is a minor performance hit only (~3% overall)
-        for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)   
-            addPoint(index, channel, exposure, frameGain * sourceGain[channel.index], channel.instrument.samplingInterval);
+        for(final Channel channel : pixel) if((exposure.sampleFlag[channel.getIndex()] & excludeSamples) == 0)   
+            addPoint(index, channel, exposure, frameGain * sourceGain[channel.getIndex()], channel.getInstrument().samplingInterval);
     }
     
  
@@ -767,7 +767,7 @@ public abstract class SourceModel2D extends SourceModel {
 
     public void setSyncGains(final Integration<?> integration, final Pixel pixel, final double[] sourceGain) {
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
-        for(Channel channel : pixel) integration.sourceSyncGain[channel.index] = sourceGain[channel.index];
+        for(Channel channel : pixel) integration.sourceSyncGain[channel.getIndex()] = sourceGain[channel.getIndex()];
     }
 
     protected void sync(final Integration<?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
@@ -820,7 +820,7 @@ public abstract class SourceModel2D extends SourceModel {
         // Do an approximate accounting of the source dependence...
         double sumpw = 0.0;
         for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.isUnflagged()) 
-            sumpw += sourceGain[channel.index] * sourceGain[channel.index] / channel.variance;
+            sumpw += sourceGain[channel.getIndex()] * sourceGain[channel.getIndex()] / channel.variance;
 
         double sumfw = 0.0;
         for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS))
@@ -838,7 +838,7 @@ public abstract class SourceModel2D extends SourceModel {
             parms.clear(pixel, 0, integration.size());
 
             for(Channel channel : pixel) if(channel.isUnflagged()) 
-                parms.addAsync(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
+                parms.addAsync(channel, np * sourceGain[channel.getIndex()] * sourceGain[channel.getIndex()] / channel.variance);
         }
 
         for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS))

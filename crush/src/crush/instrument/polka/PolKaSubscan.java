@@ -121,11 +121,14 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         if(!isWaveplateValid() || hasOption("waveplate.tp")) { 
             hasTimeStamps = false;
             warning("Invalid waveplate data. Will attempt workaround...");
+            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(polka);
+            
+            
             //!calcMeanWavePlateFrequency();
-            LabocaPixel channel = hasOption("waveplate.tpchannel") ?
-                    new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue()) : 
-                    polka.getFixedIndexLookup().get(polka.getReferencePixelFixedIndex());
-                    setTPPhases(channel);
+            LabocaPixel channel = hasOption("waveplate.tpchannel") ? lookup.get(option("waveplate.tpchannel").getValue()) 
+                    : lookup.get(polka.getReferencePixelFixedIndex());
+            
+            setTPPhases(channel);
         }
         else if(hasOption("waveplate.fix")) fixAngles();
         else if(hasOption("waveplate.frequency")) {
@@ -138,9 +141,9 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         if(hasOption("waveplate.tpchar")) {
             trim();
 
-            LabocaPixel channel = hasOption("waveplate.tpchannel") ? 
-                    new ChannelLookup<LabocaPixel>(polka).get(option("waveplate.tpchannel").getValue()) : 
-                    polka.getFixedIndexLookup().get(polka.getReferencePixelFixedIndex());
+            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(polka);
+            
+            LabocaPixel channel = hasOption("waveplate.tpchannel") ? lookup.get(option("waveplate.tpchannel").getValue()) : lookup.get(polka.getReferencePixelFixedIndex());
 
             measureTPPhases(channel);
             setTPPhases(channel);
@@ -247,7 +250,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
             @Override
             protected void process(Channel channel) {
                 for(int i=dw.length; --i >= 0; ) dw[i].noData();
-                final int c = channel.index;
+                final int c = channel.getIndex();
 
                 for(LabocaFrame exposure : PolKaSubscan.this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
                     if(exposure.sampleFlag[c] != 0) continue;
@@ -305,7 +308,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         PolKa polka = getInstrument();
         Channel offsetChannel = polka.offsetChannel;
         if(offsetChannel == null) return null;
-        int c = offsetChannel.index;
+        int c = offsetChannel.getIndex();
 
         ArrayList<Double> crossings = new ArrayList<Double>();
         double lastCrossing = Double.NaN;
@@ -462,7 +465,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     // Calculate the average TP phases at a given frequency...
     private double getMeanTPPhase(Channel channel, double freq) {		
-        final int c = channel.index;
+        final int c = channel.getIndex();
         final double w = Constant.twoPi * freq * getInstrument().integrationTime;
         double sumc = 0.0, sums = 0.0;
         int n = 0;

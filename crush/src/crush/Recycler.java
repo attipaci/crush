@@ -23,12 +23,38 @@
 
 package crush;
 
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 
-
+/**
+ * 
+ * A class that aims to reduce the creation of commonly used temporary arrays during data reduction, and thereby 
+ * improve performance. This is achieved by creating new arrays, of the supported types, only as needed, and then
+ * recycling them for future use.
+ * <p>
+ * 
+ * Commonly, {@link Instrument}, {@link Integration}, and {@link SourceModel} have built-in recycler objects that
+ * manage the reuse of commonly used arrays for their particular data sizes.
+ * <p> 
+ * 
+ * When the user needs a temporary array storage for holding temporary data for one of these objects, one
+ * should obtain an instance using a <code>get[...]Array(int size)</code> call, which will return an uninitialized 
+ * used or new array, with capacity <i>at least</i> that of the desired <code>size</code> or larger. Then, once
+ * the temporary array is no longer needed, one should call one of the {@link #recycle()} methods for reuse.
+ * <p>
+ * 
+ * As mentioned, the arrays obtained through the recycler are typically uninitialized, since it is assumed
+ * the user will populate it with its own data. If needed, the user should explicitly initialize the array
+ * after obtaining it, e.g. with an {@link Arrays#fill()}, or an appropriate initializing loop.
+ * <p>
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ */
 public class Recycler {
 	private ArrayBlockingQueue<int[]> ints;
 	private ArrayBlockingQueue<float[]> floats;

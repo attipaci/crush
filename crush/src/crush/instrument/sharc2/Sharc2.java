@@ -64,10 +64,10 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
     public Sharc2 copy() {
         Sharc2 copy = (Sharc2) super.copy();
 
+        if(arrayPointingCenter != null) copy.arrayPointingCenter = arrayPointingCenter.copy();
+        
         if(rowGain != null) copy.rowGain = Util.copyOf(rowGain);	
         if(isHiGain != null) copy.isHiGain = Util.copyOf(isHiGain);
-
-        if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 
         return copy;
     }
@@ -157,8 +157,6 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
 		try { addDivision(getDivision("amps", Sharc2Pixel.class.getField("amp"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { error(e); }
          */
-
-
     }
 
     @Override
@@ -323,7 +321,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
         double sourceGain = Double.NaN;
 
         for(Sharc2Pixel pixel : this) {
-            pixel.gain = pixel.G0 * pixel.offset / (pixel.getHardwareGain() * pixel.V0);
+            pixel.gain = pixel.G0 * pixel.offset / (pixel.getReadoutGain() * pixel.V0);
             if(pixel.isUnflagged()) {
                 sumwG2 += pixel.weight * pixel.gain * pixel.gain;
                 sumwG += pixel.weight * Math.abs(pixel.gain);
@@ -362,7 +360,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
         for(Sharc2Pixel pixel : this) if(pixel.isUnflagged()) {
             double dVdT = areaFactor * pixel.V0 / pixel.T0;
             WeightedPoint T = new WeightedPoint();
-            T.setValue((pixel.V0 - pixel.offset / pixel.getHardwareGain()) / dVdT);
+            T.setValue((pixel.V0 - pixel.offset / pixel.getReadoutGain()) / dVdT);
             T.setWeight(pixel.weight * dVdT * dVdT);
             data[n++] = T;
         }
@@ -381,7 +379,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
             double eps = 1.0 - areaFactor * loadT / pixel.T0;
 
             pixel.G0 = pixel.gain / eps;
-            pixel.V0 = pixel.offset / pixel.getHardwareGain() / eps;
+            pixel.V0 = pixel.offset / pixel.getReadoutGain() / eps;
 
             if(!pixel.isFlagged()) {
                 sumG02 += pixel.weight * pixel.G0 * pixel.G0;

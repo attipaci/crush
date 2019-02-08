@@ -31,7 +31,7 @@ import java.util.StringTokenizer;
 import crush.Channel;
 import crush.Instrument;
 import crush.Pixel;
-import crush.instrument.PixelLayout;
+import crush.PixelLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.BinaryTableHDU;

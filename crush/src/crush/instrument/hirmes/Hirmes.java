@@ -273,7 +273,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         double[] G = super.getSourceGains(filterCorrected);
 
         final double rest2Obs = 1.0 / (1.0 + z);
-        for(HirmesPixel pixel : this) G[pixel.index] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
+        for(HirmesPixel pixel : this) G[pixel.getIndex()] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
         
         return G;        
     }
@@ -363,7 +363,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     public void createDarkSquidLookup() {
         darkSquidLookup = new int[readoutRows];
         Arrays.fill(darkSquidLookup, -1);
-        for(HirmesPixel pixel : this) if(pixel.isDark()) darkSquidLookup[pixel.mux] = pixel.index;
+        for(HirmesPixel pixel : this) if(pixel.isDark()) darkSquidLookup[pixel.mux] = pixel.getIndex();
     }
 
 

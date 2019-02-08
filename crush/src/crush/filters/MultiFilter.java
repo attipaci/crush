@@ -215,7 +215,7 @@ public class MultiFilter extends VariedFilter {
 		if(isPedantic) levelForChannel(channel, filtered);
 		
 		// Subtract the rejected signal...
-		final int c = channel.index;
+		final int c = channel.getIndex();
 		for(int t = integration.size(); --t >= 0; ) remove(filtered[t], integration.get(t), c);	
 		
 		Integration.recycle(filtered);

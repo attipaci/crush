@@ -388,7 +388,7 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             @Override
             protected void process(final HirmesPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
-                for(final Frame exposure : HirmesIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
+                for(final Frame exposure : HirmesIntegration.this) if(exposure != null) if(exposure.data[channel.getIndex()] != 0.0) {
                     channel.unflag(Channel.FLAG_DISCARD);
                     return;
                 }

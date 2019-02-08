@@ -219,7 +219,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
             @Override
             protected void process(Scuba2Frame frame) {
                 for(Scuba2Pixel pixel : getInstrument()) 
-                    frame.data[pixel.index] -= frame.darkSquid[pixel.subarrayNo][pixel.row % Scuba2.SUBARRAY_ROWS];
+                    frame.data[pixel.getIndex()] -= frame.darkSquid[pixel.subarrayNo][pixel.row % Scuba2.SUBARRAY_ROWS];
             }
             
         }.process();

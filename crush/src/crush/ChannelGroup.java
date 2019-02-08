@@ -30,6 +30,33 @@ import java.util.*;
 import jnum.Copiable;
 import jnum.data.Statistics;
 
+/**
+ * A class for groping channels together. For example, all channels read out through the same readout MUX may
+ * constitute such a group. Also, pixels in an instrument, with one or more channels associated to them, are 
+ * also an example of a <code>ChannelGroup</code>.
+ * <p>
+ * 
+ * Channel groups which exhibit a correlated behavior, such as correlated noise or a common response to an
+ * external signal (such as an electronic modulationm, temeprature drifts, or telescope motion), are associated
+ * to an appropriate {@link Mode} (such as a {@link Response} or {@link CorrelatedMode}). 
+ * <p>
+ * 
+ * Channel groups are typically created by {@link Instrument#createGroups()}. They can be hard-coded groups,
+ * or else specified in the runtime configurations via the <code>group</code> option.
+ * <p>
+ * 
+ * 
+ * @see Pixel
+ * @see Mode
+ * @See ChannelDivision
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ * @param <ChannelType>     The generic type of the channels contained in this group.
+ * 
+ * 
+ */
 public class ChannelGroup<ChannelType extends Channel> extends ArrayList<ChannelType> 
 implements Copiable<ChannelGroup<ChannelType>> {
     /**
@@ -83,14 +110,16 @@ implements Copiable<ChannelGroup<ChannelType>> {
     }
     
     public int add(String spec, ChannelLookup<ChannelType> lookup, int excludeFlags) {
+
+        ChannelType channel = lookup.get(spec);
         
-        if(lookup.contains(spec)) {
-            ChannelType channel = lookup.get(spec);
+        if(channel != null) {
             if(channel.isUnflagged(excludeFlags)) {
                 add(channel);
                 return 1;
             }
         }
+        
         else if(spec.contains("-")) {
             StringTokenizer tokens = new StringTokenizer(spec, "-");
             if(tokens.countTokens() != 2) return 0;
@@ -107,7 +136,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
             int n=0;
             
             for(int i=fromIndex; i <= toIndex; i++) {
-                ChannelType channel = lookup.get(i + "");
+                channel = lookup.get(i);
                 if(channel != null) if(channel.isUnflagged(excludeFlags)) {
                     add(channel);
                     n++;

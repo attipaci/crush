@@ -32,9 +32,29 @@ import crush.instrument.Overlap;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
+import jnum.math.Metric;
 import jnum.math.Vector2D;
 
-public class Pixel extends ChannelGroup<Channel> {
+/**
+ * A class for representing a pixel or feed in an instrument, such as a directly illuminated continuum detector, 
+ * or a antenna-coupled set of detector channels (e.g. in a heterodyne mixer, or multichroic pixel).
+ * <p>
+ * 
+ * Each pixel has a 2D focal plane position, and may contain one or more detector {@link Channel}s that couple through
+ * the same feed / pixel / antenna, or physical detector plane position. Moreover, similarly to <code>Channel</code>s, 
+ * pixels also have fixed indices (between 0 and below {@link Instrument#maxPixels()}), and (optionally) unique 
+ * {@link String} IDs, that enable lookup functionality.
+ * <p>
+ * 
+ * The position of, and the association of channels to, a pixel/feed, is typically handled by a {@link PixelLayout}
+ * implementation.
+ * <p>
+ * 
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
+public class Pixel extends ChannelGroup<Channel> implements Metric<Pixel> {
 
     /**
      * 
@@ -46,16 +66,17 @@ public class Pixel extends ChannelGroup<Channel> {
     private String id;
     private int index;
     private int fixedIndex;
-    public double coupling = 1.0;
 
     private Vector2D position;    
     private boolean isIndependent = false;
+    
+    public double coupling = 1.0;
     
     private transient Collection<Overlap<Pixel>> overlaps;  // Don't copy...
     
 
     /**
-     * Constructs a new pixel for the specified instrument.
+     * Constructs a new pixel for the specified instrument. The pixel will have a default ID equal to 1+<code>fixedIndex</code>.
      * 
      * @param instrument    The instrument state to which this pixel belongs.
      * @param fixedIndex    An index that uniquely identifies the pixel between 0 and {@link Instrument#maxPixels()}.
@@ -89,6 +110,12 @@ public class Pixel extends ChannelGroup<Channel> {
         return copy;
     }
     
+    /**
+     * Get a copy of this Pixel, with the same properties, but without populating the copy with channels.
+     * 
+     * 
+     * @return  A copy of this pixel without channels associated to it.
+     */
     public Pixel emptyCopy() {
         Pixel copy = (Pixel) super.copy();
         copy.clear();
@@ -115,21 +142,47 @@ public class Pixel extends ChannelGroup<Channel> {
         return replaced;
     }
     
-    
+    /**
+     * Returns the {@link String} ID of this pixel. 
+     * 
+     * @return  The ID of this pixel. (The default ID of a pixel is equal to 1+{@link #getFixedIndex()}, if not explicitly set
+     *          with the constructor.
+     */
     public final String getID() { return id; }
     
+    /**
+     * Returns the current index of this pixel in the parent {@link Instrument}'s {@link PixelLayout}.
+     * 
+     * @return  The current indes of this pixel in the parent instrument's layout.
+     */
     public final int getIndex() {
         return index;
     }
     
-    public void setIndex(int i) {
+    /**
+     * Sets the index of this pixel in the parent instruments {@link PixelLayout}. This method should only be called
+     * by {@link PixelLayout} to ensure that it remains current.  
+     * 
+     * @param i     The new index in the parent instrument's layout.
+     */
+    void setIndex(int i) {
         this.index = i;
     }
 
+    /**
+     * Returns the 0-based fixed index of this pixel.
+     * 
+     * @return  the 0-based fixed index of this pixel. 
+     */
     public final int getFixedIndex() {
         return fixedIndex;
     }
 
+    /**
+     * Checks if this pixel is valid, i.e. has a proper finite position, and a non-zero index in the parent layout.
+     * 
+     * @return
+     */
     public boolean isValid() {
         if(position == null) return false;
         if(position.isNaN()) return false;
@@ -138,39 +191,97 @@ public class Pixel extends ChannelGroup<Channel> {
         return true;
     }
 
+    /**
+     * Returns the 2D position of this pixel, as projected to the imaging plane.
+     * 
+     * @return
+     */
     public final Vector2D getPosition() {
         return position;
     }
     
+    /**
+     * Sets the position of this pixel, as projected to the imaging plane.
+     * 
+     * @param v
+     */
     public void setPosition(Vector2D v) {
         position = v;
     }
 
+    /**
+     * Returns the projected distance of this pixel to another in the imaging plane.
+     * 
+     * @param pixel     The other pixel.
+     * @return          The projected distance to that other pixel in the imaging plane.
+     */
+    @Override
     public double distanceTo(Pixel pixel) {
         if(pixel == null) return Double.NaN;
         if(position == null) return Double.NaN;
         return position.distanceTo(pixel.getPosition());
     }
 
+    /**
+     * Returns the spacial resolution of this pixel in the projected imaging plane.
+     * 
+     * @return
+     */
     public double getResolution() {
         return instrument.getResolution();
     }
 
+    /**
+     * Returns the number of readout channels contained within this pixel / feed.
+     * 
+     * @return  the number of channels in this pixel/feed.
+     */
     public final int channels() {
         return size();
     }
 
+    /**
+     * Returns the t<sup>th</sup> channel in this pixel.
+     * 
+     * @param i     The index of the channel to retrieve.
+     * @return      The channel at that index within this pixel.
+     * 
+     * @see #channels()
+     */
     public final Channel getChannel(int i) {
         return get(i);
     }
 
+    /**
+     * Specify if this pixel has no overlap with any other pixel, so that it is safe to skip overlap calculation for it.
+     * 
+     * @param value     <code>true</code> if this pixels does not overlap with other pixels, otherwise <code>false</code>
+     * 
+     * @see #isIndependent()
+     */
     public void setIndependent(boolean value) {
         isIndependent = value;
     }
 
+    /**
+     * Checks if this pixel is independent, i.e. if it has no possible overlaps with other pixels.
+     * 
+     * @return  <code>true</code> if this pixel never overlaps with other pixels, otherwise <code>false</code>
+     * 
+     * @see #setIndependent(boolean)
+     */
     public final boolean isIndependent() { return isIndependent; }
     
-     
+    
+    /**
+     * Returns the APEX-style RPC entry for this pixel. 
+     * 
+     * @return  This pixel's line entry for an APEX-style RPC file.
+     * 
+     * @see PixelLayout#getRCPHeader()
+     * @see PixelLayout#readRCP(String)
+     * @see PixelLayout#printPixelRCP(java.io.PrintStream, String)
+     */
     public String getRCPString() {
         Vector2D position = getPosition();
         return getFixedIndex() + 
@@ -215,7 +326,23 @@ public class Pixel extends ChannelGroup<Channel> {
     }
     
   
-    // Assume Gaussian response with FWHM = resolution;
+    /**
+     * Calculates the symmetric overlap of this pixel with another pixel, assuming a Gaussian response with FWHM = resolution.
+     * The overlap is the relative response in one pixel when a point source (of <code>pointSize</code> in the projected image
+     * plane) is placed over the other pixel. 
+     * <p>
+     * 
+     * For now, CRUSH assumes symmetry, i.e. that (A overlap B) = (B overlap A), which is a good approximation for pixels
+     * with similar and approximately Gaussian (or azymuthally symmetric) beam profiles.
+     * <p>
+     * 
+     * 
+     * @param pixel         The othe pixel.
+     * @param pointSize     The projected size of a point source in the image plane.
+     * @return              The fractional overlap, i.e. the relative response of the pixel when a point source is 
+     *                      placed over the other pixel.
+     *                      
+     */
     public double overlap(final Pixel pixel, double pointSize) {
         if(isIndependent) return 0.0;
 
@@ -232,7 +359,6 @@ public class Pixel extends ChannelGroup<Channel> {
         // If other channel is not a pixel assume it is independent...
         return 0.0;
     }
-    
     
     
     public Collection<Overlap<Pixel>> getOverlaps() { return overlaps; }

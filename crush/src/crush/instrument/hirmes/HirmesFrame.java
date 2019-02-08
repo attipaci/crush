@@ -77,8 +77,8 @@ public class HirmesFrame extends SofiaFrame {
         if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
-            data[pixel.index] = DAC[from + pixel.getFixedIndex()];
-            if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.getFixedIndex()];
+            data[pixel.getIndex()] = DAC[from + pixel.getFixedIndex()];
+            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[from + pixel.getFixedIndex()];
         }
     }
     
@@ -88,8 +88,8 @@ public class HirmesFrame extends SofiaFrame {
         if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
-            data[pixel.index] = DAC[pixel.readrow][pixel.readcol];
-            if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.readrow][pixel.readcol];
+            data[pixel.getIndex()] = DAC[pixel.readrow][pixel.readcol];
+            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[pixel.readrow][pixel.readcol];
         }
     }
 
@@ -113,7 +113,7 @@ public class HirmesFrame extends SofiaFrame {
         if(jumpCounter == null) return;
 
         final byte[] newJumpCounter = new byte[instrument.size()];
-        for(int k=instrument.size(); --k >= 0; ) newJumpCounter[k] = jumpCounter[instrument.get(k).index];      
+        for(int k=instrument.size(); --k >= 0; ) newJumpCounter[k] = jumpCounter[instrument.get(k).getIndex()];      
 
         jumpCounter = newJumpCounter;
     }
@@ -179,7 +179,7 @@ public class HirmesFrame extends SofiaFrame {
         Hirmes hirmes = getScan().getInstrument();
 
         for(HirmesPixel pixel : hirmes) if(!pixel.isFlagged(Channel.FLAG_BLIND))
-            data[pixel.index] -= data[hirmes.darkSquidLookup[pixel.col]];
+            data[pixel.getIndex()] -= data[hirmes.darkSquidLookup[pixel.col]];
     }
   
     public void instrumentToEquatorial(Vector2D offset) {

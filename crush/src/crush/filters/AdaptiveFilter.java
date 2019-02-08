@@ -104,9 +104,11 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	}
 
 	protected void accumulateProfile(Channel channel) {	
+	    final int c = channel.getIndex();
+	    
 		for(int i=profile.length; --i >= 0; ) {
-			channelProfiles[channel.index][i] *= profile[i];
-			profile[i] = channelProfiles[channel.index][i];
+			channelProfiles[c][i] *= profile[i];
+			profile[i] = channelProfiles[c][i];
 		}	
 	}
 	
@@ -117,7 +119,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	}
 	
 	public float[] getValidProfile(Channel channel) {
-		float[] response = channelProfiles[channel.index];
+		float[] response = channelProfiles[channel.getIndex()];
 		
 		if(response == null) if(profile != null) {
 			response = new float[profile.length];

@@ -99,15 +99,15 @@ public class ChopperPhases extends PhaseSet {
         
         for(final Channel bgChannel : bgChannels) if(!bgChannel.isFlagged()) if(bgChannel != channel) if(bgChannel.sourcePhase == 0) {
             final WeightedPoint lr = getChopSignal(bgChannel, i);
-            if(G[bgChannel.index] == 0.0) continue;
-            lr.scale(1.0 / G[bgChannel.index]);
+            if(G[bgChannel.getIndex()] == 0.0) continue;
+            lr.scale(1.0 / G[bgChannel.getIndex()]);
             bg.average(lr);
         }
 
         final WeightedPoint value = getChopSignal(channel, i);
         
         if(bg.weight() > 0.0) {
-            bg.scale(G[channel.index]);  
+            bg.scale(G[channel.getIndex()]);  
             value.subtract(bg);
         }
         
@@ -226,7 +226,7 @@ public class ChopperPhases extends PhaseSet {
             n++;
         }
         
-        channel.dof = (n + 1) - channelParms[channel.index];
+        channel.dof = (n + 1) - channelParms[channel.getIndex()];
         
         return channel.dof > 0.0 ? chi2 / channel.dof : Double.NaN;
     }
@@ -246,7 +246,7 @@ public class ChopperPhases extends PhaseSet {
             n++;
         }
         
-        channel.dof = n - channelParms[channel.index];
+        channel.dof = n - channelParms[channel.getIndex()];
         
         return channel.dof > 0.0 ? chi2 / channel.dof : Double.NaN;
     }

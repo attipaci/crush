@@ -28,8 +28,8 @@ import java.util.StringTokenizer;
 
 import crush.Channel;
 import crush.Instrument;
+import crush.PixelLayout;
 import crush.instrument.GridIndexed;
-import crush.instrument.PixelLayout;
 import crush.instrument.SingleEndedLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;

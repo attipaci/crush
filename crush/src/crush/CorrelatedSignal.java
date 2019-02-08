@@ -34,7 +34,15 @@ import jnum.data.WeightedPoint;
 import jnum.parallel.ParallelTask;
 
 
-
+/**
+ * A class representing a common mode signal derived from the correlated detector timestreams. Unlike generic known
+ * signals, in which every sample is assumed to have the same weight (i.e. noise/uncertainty), correlated signals are 
+ * based on the detector data themselves, and thus has a noise weight associated to every sample. These noise weights
+ * should always be propagated when using these signals.
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public class CorrelatedSignal extends Signal {
 	/**
 	 * 

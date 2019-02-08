@@ -34,7 +34,21 @@ import jnum.Unit;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
 
-
+/**
+ * A class representing a collection of similar common {@link Mode}s, by some organizing principle. These modes typically
+ * form a disjoint set, whose channels may partially or fully span an {@link Instrument}. 
+ * <p>
+ * 
+ * A fundamental element of CRUSH is the removal of common modes from the timestream data, typically at the modality level.
+ * I.e. CRUSH typically removes common modes for the entire set of similar modes in an instrument at the same time.
+ * <p>
+ * 
+ * Modalities are normally created via {@link Instrument#createModalities()}.
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ * @param <ModeType>    The generic type of the modes in this modality.
+ */
 public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	/**
 	 * 

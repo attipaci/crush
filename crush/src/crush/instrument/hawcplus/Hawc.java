@@ -502,7 +502,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     public void createDarkSquidLookup() {
         darkSquidLookup = new int[subarrays][subarrayCols];
         for(int i=subarrays; --i >= 0; ) Arrays.fill(darkSquidLookup[i], -1);
-        for(HawcPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.index;
+        for(HawcPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.getIndex();
     }
 
 

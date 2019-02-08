@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import crush.Channel;
 import crush.Instrument;
 import crush.Pixel;
+import crush.PixelLayout;
 
 public abstract class SingleEndedLayout extends PixelLayout {
 

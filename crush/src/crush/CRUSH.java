@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.19";
+    private final static String revision = "devel.20";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -876,12 +876,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
     }
 
-    public String getReleaseVersion() {  
+    public static String getReleaseVersion() {  
         String version = null;
 
         try {
-            URL versionURL = new URL("http://www.sigmyne.com/crush/v2/release.version");
-            URLConnection connection = versionURL.openConnection();
+            URLConnection connection = new URL("http://www.sigmyne.com/crush/v2/release.version").openConnection();
             try {
                 connection.setConnectTimeout(TCP_CONNECTION_TIMEOUT);
                 connection.setReadTimeout(TCP_READ_TIMEOUT);
@@ -891,20 +890,19 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 version = in.readLine();
                 in.close();
             } 
-            catch(IOException e) {
-                if(e instanceof SocketTimeoutException) 
-                    warning("Timed out while awaiting version update information.");
-                else 
-                    warning("Could not get version update information.");
-
-                if(debug) warning(e);
+            catch(SocketTimeoutException e) {
+                Util.warning(CRUSH.class, "Timed out while awaiting version update information.");
             }
-
+            catch(IOException e) {
+                Util.warning(CRUSH.class, "Could not get version update information.");    
+                if(debug) Util.warning(CRUSH.class, e);
+            }
+  
         }
-        catch(MalformedURLException e) { error(e); }
+        catch(MalformedURLException e) { Util.error(CRUSH.class, e); }
         catch(IOException e) {
-            warning("No connection to version update server.");
-            if(debug) warning(e);
+            Util.warning(CRUSH.class, "No connection to version update server.");
+            if(debug) Util.warning(CRUSH.class, e);
         }
 
         return version;
@@ -1229,8 +1227,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
         home = System.getenv("CRUSH");
     }
 
-    public static final int TCP_CONNECTION_TIMEOUT = 3000;
-    public static final int TCP_READ_TIMEOUT = 2000;
+    public static final int TCP_CONNECTION_TIMEOUT = 1000;
+    public static final int TCP_READ_TIMEOUT = 1000;
 
 
 }

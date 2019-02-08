@@ -35,7 +35,21 @@ import jnum.ExtraMath;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
 
-
+/**
+ * A class that captures the common mode signal behavior of a group of channels. A fundamental element of CRUSH
+ * is the removal of common modes from the timestream data. 
+ * <p>
+ * 
+ * Similar and typically a disjoint set of common modes of an instrument may be grouped in a {@link Modality}.
+ * 
+ * 
+ * @see ChannelGroup
+ * @see Signal
+ * @see Modality
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public class Mode implements Serializable {
     /**
      * 

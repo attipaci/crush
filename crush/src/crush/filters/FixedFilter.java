@@ -86,7 +86,7 @@ public abstract class FixedFilter extends Filter {
 	
 	protected void addFrameParms(Channel channel) {
 		final double dp = rejected / points;
-		final int c = channel.index;
+		final int c = channel.getIndex();
 		for(Frame exposure : integration) if(exposure != null) 
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
 				frameParms[exposure.index] += exposure.relativeWeight * dp;

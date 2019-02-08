@@ -32,7 +32,6 @@ import crush.instrument.GeometricIndexed;
 import crush.instrument.InstantFocus;
 import crush.instrument.NonOverlapping;
 import crush.instrument.Overlap;
-import crush.instrument.PixelLayout;
 import crush.instrument.SkyGradient;
 import crush.motion.AccelerationResponse;
 import crush.motion.ChopperResponse;
@@ -63,8 +62,8 @@ import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
 /**
- * A class that captures an instrument's state (properties) at a given point in time, such as for a chunk of contiguous
- * stream of data, such as a scan or an integration, together with its own set of configuration options.
+ * A class that captures an instrument's configuration/operation state (properties) at a given point in time, such as for a chunk 
+ * of contiguous stream of data, such as a scan or an integration, together with its own set of configuration options.
  * <p>
  * 
  * Every scan/integration should have a fully independent <code>Instrument</code> object (with all their channels and properties
@@ -76,6 +75,7 @@ import nom.tam.util.Cursor;
  * Instruments primarily consists of a number of detector channels, which provide timestream data (see {@link Frame}).
  * These channels may be organized into various {@link ChannelGroup}s and {@link Pixel}s, after the channels have
  * been fully populated (see {@link #createEnsembles()}, {@link #createLayout()}). 
+ * <p>
  * 
  * @author Attila Kovacs <attila@sigmyne.com>
  *
@@ -109,7 +109,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     private Object parent;
 
-    public boolean hasEnsembles = false, isValid = false;
+    private boolean hasEnsembles = false;
     private boolean standardWeights = false;
 
     public Instrument(String name) {
@@ -163,7 +163,6 @@ implements TableFormatter.Entries, BasicMessaging {
     public void setOptions(Configurator options) {
         this.options = options;
 
-        isValid = false;
         hasEnsembles = false;
         initialOptions = null;
     }
@@ -242,8 +241,6 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(hasOption("resolution")) setResolution(option("resolution").getDouble() * getSizeUnit().value());
         if(hasOption("gain")) gain = option("gain").getDouble();
-
-        isValid = true;
     }
 
 
@@ -252,15 +249,16 @@ implements TableFormatter.Entries, BasicMessaging {
      * options for the instrument, and loading appropriate configuration files.
      * <p>
      * 
-     * The instrument should be populated with all canonical channels prior to calling this method.
+     * The instrument should be populated with all canonical channels prior to calling this method (e.g. via
+     * a {@link #populate(int)} call or otherwise).
      * <p>
      * 
      * If the pixel layout has not been initialized, this will call {@link #getLayoutInstance()} as necessary
-     * before proceeding to validate it or the existing layout with {@link PixelLayout#validate()}.
+     * before calling {@link PixelLayout#validate()}.
      * <p>
      * 
      * After the validation the instrument should have all its canonical channels and pixels added and
-     * configured. Pruning of these may happen at a later stage, during {@link Integration#validate()}, if the 
+     * configured. Pruning (slimming) of these may happen at a later stage, during {@link Integration#validate()}, if the 
      * <code>noslim</code> option isn't set.
      * <p>
      *    
@@ -899,21 +897,11 @@ implements TableFormatter.Entries, BasicMessaging {
         fixedSourceGains = true;
     }
 
-    /* TODO
-	// Replace the listed flag types with DEAD...
-	public void killChannels(List<String> killTypes, List<String> ignoreTypes) {
-		int killPattern = 0, ignorePattern = 0;
-		for(String name : killTypes) killPattern |= Channel.getFlag(name);
-		for(String name : ignoreTypes) ignorePattern |= Channel.getFlag(name);
-		killChannels(killPattern, ignorePattern);
-	}
-     */
-
     public String getChannelDataHeader() {
         return "ch\tgain\tweight\t\tflag";
     }
 
-    public String getChannelFlagKey(String prepend) {	    
+    public String getChannelFlagGuide(String prepend) {	    
         if(isEmpty()) return prepend;
 
         StringBuffer buf = new StringBuffer();
@@ -936,7 +924,7 @@ implements TableFormatter.Entries, BasicMessaging {
             out.println("#");
         }	
 
-        out.print(getChannelFlagKey("# Flag "));
+        out.print(getChannelFlagGuide("# Flag "));
         out.println("#");
         out.println("# " + getChannelDataHeader());
 
@@ -1084,15 +1072,6 @@ implements TableFormatter.Entries, BasicMessaging {
         layout.rotate(angle);
     }
 
-
-
-
-    public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
-        Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
-        for(ChannelType channel : this) lookup.put(channel.getFixedIndex(), channel);
-        return lookup;
-    }
-
     public ChannelDivision<ChannelType> getDivision(String name, Field field, int discardFlags) throws IllegalAccessException {
         HashMap<Integer, ChannelGroup<ChannelType>> table = new HashMap<Integer, ChannelGroup<ChannelType>>();
 
@@ -1118,17 +1097,6 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void addGroup(String name, ChannelGroup<ChannelType> group) {
         groups.put(name, group);		
-    }
-
-    public synchronized void addGroup(String name, Vector<String> idList) {
-        ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
-        ChannelGroup<ChannelType> group = new ChannelGroup<ChannelType>(name);
-        for(String id : idList) {
-            ChannelType pixel = lookup.get(id);
-            if(pixel != null) group.add(pixel);
-        }
-        if(group.size() == 0) warning("Empty group '" + name + "'.");
-        else groups.put(name, group);		
     }
 
 
@@ -1218,7 +1186,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void loadTempHardwareGains() {
-        for(Channel channel : this) channel.temp = (float) channel.getHardwareGain();
+        for(Channel channel : this) channel.temp = (float) channel.getReadoutGain();
     }
 
     public double[] getSourceGains(final boolean filterCorrected) {
@@ -1448,7 +1416,7 @@ implements TableFormatter.Entries, BasicMessaging {
     // Sequential, because it is usually called from a parallel environment...
     private void calcGeometricOverlaps(final GeometricIndexed geometric, final double pointSize) {
         final double radius = 2.0 * pointSize;
-        final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+        final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 
         double nbeams = 2.0 * pointSize / getResolution();
         final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>((int) Math.ceil(nbeams * nbeams));

@@ -34,7 +34,16 @@ import jnum.math.Vector2D;
 import jnum.projection.Projector2D;
 import jnum.util.*;
 
-
+/**
+ * A class that represents a set of timestream measurements obtained at the same time from the {@link Channel}s in an {@link Instrument}.
+ * Often referred to as an "exposure" also.
+ * 
+ * 
+ * @see Integration
+ * 
+ * @author Attila Kovacs <attila@sigmyne.com>
+ *
+ */
 public abstract class Frame implements Serializable, Cloneable, Flagging {
 	/**
 	 * 
@@ -50,13 +59,12 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
 	
-	public int sign = 1;
+	protected int sign = 1;   // The signal signature, used e.g. for jackknifing
 	
 	private Angle rotation;
-
 	
-	// Some temporary fields to speed up some operations...
-	public transient float tempC, tempWC, tempWC2;
+	
+	public transient float tempC, tempWC, tempWC2; // Some temporary fields to speed up some operations...
 	
 	public float[] data;
 	public byte[] sampleFlag;
@@ -65,15 +73,37 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	private boolean isValid = false;
 	
+	/**
+	 * Constructs a new frame for a parent scan. Even though the frame resides in an {@link Integration}, which in turn resides in
+	 * a {@link Scan}, there is rational to reference the frame two steps up to the scan, since integrations can be rearranged
+	 * (split or merged).
+	 * 
+	 * @param parent   The scan to which the frame belongs.
+	 */
 	public Frame(Scan<?> parent) { 
 		scan = parent; 
 		index = parent.size();
 	}
 	
+	/**
+	 * Returns the scan to which this frame belongs.
+	 * 
+	 * @return The scan in which this frame resides.
+	 */
 	public Scan<?> getScan() { return scan; }
 	
+	/**
+	 * Returns the instrument state for this frame. Same as {@link #getScan()#getInstrument()}.
+	 * 
+	 * @return
+	 */
 	public Instrument<?> getInstrument() { return getScan().getInstrument(); }
 	
+	/**
+	 * The number of channel data points in this frame.
+	 * 
+	 * @return
+	 */
 	public final int size() { return data.length; }
 	
     @Override

@@ -271,7 +271,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	
 	protected void remove(Channel channel) {
 		// Subtract the rejected signal...
-		final int c = channel.index;
+		final int c = channel.getIndex();
 		for(int t = integration.size(); --t >= 0; ) remove(data[t], integration.get(t), c);
 	}
 	
@@ -290,7 +290,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	
 	// TODO smart timestream access...
 	protected void loadTimeStream(Channel channel) {
-		final int c = channel.index;
+		final int c = channel.getIndex();
 		
 		points = 0.0;
 		
@@ -413,7 +413,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	}
 		
 	protected void levelForChannel(Channel channel, float[] signal) {	
-		final int c = channel.index;
+		final int c = channel.getIndex();
 		double sum = 0.0;
 		int n = 0;
 		

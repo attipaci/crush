@@ -45,6 +45,8 @@ public class Scuba2Pixel extends Channel {
 		col = Scuba2.SUBARRAY_COLS * subarrayNo + zeroIndex % Scuba2.SUBARRAY_COLS;
 	}
 	
+	@Override
+    public Scuba2 getInstrument() { return (Scuba2) super.getInstrument(); }
 	
 	@Override
 	public int getCriticalFlags() {
@@ -61,7 +63,7 @@ public class Scuba2Pixel extends Channel {
 	
 	@Override
 	public String getID() {
-		return ((Scuba2) instrument).subarray[subarrayNo].id + ":" + row + "," + col;
+		return getInstrument().subarray[subarrayNo].id + ":" + row + "," + col;
 	}
 	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
