@@ -36,19 +36,18 @@ public class HirmesPixel extends Channel {
      */
     private static final long serialVersionUID = 293691569452930105L;
     
-    public int detArray, sub, readrow, readcol, subrow, subcol, row, col, mux, pin, seriesArray, biasLine;
-    public float jump = 0.0F;
-    public boolean hasJumps = false;
-    
+    public int detArray = -1, sub = -1, subrow = -1, subcol = -1, row = -1, col = -1, mux = -1, pin = -1, seriesArray = -1, biasLine = -1;
     public double subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
+
+    int readrow = -1, readcol = -1;
     
-    int jumpCounter = 0;
+    boolean hasJumps = false;
     
     Vector2D focalPlanePosition;
     
     double restFrequency;
     
-    public HirmesPixel(Hirmes hirmes, int zeroIndex) {
+    HirmesPixel(Hirmes hirmes, int zeroIndex) {
         super(hirmes, zeroIndex);
         
         readrow = zeroIndex / Hirmes.readoutCols;
@@ -159,7 +158,7 @@ public class HirmesPixel extends Channel {
     public double getFrequency() { return restFrequency; }
 
 
-    public void calcSIBSPosition3D() {
+    void calcSIBSPosition3D() {
         Hirmes hirmes = getInstrument(); 
         HirmesLayout layout = hirmes.getLayout();
         
@@ -177,7 +176,7 @@ public class HirmesPixel extends Channel {
         }
     }
 
-    public boolean isDark() {
+    boolean isDark() {
         return subcol < 0 || getPixel().getPosition() == null;
     }
         

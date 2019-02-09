@@ -40,7 +40,7 @@ import jnum.parallel.ParallelTask;
 
 import java.util.*;
 
-public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
+class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
     /**
      * 
      */
@@ -53,7 +53,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     double dAngle;
 
     
-    public PolKaSubscan(APEXScan<LabocaSubscan> parent) {
+    PolKaSubscan(APEXScan<LabocaSubscan> parent) {
         super(parent);
     }
     
@@ -92,7 +92,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         return (int)Math.round(getInstrument().samplingInterval / (4.0*getWaveplateFrequency()));
     }
 
-    public double getWaveplateFrequency() {
+    private double getWaveplateFrequency() {
         return getInstrument().waveplateFrequency;
     }
 
@@ -200,7 +200,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     */
 
 
-    public void removeTPModulation() {
+    private void removeTPModulation() {
         PolKa polka = getInstrument();
 
         // If the waveplate is not rotating, then there is nothing to do...
@@ -295,7 +295,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     @Override
     public LabocaFrame getFrameInstance() {
-        return new PolKaFrame(getScan());
+        return new PolKaFrame(this);
     }
 
     @Override
@@ -304,7 +304,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         return super.getTauCoefficients(id);
     }
 
-    public ArrayList<Double> getMJDCrossings() {
+    private ArrayList<Double> getMJDCrossings() {
         PolKa polka = getInstrument();
         Channel offsetChannel = polka.offsetChannel;
         if(offsetChannel == null) return null;
@@ -368,7 +368,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     } 
     
-    public double getMedianMJDPeriod(ArrayList<Double> crossings) {
+    private double getMedianMJDPeriod(ArrayList<Double> crossings) {
         double dMJD = Double.NaN;  
         for(int i=0; i<3; i++) dMJD = getMedianMJDPeriod(crossings, dMJD); 
         return dMJD;
@@ -390,7 +390,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
    
 
-    public double selectDelay(ArrayList<Double> crossings, double mjdPeriod, double selectionPoint) {
+    private double selectDelay(ArrayList<Double> crossings, double mjdPeriod, double selectionPoint) {
         final double[] delays = new double[crossings.size()];
         final double MJD0 = crossings.get(0);
         
@@ -410,12 +410,12 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
     // Check the waveplate for the bridge error during 2011 Dec 6-8, when 
     // angles were written as zero...
-    public boolean isWaveplateValid() {
+    private boolean isWaveplateValid() {
         for(Frame exposure : this) if(exposure != null) if(((PolKaFrame) exposure).waveplateAngle != 0.0) return true;
         return false;		
     }
 
-    public void measureTPPhases(Channel channel) {
+    private void measureTPPhases(Channel channel) {
         PolKa polka = getInstrument();
         PolKaFrame firstFrame = (PolKaFrame) get(0);
 
@@ -432,7 +432,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
                 );
     }
 
-    public void setTPPhases(Channel channel) {
+    private void setTPPhases(Channel channel) {
         info("Reconstructing waveplate angles from TP modulation.");
 
         PolKa polka = getInstrument();

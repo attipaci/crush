@@ -49,7 +49,7 @@ public class APEXLayout extends PixelLayout {
     
     private Hashtable<Integer, String> feedTypes;
     
-    public APEXLayout(APEXInstrument<? extends Channel> instrument) {
+    protected APEXLayout(APEXInstrument<? extends Channel> instrument) {
         super(instrument);
     }
 

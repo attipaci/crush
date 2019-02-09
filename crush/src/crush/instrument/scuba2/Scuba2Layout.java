@@ -35,7 +35,7 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 
-public class Scuba2Layout extends SingleEndedLayout implements GridIndexed {
+class Scuba2Layout extends SingleEndedLayout implements GridIndexed {
 
     /**
      * 
@@ -49,7 +49,7 @@ public class Scuba2Layout extends SingleEndedLayout implements GridIndexed {
     Vector2D pointingCorrection;
     Vector2D userPointingOffset;
 
-    public Scuba2Layout(Instrument<? extends Channel> instrument) {
+    Scuba2Layout(Instrument<? extends Channel> instrument) {
         super(instrument);
     }
     

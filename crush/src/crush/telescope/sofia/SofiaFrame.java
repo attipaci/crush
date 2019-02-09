@@ -30,7 +30,7 @@ import jnum.astro.GeodeticCoordinates;
 import jnum.astro.TelescopeCoordinates;
 import jnum.math.Vector2D;
 
-public class SofiaFrame extends HorizontalFrame {
+public abstract class SofiaFrame extends HorizontalFrame {
     /**
      * 
      */
@@ -47,7 +47,7 @@ public class SofiaFrame extends HorizontalFrame {
      
     public double PWV;
 
-    public SofiaFrame(SofiaScan<?> parent) {
+    public SofiaFrame(SofiaIntegration<?> parent) {
         super(parent);
     }
    
@@ -99,6 +99,9 @@ public class SofiaFrame extends HorizontalFrame {
         offset.rotate(Math.PI + telescopeVPA);
     }
     
+    public abstract double getRollAngle();
+    
+    public abstract double getLOSAngle();
     
      
 }

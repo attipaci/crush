@@ -42,7 +42,7 @@ import crush.telescope.cso.CSOScan;
 import java.text.*;
 
 
-public class Sharc2Scan extends CSOScan<Sharc2Integration> {
+class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	/**
 	 * 
 	 */
@@ -53,7 +53,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	private double raUnit = Unit.hourAngle;
 	private double decUnit = Unit.deg;
 	
-	public Sharc2Scan(Sharc2 instrument) {
+	Sharc2Scan(Sharc2 instrument) {
 		super(instrument);
 	}
 
@@ -117,7 +117,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	}
 	
 	
-	public File getFile(String scanDescriptor) throws FileNotFoundException {
+	private File getFile(String scanDescriptor) throws FileNotFoundException {
 		File scanFile;
 
 		String path = getDataPath();
@@ -156,7 +156,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	}
 
 	
-	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
+	private Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
 		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor));
@@ -348,9 +348,7 @@ public class Sharc2Scan extends CSOScan<Sharc2Integration> {
 			double felo = -option("fzao").getDouble() * Unit.arcsec;
 			horizontalOffset.addY(fixedOffset.y() - felo);
 			fixedOffset.setY(felo);
-		}
-		
-		
+		}		
 	}
 
 }

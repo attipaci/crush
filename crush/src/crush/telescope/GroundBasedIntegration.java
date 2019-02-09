@@ -44,7 +44,7 @@ public abstract class GroundBasedIntegration<FrameType extends HorizontalFrame> 
     public double zenithTau = 0.0;
     
     
-    public GroundBasedIntegration(GroundBasedScan<? extends GroundBasedIntegration<? extends FrameType>> parent) {
+    protected GroundBasedIntegration(GroundBasedScan<? extends GroundBasedIntegration<? extends FrameType>> parent) {
         super(parent);
     }
   

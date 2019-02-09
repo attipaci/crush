@@ -20,32 +20,56 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+
 package crush.instrument;
 
-import java.lang.reflect.*;
-
 import crush.Frame;
+import crush.Integration;
+import crush.Signal;
 
-public class FieldResponse extends FrameResponse<Frame> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4490473787009977735L;
-	private Field field;
+
+public abstract class FrameResponse<FrameType extends Frame> extends Response<FrameType> {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6877873384217735032L;
+
+    private int derivative = 0;
     
-    public FieldResponse(Field field) {
-        this(field, false);
+    public FrameResponse() {
+        this(false);
     }
-    
-    public FieldResponse(Field field, boolean isFloating) {
+
+    public FrameResponse(boolean isFloating) {
         super(isFloating);
     }
-    
-    public Field getField() { return field; }
 
+    
+    public void setDerivative(int n) {
+        derivative = n;
+    }
+    
+    protected abstract double getValue(FrameType exposure) throws Exception;
+
+    
     @Override
-    protected double getValue(Frame exposure) throws Exception {
-        return field.getDouble(exposure);
+    public final Signal getSignal(Integration<? extends FrameType> integration) {
+        float[] data = new float[integration.size()];   
+
+        try {
+            for(int t=data.length; --t >= 0; ) {
+                final FrameType exposure = integration.get(t);
+                data[t] = exposure == null ? Float.NaN : (float) getValue(exposure);
+            }
+        }
+        catch(Exception e) { integration.warning(e); }
+
+        Signal s = new Signal(this, integration, data, true);
+        for(int i=derivative; --i >= 0; ) s.differentiate();
+        return s;
     }
 
+    
+    
 }

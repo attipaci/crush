@@ -35,7 +35,7 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 
-public class GismoLayout extends SingleEndedLayout implements GridIndexed {
+class GismoLayout extends SingleEndedLayout implements GridIndexed {
 
     /**
      * 
@@ -46,7 +46,7 @@ public class GismoLayout extends SingleEndedLayout implements GridIndexed {
     private Vector2D pixelSize = GismoPixel.defaultSize;
 
     
-    public GismoLayout(Gismo instrument) {
+    GismoLayout(Gismo instrument) {
         super(instrument);
         arrayPointingCenter = GismoLayout.defaultPointingCenter.copy();
     }
@@ -62,7 +62,7 @@ public class GismoLayout extends SingleEndedLayout implements GridIndexed {
     @Override
     public Gismo getInstrument() { return (Gismo) super.getInstrument(); }
     
-    public void parseHeader(Header header) {
+    void parseHeader(Header header) {
         arrayPointingCenter.setX(header.getDoubleValue("PNTROW", 8.5));
         arrayPointingCenter.setY(header.getDoubleValue("PNTCOL", 4.5));
     }
@@ -129,7 +129,7 @@ public class GismoLayout extends SingleEndedLayout implements GridIndexed {
     }
 
     
-    public Vector2D getDefaultPointingCenter() { return defaultPointingCenter; }
+    Vector2D getDefaultPointingCenter() { return defaultPointingCenter; }
 
 
 

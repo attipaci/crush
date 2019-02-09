@@ -235,19 +235,6 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
         }
         catch(NoSuchFieldException e) { error(e); }
 
-        try {
-            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), LOSResponse.class); 
-            losResponse.setGainFlag(HawcPixel.FLAG_LOS_RESPONSE);
-            addModality(losResponse);
-        }
-        catch(NoSuchFieldException e) { error(e); }
-            
-        try { 
-            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), RollResponse.class);
-            rollResponse.setGainFlag(HawcPixel.FLAG_ROLL_RESPONSE);
-            addModality(rollResponse);
-        }
-        catch(NoSuchFieldException e) { error(e); }
     }
   
     @Override
@@ -309,7 +296,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
         Fits fits = new Fits(fileName);
         long[][] data = (long[][]) fits.getHDU(0).getData().getData();
         
-        for(HawcPixel pixel : this) pixel.jump = data[pixel.col][pixel.row];
+        for(HawcPixel pixel : this) pixel.jumpLevel = data[pixel.col][pixel.row];
        
         registerConfigFile(fileName);
         fits.close();   

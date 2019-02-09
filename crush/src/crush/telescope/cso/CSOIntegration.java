@@ -40,7 +40,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	 */
 	private static final long serialVersionUID = 8762250193431287809L;
 
-	public CSOIntegration(CSOScan<? extends CSOIntegration<? extends FrameType>> parent) {
+	protected CSOIntegration(CSOScan<? extends CSOIntegration<? extends FrameType>> parent) {
 		super(parent);
 	}
 	
@@ -115,7 +115,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	}
 	
 	
-	public void printEquivalentTaus(double value) {	
+	protected void printEquivalentTaus(double value) {	
 		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
 				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
@@ -125,7 +125,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	}
 	
 	
-	public double getSkyLoadTemperature() {
+	protected double getSkyLoadTemperature() {
 		double transmission = 0.5 * (getFirstFrame().getTransmission() + getLastFrame().getTransmission());
 		return (1.0 - transmission) * getScan().getAmbientKelvins();
 	}
@@ -148,7 +148,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	
 	}
 	
-	public void setMaiTau() throws Exception {
+	private void setMaiTau() throws Exception {
 		info("Looking up MaiTau tables...");
 		
 		try {
@@ -158,7 +158,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		catch(Exception e) { fallbackTau("maitau", e); }	
 	}
 	
-	public void setTableTau() throws Exception {
+	private void setTableTau() throws Exception {
 		String source = hasOption("tau.tables") ? option("tau.tables").getPath() : ".";
 		String id = getScan().getID();
 		String date = id.substring(0, id.indexOf('.'));
@@ -177,7 +177,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		setTau("225GHz", table.getTau(getMJD()));	
 	}
 	
-	public void setJCMTTableTau() throws Exception {
+	private void setJCMTTableTau() throws Exception {
 		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
 		String spec = getScan().getShortDateString();
 		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
@@ -207,7 +207,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		
 	}
 	
-	public double getMaiTau(String id) throws IOException {
+	private double getMaiTau(String id) throws IOException {
 	    id = id.toLowerCase();	
 		double value = Double.NaN;
 
@@ -242,7 +242,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	}
 	 
 
-	public double getDirectTau() { 
+	private double getDirectTau() { 
 		double eps = (getInstrument().getLoadTemperature() - getInstrument().excessLoad) / getScan().ambientT; 	
 		return -Math.log(1.0-eps) * getScan().horizontal.sinLat();
 	}

@@ -108,8 +108,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     // The integration should carry a copy of the instrument s.t. the integration can freely modify it...
     // The constructor of Integration thus copies the Scan instrument for private use...
     public Integration(Scan<? extends Integration<? extends FrameType>> parent) {
-        scan = parent;
-        instrument = scan.getInstrument().copy();
+        setParent(parent);
+        instrument = parent.getInstrument().copy();
         instrument.setParent(this);
         setThreadCount(CRUSH.maxThreads);
     }
@@ -134,9 +134,28 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         return clone;
     }
     
+    void setParent(Scan<? extends Integration<? extends FrameType>> parent) {
+        scan = parent;        
+    }
     
+    @Override
+    public boolean add(FrameType frame) {
+       if(frame != null) { 
+           frame.setParent(this);
+           frame.index = size();
+       }
+       return super.add(frame);
+    }
     
-    
+    @Override
+    public void add(int index, FrameType frame) {
+        if(frame != null) {
+            frame.setParent(this);
+            frame.index = index;
+        }
+        super.add(index, frame);
+    }
+   
 
     @Override
     public int compareTo(Integration<FrameType> other) {
@@ -3080,10 +3099,11 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         signals.put(signal.getMode(), signal);
     }
 
+    @SuppressWarnings("unchecked")
     public Signal getSignal(Mode mode) {
         Signal signal = signals.get(mode);
         if(signal == null) if(mode instanceof Response) {
-            signal = ((Response) mode).getSignal(this);	
+            signal = ((Response<FrameType>) mode).getSignal(this);	
             if(signal.isFloating) signal.level(false);
             signal.removeDrifts();
         }

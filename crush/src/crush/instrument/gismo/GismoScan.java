@@ -51,7 +51,7 @@ import java.text.*;
 import java.util.*;
 
 
-public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
+class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 	/**
 	 * 
 	 */
@@ -74,7 +74,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset, pakoOffsets;
 	public Vector2D basisOffset = new Vector2D();
 	
-	public GismoScan(Gismo instrument) {
+	GismoScan(Gismo instrument) {
 		super(instrument);
 	}
 	
@@ -160,7 +160,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 		return info;
 	}
 
-	public File getFile(String scanDescriptor) throws FileNotFoundException {
+	private File getFile(String scanDescriptor) throws FileNotFoundException {
 		File scanFile;
 
 		String path = getDataPath();
@@ -234,14 +234,14 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 	}	
 
 	
-	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
+	private Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
 		boolean isCompressed = file.getName().endsWith(".gz");
 		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
-	public void setVersionOptions(double ver) {
+	private void setVersionOptions(double ver) {
 		// Make options an independent set of options, setting version specifics...
 		if(!getOptions().containsKey("ver")) return;
 			
@@ -254,7 +254,7 @@ public class GismoScan extends GroundBasedScan<GismoIntegration> implements Weat
 			if(Range.from(rangeSpec, true).contains(fitsVersion)) getOptions().parseAll(settings.get(rangeSpec));
 	}
 	
-	public void setScanIDOptions(String id) {
+	private void setScanIDOptions(String id) {
 		if(!getOptions().containsKey("id")) return;
 	
 		// Make options an independent set of options, setting MJD specifics...

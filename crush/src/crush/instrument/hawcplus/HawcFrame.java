@@ -32,17 +32,17 @@ import jnum.astro.GeodeticCoordinates;
 import jnum.math.Vector2D;
 
 
-public class HawcFrame extends SofiaFrame {
+class HawcFrame extends SofiaFrame {
     /**
      * 
      */
     private static final long serialVersionUID = 6511202510198331668L;
 
+    float LOS, roll;
+    
     long mceSerial;
     float hwpAngle;
     byte[] jumpCounter;
-    
-    public float LOS, roll;
     
     int status;
 
@@ -50,9 +50,9 @@ public class HawcFrame extends SofiaFrame {
     
   
     
-    public HawcFrame(HawcScan hawcScan) {
-        super(hawcScan);
-        create(hawcScan.getInstrument().size());
+    HawcFrame(HawcIntegration parent) {
+        super(parent);
+        create(getInstrument().size());
     }
     
     @Override
@@ -71,7 +71,7 @@ public class HawcFrame extends SofiaFrame {
         return copy;
     }
 
-    public void parseData(int frameIndex, int[] DAC, short[] jump) {   
+    void parseData(int frameIndex, int[] DAC, short[] jump) {   
         parseData(DAC, jump, frameIndex * FITS_CHANNELS);
     }
 
@@ -87,7 +87,7 @@ public class HawcFrame extends SofiaFrame {
         }
     }
     
-    public void parseData(int[][] DAC, short[][] jump) {  
+    void parseData(int[][] DAC, short[][] jump) {  
         Hawc hawc = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
@@ -192,18 +192,18 @@ public class HawcFrame extends SofiaFrame {
     }
     
 
-    public void darkCorrect() {
+    void darkCorrect() {
         Hawc hawc = getScan().getInstrument();
 
         for(HawcPixel pixel : hawc) if(!pixel.isFlagged(Channel.FLAG_BLIND))
             data[pixel.getIndex()] -= data[hawc.darkSquidLookup[pixel.sub][pixel.col]];
     }
   
-    public void instrumentToEquatorial(Vector2D offset) {
+    void instrumentToEquatorial(Vector2D offset) {
         offset.rotate(-instrumentVPA);
     }
 
-    public void equatorialToInstrument(Vector2D offset) {
+    void equatorialToInstrument(Vector2D offset) {
         offset.rotate(instrumentVPA);
     }
    
@@ -220,5 +220,17 @@ public class HawcFrame extends SofiaFrame {
 
     public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
     public static byte SAMPLE_TRANSIENT_NOISE = sampleFlags.next('T', "transient noise").value();
+
+
+
+    @Override
+    public double getRollAngle() {
+        return roll;
+    }
+
+    @Override
+    public double getLOSAngle() {
+        return LOS;
+    }
    
 }

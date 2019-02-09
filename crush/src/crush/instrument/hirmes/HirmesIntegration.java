@@ -38,14 +38,14 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
 
-public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {    
+class HirmesIntegration extends SofiaIntegration<HirmesFrame> {    
     /**
      * 
      */
     private static final long serialVersionUID = -7898186476366677656L;
     
 
-    public HirmesIntegration(HirmesScan parent) {
+    HirmesIntegration(HirmesScan parent) {
         super(parent);
     }   
     
@@ -57,11 +57,11 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
     
     @Override
     public HirmesFrame getFrameInstance() {
-        return new HirmesFrame(getScan());
+        return new HirmesFrame(this);
     }
 
 
-    protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {   
+    void read(List<BinaryTableHDU> dataHDUs) throws Exception {   
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
@@ -78,7 +78,7 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             new HirmesRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1); 
     }
 
-    class HirmesRowReader extends HDURowReader { 
+    private class HirmesRowReader extends HDURowReader { 
         private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
         private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
         private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
@@ -92,7 +92,7 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
 
         private final HirmesScan hirmesScan = getScan();
 
-        public HirmesRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
+        HirmesRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
 
             isLab = hasOption("lab");
@@ -196,7 +196,7 @@ public class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                 @Override
                 public void processRow(int i, Object[] row) {
                     // Create the frame object only if it cleared the above hurdles...
-                    final HirmesFrame frame = new HirmesFrame(hirmesScan);
+                    final HirmesFrame frame = getFrameInstance();
                     frame.index = i;
                     frame.isComplete = false;
                     frame.hasTelescopeInfo = !isLab;

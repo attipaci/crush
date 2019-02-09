@@ -305,7 +305,7 @@ public class Mode implements Serializable {
 
     }
     
-    public class NonLinearResponse extends Response {
+    public class NonLinearResponse extends Response<Frame> {
         /**
          * 
          */

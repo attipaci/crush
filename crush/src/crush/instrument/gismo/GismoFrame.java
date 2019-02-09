@@ -28,11 +28,12 @@ import crush.*;
 import crush.telescope.HorizontalFrame;
 
 
-public class GismoFrame extends HorizontalFrame {
+class GismoFrame extends HorizontalFrame {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -322299070222166192L;
+	
 	int samples = 1;
 	int frameNumber;
 	int calFlag = 0;
@@ -40,13 +41,16 @@ public class GismoFrame extends HorizontalFrame {
 	//double labviewTime;
 	//float[] diodeT, resistorT, diodeV;
 	
-	public GismoFrame(GismoScan parent) {
+	GismoFrame(GismoIntegration parent) {
 		super(parent);
-		create(getScan().getInstrument().pixels());
+		create(getInstrument().pixels());
 	}
 	
 	@Override
     public GismoScan getScan() { return (GismoScan) super.getScan(); }
+	
+	@Override
+    public Gismo getInstrument( ) { return (Gismo) super.getInstrument(); }
 	
 	@Override
     public void cloneReadout(Frame from) {
@@ -60,13 +64,13 @@ public class GismoFrame extends HorizontalFrame {
 	}
 	
 	
-	public void parseData(float[][] DAC) {
+	void parseData(float[][] DAC) {
 		final int pixels = getScan().getInstrument().pixels();
 		for(int bol=0; bol<pixels; bol++) data[bol] = DAC[bol/8][bol%8];		
 	}
 	
 	
-	public void parseData(float[] DAC, int from, int channels) {
+	void parseData(float[] DAC, int from, int channels) {
 		System.arraycopy(DAC, from, data, 0, channels);
 	}
 

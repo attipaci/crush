@@ -36,12 +36,13 @@ public class GismoPixel extends Channel {
 	 * 
 	 */
 	private static final long serialVersionUID = -2948396506109435290L;
+	
 	public int row, col, mux, pin;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	
 	// 16 x 8 (rows x cols)
 	
-	public GismoPixel(Gismo array, int zeroIndex) {
+	GismoPixel(Gismo array, int zeroIndex) {
 		super(array, zeroIndex);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
@@ -52,7 +53,7 @@ public class GismoPixel extends Channel {
 
 
 	
-	public static Vector2D getPosition(Vector2D size, double row, double col) {
+	static Vector2D getPosition(Vector2D size, double row, double col) {
 		return new Vector2D(size.x() * col, -size.y() * row);
 	}
 	
@@ -79,7 +80,7 @@ public class GismoPixel extends Channel {
 		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
 	}
 	
-	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
+	static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
 	
 	
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();

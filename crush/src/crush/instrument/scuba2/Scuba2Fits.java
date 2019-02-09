@@ -37,7 +37,7 @@ import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
 
-public class Scuba2Fits implements Comparable<Scuba2Fits> {
+class Scuba2Fits implements Comparable<Scuba2Fits> {
 	private Configurator options;
 	private File file;
 	private String fileName;
@@ -45,7 +45,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	Fits fits;
 	BasicHDU<?>[] HDU;
 	
-	public Scuba2Fits(String fileName, Configurator options) throws Exception {
+	Scuba2Fits(String fileName, Configurator options) throws Exception {
 		this.options = options;
 		
 		String lFileName = fileName.toLowerCase();
@@ -60,7 +60,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		else throw new IllegalArgumentException("Input file is neither SDF or FITS...");
 	}
 	
-	public void setFile(File file) throws FileNotFoundException, FitsException {
+	private void setFile(File file) throws FileNotFoundException, FitsException {
 		this.file = null;
 		this.fileName = null;
 	
@@ -75,27 +75,20 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		HDU = fits.read();
 	}
 	
-	public File getFile() { return file; }
+	File getFile() { return file; }
 	
-	public String getFileName() { return fileName; }
+	String getFileName() { return fileName; }
 	
-	public BasicHDU<?>[] getHDUs() { return HDU; }
+	BasicHDU<?>[] getHDUs() { return HDU; }
+
 	
-	public boolean hasOption(String key) {
-		return options.hasOption(key);
-	}
+	int getSubarrayIndex() { return fileName.charAt(2) - 'a'; }
 	
-	public Configurator option(String key) {
-		return options.option(key);
-	}
+	String getDateString() { return fileName.substring(3, 11); }
 	
-	public int getSubarrayIndex() { return fileName.charAt(2) - 'a'; }
+	int getScanNumber() { return Integer.parseInt(fileName.substring(12, 17)); }
 	
-	public String getDateString() { return fileName.substring(3, 11); }
-	
-	public int getScanNumber() { return Integer.parseInt(fileName.substring(12, 17)); }
-	
-	public int getSubscanNo() { return Integer.parseInt(fileName.substring(18, 22)); }
+	int getSubscanNo() { return Integer.parseInt(fileName.substring(18, 22)); }
 
 	
 	@Override
@@ -125,7 +118,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	}
 
 	
-	public static String getFitsName(String sdfName) {
+	private static String getFitsName(String sdfName) {
 		return sdfName.substring(0, sdfName.length() - 4) + ".fits";		
 	}
 	

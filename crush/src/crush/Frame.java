@@ -49,7 +49,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	 * 
 	 */
 	private static final long serialVersionUID = 6878330196774273680L;
-	private Scan<?> scan;
+	private Integration<?> integration;
 	public int index;
 	
 	public double MJD;
@@ -73,31 +73,31 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	private boolean isValid = false;
 	
-	/**
-	 * Constructs a new frame for a parent scan. Even though the frame resides in an {@link Integration}, which in turn resides in
-	 * a {@link Scan}, there is rational to reference the frame two steps up to the scan, since integrations can be rearranged
-	 * (split or merged).
-	 * 
-	 * @param parent   The scan to which the frame belongs.
-	 */
-	public Frame(Scan<?> parent) { 
-		scan = parent; 
-		index = parent.size();
+	
+	public Frame(Integration<? extends Frame> parent) {
+	    setParent(parent);
+	    index = -1;
 	}
+	
+	void setParent(Integration<? extends Frame> parent) {
+	    integration = parent;
+	}
+	
+	public Integration<?> getIntegration() { return integration; }
 	
 	/**
 	 * Returns the scan to which this frame belongs.
 	 * 
 	 * @return The scan in which this frame resides.
 	 */
-	public Scan<?> getScan() { return scan; }
+	public Scan<?> getScan() { return getIntegration().getScan(); }
 	
 	/**
 	 * Returns the instrument state for this frame. Same as {@link #getScan()#getInstrument()}.
 	 * 
 	 * @return
 	 */
-	public Instrument<?> getInstrument() { return getScan().getInstrument(); }
+	public Instrument<?> getInstrument() { return getIntegration().getInstrument(); }
 	
 	/**
 	 * The number of channel data points in this frame.

@@ -35,15 +35,15 @@ public class Sharc2Pixel extends Channel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1902854577318314033L;
-	public int row, col, block = 0;
-	public double biasV;
-	public short DAC;
-	public double G0 = 0.0, V0 = Double.POSITIVE_INFINITY, T0 = Double.POSITIVE_INFINITY; // Gain non-linearity constants...
+	public int row = -1, col = -1, block = 0;
+	public double rowGain = 1.0, muxGain;
 	
-	public double rowGain = 1.0;
-	public double muxGain;
+	double biasV;
+	short DAC;
+	double G0 = 0.0, V0 = Double.POSITIVE_INFINITY, T0 = Double.POSITIVE_INFINITY; // Gain non-linearity constants...
 	
-	public Sharc2Pixel(Sharc2 array, int zeroIndex) {
+	
+	Sharc2Pixel(Sharc2 array, int zeroIndex) {
 		super(array, zeroIndex);
 		row = zeroIndex / 32;
 		col = zeroIndex % 32;

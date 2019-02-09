@@ -31,7 +31,7 @@ public class LabocaScan extends APEXScan<LabocaSubscan> {
 	 */
 	private static final long serialVersionUID = -3989020051894803532L;
 
-	public LabocaScan(Laboca instrument) {
+	protected LabocaScan(Laboca instrument) {
 		super(instrument);
 	}
 

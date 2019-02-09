@@ -33,12 +33,12 @@ public class Scuba2Pixel extends Channel {
 	 */
 	private static final long serialVersionUID = -638264274147854699L;
 	
-	public int subarrayNo;
-	public int row, col, block=0;  // row = MUX, col = address line
+	public int subarrayNo = -1;
+	public int row = -1, col = -1, block=0;  // row = MUX, col = address line
 	public double subarrayGain = 1.0, rowGain = 1.0, colGain = 1.0;
 	public double he3Gain = 0.0;
 	
-	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
+	Scuba2Pixel(Scuba2 array, int zeroIndex) {
 		super(array, zeroIndex);
 		subarrayNo = zeroIndex / Scuba2Subarray.PIXELS;
 		row = zeroIndex / Scuba2.SUBARRAY_COLS;

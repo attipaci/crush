@@ -150,14 +150,14 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 	
 	
 	
-	public ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
+	ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
 		ArrayList<Scuba2Pixel> pixels = new ArrayList<Scuba2Pixel>(Scuba2Subarray.PIXELS);
 		for(Scuba2Pixel pixel : this) if(pixel.subarrayNo == subarrayIndex) pixels.add(pixel);
 		return pixels;
 	}
 	
 	
-	public void addPixelsFor(boolean[] hasSubarray) {
+	void addPixelsFor(boolean[] hasSubarray) {
 		int subarrays = 0;
 		for(int i=0; i < hasSubarray.length; i++) if(hasSubarray[i]) subarrays++;
 		

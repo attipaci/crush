@@ -44,7 +44,9 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.CRUSH;
 import crush.Channel;
+import crush.Modality;
 import crush.Scan;
+import crush.instrument.hawcplus.HawcPixel;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Constant;
@@ -116,6 +118,26 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
         configFiles.add(fileName);
         history.add("AUX: " + fileName); 
+    }
+    
+    
+    @Override
+    protected void createModalities() {
+        super.createModalities();
+        
+        try {
+            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), LOSResponse.class); 
+            losResponse.setGainFlag(HawcPixel.FLAG_LOS_RESPONSE);
+            addModality(losResponse);
+        }
+        catch(NoSuchFieldException e) { error(e); }
+            
+        try { 
+            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), RollResponse.class);
+            rollResponse.setGainFlag(HawcPixel.FLAG_ROLL_RESPONSE);
+            addModality(rollResponse);
+        }
+        catch(NoSuchFieldException e) { error(e); }
     }
 
     @Override

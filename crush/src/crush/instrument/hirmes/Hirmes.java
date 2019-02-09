@@ -64,7 +64,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     private double z = 0.0;                 // Doppler shift. 
 
-    public Hirmes() {
+    Hirmes() {
         super("hirmes", pixels);
     }
 
@@ -278,16 +278,16 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return G;        
     }
 
-    public double getRelativeTransmission(double fobs) {
+    private double getRelativeTransmission(double fobs) {
         // TODO spectral telluric corrections go here...
         return 1.0;
     }
 
-    public final String getSubarrayID(int sub) {
+    final String getSubarrayID(int sub) {
         return subID[sub];
     }
 
-    public final int getSubarrayIndex(String id) {
+    final int getSubarrayIndex(String id) {
         for(int sub=0; sub < subarrays; sub++) if(subID[sub].equalsIgnoreCase(id)) return sub;
         return -1;        
     }
@@ -360,7 +360,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return slimmed;
     }
 
-    public void createDarkSquidLookup() {
+    private void createDarkSquidLookup() {
         darkSquidLookup = new int[readoutRows];
         Arrays.fill(darkSquidLookup, -1);
         for(HirmesPixel pixel : this) if(pixel.isDark()) darkSquidLookup[pixel.mux] = pixel.getIndex();
@@ -375,7 +375,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
    
-    public int getGratingIndex(double wavelength) {
+    private int getGratingIndex(double wavelength) {
         if(wavelength > 71.8 * Unit.um) return 2;
         if(wavelength > 42.4 * Unit.um) return 1;
         return 0;
@@ -386,11 +386,11 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return Math.atan(fpx / 546.48) + (3.17e-9 * fpx - 2.30e-7) * fpx*fpx;
     }
 
-    public double getRestFrequency(Vector2D focalPlanePosition) {
+    double getRestFrequency(Vector2D focalPlanePosition) {
         return (1.0 + z) * getObservingFrequency(focalPlanePosition);
     }
     
-    public double getObservingFrequency(Vector2D focalPlanePosition) {
+    private double getObservingFrequency(Vector2D focalPlanePosition) {
         final double[] n = { 0.0220311,0.0129907,0.0076615 };
         
         

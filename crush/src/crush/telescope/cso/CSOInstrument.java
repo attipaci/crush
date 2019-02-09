@@ -53,11 +53,11 @@ public abstract class CSOInstrument<ChannelType extends Channel> extends Telesco
 
     public double excessLoad = 0.0;
 
-    public CSOInstrument(String name, int size) {
+    protected CSOInstrument(String name, int size) {
         super(name, size);
     }
 
-    public CSOInstrument(String name) {
+    protected CSOInstrument(String name) {
         super(name);
     }
 

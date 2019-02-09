@@ -32,31 +32,29 @@ import jnum.astro.GeodeticCoordinates;
 import jnum.math.Vector2D;
 
 
-public class HirmesFrame extends SofiaFrame {
+class HirmesFrame extends SofiaFrame {
     /**
      * 
      */
     private static final long serialVersionUID = 2015348452508480568L;
+    
+    float LOS, roll;
+    
     long mceSerial;
     byte[] jumpCounter;
     
-    public float LOS, roll;
     
     int status;
 
     boolean isComplete = false;
     
-    public HirmesFrame(HirmesScan scan) {
-        super(scan);
-        create(scan.getInstrument().size());
+    HirmesFrame(HirmesIntegration parent) {
+        super(parent);
+        create(getInstrument().size());
     }
 
     @Override
     public HirmesScan getScan() { return (HirmesScan) super.getScan(); }
-    
-    public void parseData(int frameIndex, int[] DAC, short[] jump) {   
-        parseData(DAC, jump, frameIndex * FITS_CHANNELS);
-    }
     
     @Override
     public HirmesFrame copy(boolean withContents) {
@@ -70,8 +68,12 @@ public class HirmesFrame extends SofiaFrame {
         return copy;
     }
 
+    void parseData(int frameIndex, int[] DAC, short[] jump) {   
+        parseData(DAC, jump, frameIndex * FITS_CHANNELS);
+    }
+    
     // Parses data for valid pixels only...   
-    public void parseData(int[] DAC, short[] jump, int from) {  
+    private void parseData(int[] DAC, short[] jump, int from) {  
         Hirmes hirmes = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
@@ -82,7 +84,7 @@ public class HirmesFrame extends SofiaFrame {
         }
     }
     
-    public void parseData(int[][] DAC, short[][] jump) {  
+    void parseData(int[][] DAC, short[][] jump) {  
         Hirmes hirmes = getScan().getInstrument();
         
         if(jump != null) jumpCounter = new byte[data.length];
@@ -175,20 +177,31 @@ public class HirmesFrame extends SofiaFrame {
     }
     
 
-    public void darkCorrect() {
+    void darkCorrect() {
         Hirmes hirmes = getScan().getInstrument();
 
         for(HirmesPixel pixel : hirmes) if(!pixel.isFlagged(Channel.FLAG_BLIND))
             data[pixel.getIndex()] -= data[hirmes.darkSquidLookup[pixel.col]];
     }
   
-    public void instrumentToEquatorial(Vector2D offset) {
+    void instrumentToEquatorial(Vector2D offset) {
         offset.rotate(-instrumentVPA);
     }
 
-    public void equatorialToInstrument(Vector2D offset) {
+    void equatorialToInstrument(Vector2D offset) {
         offset.rotate(instrumentVPA);
     }
+    
+    @Override
+    public double getRollAngle() {
+        return roll;
+    }
+
+    @Override
+    public double getLOSAngle() {
+        return LOS;
+    }
+   
     
 
     public final static int JUMP_RANGE = 1<<7;  // Jumps are 7-bit signed values...

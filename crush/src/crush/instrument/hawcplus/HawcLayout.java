@@ -25,15 +25,17 @@ package crush.instrument.hawcplus;
 
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import crush.Instrument;
 import crush.instrument.GridIndexed;
 import crush.instrument.SingleEndedLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class HawcLayout extends SingleEndedLayout implements GridIndexed { 
+class HawcLayout extends SingleEndedLayout implements GridIndexed { 
     /**
      * 
      */
@@ -46,8 +48,20 @@ public class HawcLayout extends SingleEndedLayout implements GridIndexed {
     
     private double[] polZoom;
     
-    public HawcLayout(Hawc instrument) {
+    HawcLayout(Hawc instrument) {
         super(instrument);
+    }
+    
+    @Override
+    public HawcLayout copyFor(Instrument<?> instrument) {
+        HawcLayout copy = (HawcLayout) super.copyFor(instrument);
+        
+        if(pixelSize != null) copy.pixelSize = pixelSize.copy();
+        if(subarrayOffset != null) copy.subarrayOffset = Vector2D.copyOf(subarrayOffset);
+        if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
+        if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
+        
+        return copy;
     }
     
     @Override
@@ -128,7 +142,7 @@ public class HawcLayout extends SingleEndedLayout implements GridIndexed {
         getInstrument().registerConfigFile(fileName);
     }
 
-    public Vector2D getSIBSPosition(int sub, double row, double col) {
+    Vector2D getSIBSPosition(int sub, double row, double col) {
         Vector2D v = new Vector2D(col, 39.0 - row); // X, Y
         v.rotate(subarrayOrientation[sub]);
         v.add(subarrayOffset[sub]);

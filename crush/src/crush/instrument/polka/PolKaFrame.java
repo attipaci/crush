@@ -26,12 +26,11 @@ package crush.instrument.polka;
 import crush.Channel;
 import crush.instrument.laboca.*;
 import crush.polarization.*;
-import crush.telescope.apex.APEXScan;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.math.Angle;
 
-public class PolKaFrame extends LabocaFrame {
+class PolKaFrame extends LabocaFrame {
 	/**
 	 * 
 	 */
@@ -42,7 +41,7 @@ public class PolKaFrame extends LabocaFrame {
 	float unpolarizedGain;
 	double waveplateOffset = Double.NaN, waveplateAngle = Double.NaN, waveplateFrequency = Double.NaN;
 	
-	public PolKaFrame(APEXScan<LabocaSubscan> parent) {
+	PolKaFrame(PolKaSubscan parent) {
 		super(parent);
 	}
 	
@@ -67,7 +66,7 @@ public class PolKaFrame extends LabocaFrame {
 	}
 	
 	
-	public void loadWaveplateData() {
+	void loadWaveplateData() {
 		final PolKa polka = getScan().getInstrument();
 		
 		if(polka.frequencyChannel != null) waveplateFrequency = data[polka.frequencyChannel.getIndex()];	

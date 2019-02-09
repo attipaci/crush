@@ -22,30 +22,23 @@
  ******************************************************************************/
 package crush.instrument.laboca;
 
-import crush.*;
-import crush.instrument.FieldResponse;
+import crush.instrument.FrameResponse;
 
-import java.lang.reflect.*;
-
-public class LabocaHe3Response extends FieldResponse {
+public class LabocaHe3Response extends FrameResponse<LabocaFrame> {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4390450615227012414L;
-	static Field temperatureField;
-	
-	private static final String he3FieldName = "he3Temp";
-	
-	static { 
-		try { temperatureField = LabocaFrame.class.getField(he3FieldName); }
-		catch(NoSuchFieldException e) {
-			CRUSH.warning(null, LabocaFrame.class.getSimpleName() + " has no field named '" + he3FieldName + ".");
-			CRUSH.trace(e);
-		}
+
+	public LabocaHe3Response() {
+	    super(true);
 	}
 	
-	public LabocaHe3Response() { super(temperatureField, true); }
-	
+    @Override
+    protected double getValue(LabocaFrame exposure) throws Exception {
+        return exposure.he3Temp;
+    }
+
 	
 }

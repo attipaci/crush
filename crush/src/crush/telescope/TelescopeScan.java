@@ -58,7 +58,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     public EquatorialCoordinates equatorial, apparent;
     public Precession fromApparent, toApparent;
     
-    public TelescopeScan(TelescopeInstrument<?> instrument) {
+    protected TelescopeScan(TelescopeInstrument<?> instrument) {
         super(instrument);
     }
     
@@ -89,7 +89,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     }
     
     
-    public void precess(CoordinateEpoch epoch) {
+    private void precess(CoordinateEpoch epoch) {
         Precession toEpoch = new Precession(equatorial.epoch, epoch);
         toEpoch.precess(equatorial);
         for(Integration<? extends TelescopeFrame> integration : this) for(TelescopeFrame frame : integration) 
@@ -97,7 +97,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         calcPrecessions(epoch);
     }
     
-    public void calcPrecessions(CoordinateEpoch epoch) {
+    protected void calcPrecessions(CoordinateEpoch epoch) {
         JulianEpoch apparentEpoch = JulianEpoch.forMJD(getMJD());
         fromApparent = new Precession(apparentEpoch, epoch);
         toApparent = new Precession(epoch, apparentEpoch);
@@ -105,7 +105,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         
 
     
-    public void calcApparent() {
+    protected void calcApparent() {
         apparent = equatorial.clone();
         if(toApparent == null) calcPrecessions(equatorial.epoch);
         toApparent.precess(apparent);
@@ -135,7 +135,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         else return equatorial;
     }
     
-
+    /*
     public Vector2D getEquatorialPointing(GaussianSource source) {
         if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
             throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
@@ -158,7 +158,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
             
         return sourceCoords.getOffsetFrom(reference);
     }
-    
+    */
     
     @Override
     public Offset2D getNativePointing(GaussianSource source) {
@@ -197,7 +197,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         return null;
     }
     
-    public Offset2D getNativeOffsetOf(Offset2D equatorial) {
+    private Offset2D getNativeOffsetOf(Offset2D equatorial) {
         if(!equatorial.getCoordinateClass().equals(EquatorialCoordinates.class))
             throw new IllegalArgumentException("not an equatorial offset");
         
@@ -216,7 +216,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
 
     
     // Inverse rotation from Native to Nasmyth...
-    public Vector2D getNasmythOffset(Offset2D pointing) {
+    protected Vector2D getNasmythOffset(Offset2D pointing) {
         SphericalCoordinates coords = getNativeCoordinates();
         if(!pointing.getCoordinateClass().equals(coords.getClass())) 
             throw new IllegalArgumentException("non-native pointing offset."); 
@@ -233,7 +233,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         return nasmyth;
     }
     
-    public void applyPointing() {
+    protected void applyPointing() {
         Offset2D differential = getNativePointingIncrement(pointing);
         pointingAt(differential);
         

@@ -169,7 +169,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 		
 	}
 	
-	public void readTemperatureGains(String fileName) throws IOException {
+	void readTemperatureGains(String fileName) throws IOException {
 		info("Loading He3 gains from " + fileName);
 		
         final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(this);
@@ -188,7 +188,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 	}
 	
 	
-	public void writeTemperatureGains(String fileName, String header) throws IOException {		
+	void writeTemperatureGains(String fileName, String header) throws IOException {		
 		PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
 		out.println("# He3 Temperature Gains Data.");
 		out.println("# ");

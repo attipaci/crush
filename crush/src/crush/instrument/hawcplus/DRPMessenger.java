@@ -38,14 +38,14 @@ import crush.CRUSH;
 import jnum.Configurator;
 
 
-public class DRPMessenger extends Thread {
+class DRPMessenger extends Thread {
 	private ArrayBlockingQueue<Message> queue;
 	private InetSocketAddress address;
 	private String senderID = "hawc.pipe.step.crush";
 	private int timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 	private boolean isTimestamping = true;
 	
-	public DRPMessenger(Configurator options) throws IOException {
+	DRPMessenger(Configurator options) throws IOException {
 		String host = options.hasOption("host") ? options.option("host").getValue() : DEFAULT_HOST;
 		int port = options.hasOption("port") ? options.option("port").getInt() : DEFAULT_DRP_PORT;
 		
@@ -64,35 +64,35 @@ public class DRPMessenger extends Thread {
 		start();
 	}
 	
-	public synchronized void setTimestamping(boolean value) { isTimestamping = value; }
+	synchronized void setTimestamping(boolean value) { isTimestamping = value; }
 	
-	public boolean isTimestamping() { return isTimestamping; }
+	boolean isTimestamping() { return isTimestamping; }
 	
-	public void setSenderID(String id) { senderID = id; }
+	void setSenderID(String id) { senderID = id; }
 	
-	public String getSenderID() { return senderID; }
+	String getSenderID() { return senderID; }
 	
-	public void setTimeout(int millis) { timeoutMillis = millis; }
+	void setTimeout(int millis) { timeoutMillis = millis; }
 	
-	public int getTimeout() { return timeoutMillis; }
+	int getTimeout() { return timeoutMillis; }
 	
-	public void critical(String message) {
+	void critical(String message) {
 		new Message(TYPE_CRITICAL, message);
 	}
 	
-	public void error(String message) {
+	void error(String message) {
 		new Message(TYPE_ERROR, message);
 	}
 
-	public void warning(String message) {
+	void warning(String message) {
 		new Message(TYPE_WARNING, message);
 	}
 
-	public void info(String message) {
+	void info(String message) {
 		new Message(TYPE_INFO, message);
 	}
 	
-	public void debug(String message) {
+	void debug(String message) {
 		new Message(TYPE_DEBUG, message);
 	}
 	
@@ -126,7 +126,7 @@ public class DRPMessenger extends Thread {
 		socket.close();
 	}
 	
-	public void clear() {
+	void clear() {
 		queue.clear();
 	}
 	
@@ -135,7 +135,7 @@ public class DRPMessenger extends Thread {
 	    CRUSH.removeReporter(DRP_REPORTER_ID); 
 	}
 	
-	public void shutdown() {  
+	void shutdown() {  
 	    disable();
 	    
 	    // Give it some time to send any queued messages...

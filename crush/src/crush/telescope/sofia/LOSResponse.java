@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,34 +20,24 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.instrument.hawcplus;
+package crush.telescope.sofia;
 
-import crush.*;
-import crush.instrument.FieldResponse;
+import crush.instrument.FrameResponse;
 
-import java.lang.reflect.*;
-
-public class RollResponse extends FieldResponse {
+public class LOSResponse extends FrameResponse<SofiaFrame> {
     /**
      * 
      */
-    private static final long serialVersionUID = 4687041979297880692L;
+    private static final long serialVersionUID = -2854400538563120633L;
 
-    static Field field;
-    
-    private static final String fieldName  = "roll";
-    
-    static { 
-        try { field = HawcFrame.class.getField(fieldName); }
-        catch(NoSuchFieldException e) {
-            CRUSH.warning(null, HawcFrame.class.getSimpleName() + " has no field named '" + fieldName + "'.");
-            CRUSH.trace(e);
-        }
-    }
-    
-    public RollResponse() { 
-        super(field, true);
+    public LOSResponse() {
         setDerivative(2);
     }
     
+    @Override
+    protected double getValue(SofiaFrame exposure) throws Exception {
+        return exposure.getLOSAngle();
+    }
+    
+  
 }

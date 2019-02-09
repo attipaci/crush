@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,6 +22,8 @@
  ******************************************************************************/
 package crush.instrument;
 
+
+import crush.Frame;
 import crush.Integration;
 import crush.Mode;
 import crush.Signal;
@@ -41,19 +43,26 @@ import crush.Signal;
  * @author Attila Kovacs <attila@sigmyne.com>
  *
  */
-public abstract class Response extends Mode {
-
+public abstract class Response<FrameType extends Frame> extends Mode {    
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8619855129077390006L;
 
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+    private boolean isFloating;
+   
+    public Response() { this(false); }
+    
+    public Response(boolean isFloating) {
+        super();
+        this.isFloating = isFloating;
+    }
 
-	public abstract Signal getSignal(Integration<?> integration);
-	
+    public boolean isFloating() { return isFloating; }
+    
+    public void setFloating(boolean value) { isFloating = value; }
+
+
+	public abstract Signal getSignal(Integration<? extends FrameType> integration);    
 	
 }

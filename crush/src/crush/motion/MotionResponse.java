@@ -24,12 +24,13 @@ package crush.motion;
 
 import java.util.StringTokenizer;
 
+import crush.Frame;
 import crush.Integration;
 import crush.Signal;
 import crush.instrument.Response;
 
 
-public abstract class MotionResponse extends Response {
+public abstract class MotionResponse extends Response<Frame> {
 
 	/**
 	 * 
@@ -40,10 +41,10 @@ public abstract class MotionResponse extends Response {
 		super();
 	}
 	
-	public abstract Signal getSignal(Integration<?> integration, Motion direction);
+	public abstract Signal getSignal(Integration<? extends Frame> integration, Motion direction);
 
 	@Override
-	public Signal getSignal(Integration<?> integration) {
+	public Signal getSignal(Integration<? extends Frame> integration) {
 		StringTokenizer tokens = new StringTokenizer(name, "-:");
 		tokens.nextToken();
 		String type = tokens.nextToken();

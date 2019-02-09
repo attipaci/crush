@@ -36,12 +36,10 @@ public class SabocaPixel extends Channel {
 	 */
 	private static final long serialVersionUID = -5970759467554165572L;
 
+	public int squid = -1, pin = -1;
 	public double squidGain = 1.0;
-	
-	public int squid;
-	public int pin;
-	
-	public SabocaPixel(Saboca array, int backendIndex) { 
+
+	SabocaPixel(Saboca array, int backendIndex) { 
 		super(array, backendIndex); 	
 	}
 	

@@ -26,7 +26,7 @@ import nom.tam.fits.*;
 
 import java.io.*;
 
-public class ESORename {
+public final class ESORename {
 
 	public static void main(String[] args) {
 		if(args.length == 0) {
@@ -42,7 +42,7 @@ public class ESORename {
 		}
 	}
 	
-	public static void rename(String fileName) throws Exception {
+	private static void rename(String fileName) throws Exception {
 		File file = new File(fileName);
 	
 		boolean isCompressed = fileName.endsWith(".gz") || fileName.endsWith(".Z");
@@ -63,7 +63,7 @@ public class ESORename {
 		
 	}
 	
-	public static void usage() {
+	private static void usage() {
 		System.err.println();
 		System.err.println("  -------------------------------------------------------------------");
 		System.err.println("  esorename -- Rename ESO archive files to their original file names.");

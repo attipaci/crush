@@ -25,7 +25,7 @@ package crush.instrument.sharc2;
 
 import crush.telescope.HorizontalFrame;
 
-public class Sharc2Frame extends HorizontalFrame {
+class Sharc2Frame extends HorizontalFrame {
 	/**
 	 * 
 	 */
@@ -34,17 +34,17 @@ public class Sharc2Frame extends HorizontalFrame {
 	int telescopeFlags = 0;
 	double dspTime;
 	
-	public Sharc2Frame(Sharc2Scan parent) {
+	Sharc2Frame(Sharc2Integration parent) {
 		super(parent);
 		create(Sharc2.pixels);
 	}
 	
-	public void parseData(float[][] value) {
+	void parseData(float[][] value) {
 		for(int bol=0; bol<Sharc2.pixels; bol++)
 			data[bol] = value.length == 12 ? -value[bol/32][bol%32] : -value[bol/12][bol%12];		
 	}
 
-	public void parseData(float[] value, int from, int channels) {
+	void parseData(float[] value, int from, int channels) {
 		for(int c=channels; --c >= 0; ) data[c] = -value[from + c];
 	}
 }

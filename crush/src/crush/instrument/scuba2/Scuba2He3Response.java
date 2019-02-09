@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,17 +23,22 @@
 
 package crush.instrument.scuba2;
 
-import crush.instrument.FieldResponse;
+import crush.instrument.FrameResponse;
 
-public class Scuba2He3Response extends FieldResponse {
+public class Scuba2He3Response extends FrameResponse<Scuba2Frame> {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8676900365295069180L;
 
-	public Scuba2He3Response() throws SecurityException, NoSuchFieldException {
-		super(Scuba2Frame.class.getField("detectorT"), true);
+	public Scuba2He3Response() {
+	    super(true);
 	}
+
+    @Override
+    protected double getValue(Scuba2Frame exposure) throws Exception {
+        return exposure.detectorT;
+    }
 
 }

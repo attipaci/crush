@@ -29,17 +29,17 @@ import crush.*;
 import crush.telescope.HorizontalFrame;
 
 
-public class Scuba2Frame extends HorizontalFrame {
+class Scuba2Frame extends HorizontalFrame {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7910019752807155234L;
 	
-	public int frameNumber;
-	public float detectorT;
-	public int[][] darkSquid = new int[Scuba2.SUBARRAYS][];  // sub, col
+	int frameNumber;
+	float detectorT;
+	int[][] darkSquid = new int[Scuba2.SUBARRAYS][];  // sub, col
 	
-	public Scuba2Frame(Scuba2Scan parent) {
+	Scuba2Frame(Scuba2Subscan parent) {
 		super(parent);
 	}
 	
@@ -59,7 +59,7 @@ public class Scuba2Frame extends HorizontalFrame {
 	    return copy;
 	}
 	
-	public void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {
+	void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {
 		Scuba2Scan scuba2Scan = getScan();
 		final int blankingValue = scuba2Scan.blankingValue;
 		
@@ -73,7 +73,7 @@ public class Scuba2Frame extends HorizontalFrame {
 		}
 	}
 	
-	public void setDarkSquid(int subarray, int[] data) {
+	void setDarkSquid(int subarray, int[] data) {
 	    darkSquid[subarray] = data;
 	}
 	

@@ -34,7 +34,7 @@ import jnum.astro.*;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
+class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 	/**
 	 * 
 	 */
@@ -55,10 +55,7 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 	@Override
 	public void setTau() throws Exception {
 		super.setTau();
-		printEquivalentTaus();
-	}
-	
-	public void printEquivalentTaus() {
+
 	    CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(zenithTau / getScan().horizontal.sinLat())
@@ -68,10 +65,10 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 	
 	@Override
 	public GismoFrame getFrameInstance() {
-		return new GismoFrame(getScan());
+		return new GismoFrame(this);
 	}
 	
-	protected void read(BinaryTableHDU hdu, boolean oldFormat) throws Exception {
+	void read(BinaryTableHDU hdu, boolean oldFormat) throws Exception {
 		int records = hdu.getAxes()[0];
 
 		getScan().info("Processing scan data:");		
@@ -92,7 +89,7 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 		else new GismoReader(hdu).read();
 	}
 		
-	class GismoReader extends HDUReader {	
+	private class GismoReader extends HDUReader {	
 		private float[] DAC;
 		private double[] MJD, LST, dX, dY, AZE, ELE;
 		private double[] X0, Y0, cEL; //AZ, EL, cAZ, cEL, tAZ, tEL, posA;
@@ -102,7 +99,7 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 		
 		private final GismoScan gismoScan = getScan();
 		
-		public GismoReader(BinaryTableHDU hdu) throws FitsException {
+		GismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
@@ -191,7 +188,7 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					if(!ignoreIRIG) if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
 								
 					// Create the frame object only if it cleared the above hurdles...
-					final GismoFrame frame = new GismoFrame(gismoScan);
+					final GismoFrame frame = getFrameInstance();
 					frame.index = i;
 					
 					// Set the frame flags...
@@ -283,16 +280,14 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 	}	
 	
 	
-	class OldGismoReader extends HDUReader {	
+	private class OldGismoReader extends HDUReader {	
 		private float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST;
 		private double[] MJD;
 		private int[] NS, SN, CAL;
 		private byte[] SDI;
 		private int channels;
-		
-		private final GismoScan gismoScan = getScan();
-		
-		public OldGismoReader(BinaryTableHDU hdu) throws FitsException {
+			
+		OldGismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
@@ -371,7 +366,7 @@ public class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
 								
 					// Create the frame object only if it cleared the above hurdles...
-					final GismoFrame frame = new GismoFrame(gismoScan);
+					final GismoFrame frame = getFrameInstance();
 					
 					// Set the frame flags...
 					frame.calFlag = calFlag;

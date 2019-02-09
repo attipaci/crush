@@ -40,7 +40,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
 
-public class HawcIntegration extends SofiaIntegration<HawcFrame> {	
+class HawcIntegration extends SofiaIntegration<HawcFrame> {	
     /**
      * 
      */
@@ -51,7 +51,7 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
 
     private Dependents driftParms;
 
-    public HawcIntegration(HawcScan parent) {
+    HawcIntegration(HawcScan parent) {
         super(parent);
     }	
     
@@ -63,14 +63,14 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
     
     @Override
     public HawcFrame getFrameInstance() {
-        return new HawcFrame(getScan());
+        return new HawcFrame(this);
     }
 
-    public double getMeanHWPAngle() {
+    double getMeanHWPAngle() {
         return 0.5 * (getFirstFrame().hwpAngle + getLastFrame().hwpAngle);
     }
   
-    protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
+    void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
@@ -87,7 +87,7 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
             new HawcPlusRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1);	
     }
 
-    class HawcPlusRowReader extends HDURowReader { 
+    private class HawcPlusRowReader extends HDURowReader { 
         private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
         private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
         private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
@@ -101,7 +101,7 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
 
         private final HawcScan hawcScan = getScan();
 
-        public HawcPlusRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
+        HawcPlusRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
 
             isLab = hasOption("lab");
@@ -198,7 +198,7 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     Hawc hawc = getInstrument();
 
                     // Create the frame object only if it cleared the above hurdles...
-                    final HawcFrame frame = new HawcFrame(hawcScan);
+                    final HawcFrame frame = getFrameInstance();
                     frame.index = i;
                     frame.isComplete = false;
                     frame.hasTelescopeInfo = !isLab;
@@ -378,14 +378,11 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
     @Override
     public void setTau() throws Exception {
         super.setTau();
-        printEquivalentTaus(zenithTau);
-    }
-    
-    private void printEquivalentTaus(double value) { 
+       
         CRUSH.values(this, "--->"
-                + " tau(" + Util.f0.format(getInstrument().instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
-                + ", tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
-                + ", PWV:" + Util.f1.format(getTau("pwv", value)) + "um"
+                + " tau(" + Util.f0.format(getInstrument().instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(zenithTau)
+                + ", tau(LOS):" + Util.f3.format(zenithTau / getScan().horizontal.sinLat())
+                + ", PWV:" + Util.f1.format(getTau("pwv", zenithTau)) + "um"
         );      
     }
 
@@ -564,13 +561,13 @@ public class HawcIntegration extends SofiaIntegration<HawcFrame> {
         new Fork<Void>() {
             @Override
             protected void process(HawcFrame frame) {
-                for(HawcPixel pixel : getInstrument()) if(pixel.jump != 0.0) {
+                for(HawcPixel pixel : getInstrument()) if(pixel.jumpLevel != 0.0) {
                     int nJumps = frame.jumpCounter[pixel.getIndex()] - first.jumpCounter[pixel.getIndex()];
                     // Check for wraparound...
                     if(nJumps > maxJump) nJumps -= HawcFrame.JUMP_RANGE;
                     else if(nJumps < -maxJump) nJumps += HawcFrame.JUMP_RANGE;
                     
-                    frame.data[pixel.getIndex()] -= pixel.jump * nJumps;
+                    frame.data[pixel.getIndex()] -= pixel.jumpLevel * nJumps;
                 }
             } 
         }.process();

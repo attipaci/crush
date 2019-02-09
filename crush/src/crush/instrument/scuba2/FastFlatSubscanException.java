@@ -25,7 +25,7 @@ package crush.instrument.scuba2;
 
 import crush.UnsupportedIntegrationException;
 
-public class FastFlatSubscanException extends UnsupportedIntegrationException {
+class FastFlatSubscanException extends UnsupportedIntegrationException {
 
 	/**
 	 * 

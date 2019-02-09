@@ -41,7 +41,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
+class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
     /**
      * 
      */
@@ -59,14 +59,15 @@ public class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing
     Vector2D hiresFocalPlaneOffset;         // (mm) Hires-array offset, calculated from subarrayPixelOffset & loresPixelSpacing
 
     
-    public HirmesLayout(Instrument<? extends Channel> instrument) {
+    HirmesLayout(Instrument<? extends Channel> instrument) {
         super(instrument);
         // TODO Auto-generated constructor stub
     }
 
 
-    public HirmesLayout copyFor(Hirmes hirmes) {
-        HirmesLayout copy = (HirmesLayout) super.copyFor(hirmes);
+    @Override
+    public HirmesLayout copyFor(Instrument<?> instrument) {
+        HirmesLayout copy = (HirmesLayout) super.copyFor(instrument);
 
         if(loresPixelSize != null) copy.loresPixelSize = loresPixelSize.copy();
         if(hiresPixelSize != null) copy.hiresPixelSize = Vector2D.copyOf(hiresPixelSize);
@@ -167,15 +168,15 @@ public class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing
         getInstrument().registerConfigFile(fileName);
     }
 
-
-
-    public Vector2D getPixelSize(int sub, int col) {
+    /*
+    private Vector2D getPixelSize(int sub, int col) {
         if(sub == Hirmes.HIRES_SUBARRAY) return hiresPixelSize[col];
         return loresPixelSize;
     }
+    */
     
     
-    public Vector2D getFocalPlanePosition(int sub, double row, double col) {      
+    Vector2D getFocalPlanePosition(int sub, double row, double col) {      
         Vector2D v = (sub == Hirmes.HIRES_SUBARRAY) ? new Vector2D(0.0, row-7.5) : new Vector2D(-col, row-7.5); // xp, yp
         v.rotate(subarrayOrientation[sub]);
         v.add(subarrayPixelOffset[sub]);
@@ -183,7 +184,7 @@ public class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing
         return v;
     }
     
-    public Vector2D getHiresFocalPlanePosition(int strip, int row) {
+    Vector2D getHiresFocalPlanePosition(int strip, int row) {
         Vector2D v = new Vector2D(0.0, (row-7.5) * hiresHeightMicrons[strip] * Unit.um);
         v.rotate(subarrayOrientation[Hirmes.HIRES_SUBARRAY]);
         v.addX(hiresColOffsetMillis[strip] * Unit.mm);

@@ -44,7 +44,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
+class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 	/**
 	 * 
 	 */
@@ -64,9 +64,9 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 	boolean[] hasSubarray = new boolean[Scuba2.SUBARRAYS];
 	int subarrays;
 	
-	public Class<? extends SphericalCoordinates> trackingClass;
+	Class<? extends SphericalCoordinates> trackingClass;
 	
-	public Scuba2Scan(Scuba2 instrument) {
+	Scuba2Scan(Scuba2 instrument) {
 		super(instrument);
 	}
 	
@@ -77,12 +77,6 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 	public Scuba2Subscan getIntegrationInstance() {
 		return new Scuba2Subscan(this);
 	}
-
-	public Scuba2Fits getFirstFits() {
-		return getFirstIntegration().files.get(0);
-	}
-	
-
 	
 	@Override
 	public void mergeIntegrations() {
@@ -201,7 +195,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		super.validate();
 	}
 
-	public ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor) throws FileNotFoundException{
+	private ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor) throws FileNotFoundException{
 		List<String> subIDs = hasOption("subarray") ? option("subarray").getList() : null;
 		
 		ArrayList<Scuba2Fits> files = null;
@@ -214,7 +208,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		return files;
 	}
 	
-	public ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor, char subarrayCode) throws FileNotFoundException {
+	private ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor, char subarrayCode) throws FileNotFoundException {
 		ArrayList<Scuba2Fits> scanFiles = new ArrayList<Scuba2Fits>();
 
 		String path = getDataPath();
@@ -357,7 +351,7 @@ public class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weathe
 		isTracking = true;		
 	}
 	
-	public void parseCoordinateInfo(Header header) {
+	void parseCoordinateInfo(Header header) {
 		String trackingSystem = header.getStringValue("TRACKSYS");
 		
 		final double lon = header.getDoubleValue("BASEC1", Double.NaN) * Unit.deg;

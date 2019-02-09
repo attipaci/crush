@@ -85,7 +85,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> {
     }
 
 	
-    public int pixels() { return pixels; }
+    int pixels() { return pixels; }
 
 	
 	@Override
@@ -284,7 +284,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> {
 	}
 	
 	
-	public void setBiasOptions() {	
+	private void setBiasOptions() {	
 		if(!getOptions().containsKey("bias")) return;
 			
 		int bias = detectorBias[0];
@@ -451,10 +451,5 @@ public class Gismo extends TelescopeInstrument<GismoPixel> {
     public static final int rows = 16;
     public static final int cols = 8;
     public static final int pixels = rows * cols;
-    
-
-
-
-
-	
+    	
 }

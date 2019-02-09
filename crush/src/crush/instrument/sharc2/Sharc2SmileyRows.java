@@ -26,7 +26,7 @@ package crush.instrument.sharc2;
 import crush.Channel;
 import crush.instrument.ZeroMeanGains;
 
-public class Sharc2SmileyRows extends ZeroMeanGains {
+class Sharc2SmileyRows extends ZeroMeanGains {
 
     /**
      * 

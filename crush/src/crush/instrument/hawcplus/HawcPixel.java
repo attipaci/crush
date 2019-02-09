@@ -36,17 +36,15 @@ public class HawcPixel extends Channel {
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
 	
-	int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
+	public int pol = -1, sub = -1, subrow = -1, col = -1, mux = -1, row = -1, biasLine = -1, seriesArray = -1;
+	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0, losGain = 1.0, rollGain = 1.0;
+	
 	int fitsIndex, fitsRow, fitsCol;
-	float jump = 0.0F;
+	
+	float jumpLevel = 0.0F;
 	boolean hasJumps = false;
 	
-	double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
-	double losGain = 1.0, rollGain = 1.0;
-	
-	int jumpCounter = 0;
-	
-	public HawcPixel(Hawc array, int zeroIndex) {
+	HawcPixel(Hawc array, int zeroIndex) {
 		super(array, zeroIndex);
 		
 		col = zeroIndex % Hawc.subarrayCols;
@@ -68,8 +66,8 @@ public class HawcPixel extends Channel {
 	
 	@Override
     public Hawc getInstrument() { return (Hawc) super.getInstrument(); }
-
-	public void calcSIBSPosition() {
+	
+	void calcSIBSPosition() {
 	    if(isFlagged(FLAG_BLIND)) getPixel().setPosition(null);
 	    getPixel().setPosition(getInstrument().getLayout().getSIBSPosition(sub, subrow, col));
 	}

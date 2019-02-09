@@ -35,18 +35,11 @@ public class LabocaPixel extends Channel {
 	 * 
 	 */
 	private static final long serialVersionUID = 5745477721698573346L;
-	public int box = -1;
-	public int amp = -1;
-	public int cable = -1;
-	public int pin = -1;
-
-	public double boxGain = 1.0;
-	public double ampGain = 1.0;
-	public double cableGain = 1.0;
 	
-	public double temperatureGain = 0.0;
+	public int box = -1, amp = -1, cable = -1, pin = -1;
+	public double boxGain = 1.0, ampGain = 1.0, cableGain = 1.0, temperatureGain = 0.0;
 	
-	public LabocaPixel(Laboca array, int backendChannel) {
+	LabocaPixel(Laboca array, int backendChannel) {
 		super(array, backendChannel);
 	}
 	

@@ -43,7 +43,7 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HirmesScan extends SofiaScan<HirmesIntegration> {    
+class HirmesScan extends SofiaScan<HirmesIntegration> {    
     /**
      * 
      */
@@ -56,7 +56,7 @@ public class HirmesScan extends SofiaScan<HirmesIntegration> {
     double focusTOffset;
 
 
-    public HirmesScan(Hirmes instrument) {
+    HirmesScan(Hirmes instrument) {
         super(instrument);
         // Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);

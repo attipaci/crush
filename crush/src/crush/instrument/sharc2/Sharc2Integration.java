@@ -35,7 +35,7 @@ import jnum.astro.*;
 import jnum.math.Vector2D;
 
 // TODO Split nod-phases into integrations...
-public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
+class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 	/**
 	 * 
 	 */
@@ -43,7 +43,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 	
 	public boolean hasExtraTimingInfo = false;
 	
-	public Sharc2Integration(Sharc2Scan parent) {
+	Sharc2Integration(Sharc2Scan parent) {
 		super(parent);
 	}
 
@@ -91,7 +91,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 		}
 	}
 	
-	public void trimToGap() {
+	private void trimToGap() {
 		info("Trimming timestream to first gap.");
 		
 		Sharc2Frame first = getFirstFrame();
@@ -120,7 +120,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 	
 	@Override
 	public Sharc2Frame getFrameInstance() {
-		return new Sharc2Frame(getScan());
+		return new Sharc2Frame(this);
 	}
 	
 	
@@ -150,7 +150,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 		
 	}
 		
-	class Sharc2Reader extends HDUReader {	
+	private class Sharc2Reader extends HDUReader {	
 		private boolean isDoubleUT;
 		private int offset;
 
@@ -162,7 +162,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 		
 		private final Sharc2Scan sharcscan = getScan();
 		
-		public Sharc2Reader(TableHDU<?> hdu, int offset) throws FitsException {
+		Sharc2Reader(TableHDU<?> hdu, int offset) throws FitsException {
 			super(hdu);
 			this.offset = offset;			
 
@@ -203,10 +203,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 			chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
 			
 			//iFlag = hdu.findColumn("Celestial");
-			//iTRK = hdu.findColumn("Tracking");
-			
-			
-			
+			//iTRK = hdu.findColumn("Tracking");	
 		}
 	
 		@Override
@@ -222,7 +219,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 				@Override
 				public void processRow(int i) throws FitsException {	
 
-					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
+					final Sharc2Frame frame = getFrameInstance();
 					frame.hasTelescopeInfo = !isLab;
 					frame.index = i;
 					

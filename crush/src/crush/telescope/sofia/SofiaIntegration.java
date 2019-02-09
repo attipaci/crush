@@ -37,16 +37,16 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
     private static final long serialVersionUID = -4771883165716694480L;
 
 
-    public SofiaIntegration(SofiaScan<? extends SofiaIntegration<? extends FrameType>> parent) {
+    protected SofiaIntegration(SofiaScan<? extends SofiaIntegration<? extends FrameType>> parent) {
         super(parent);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public SofiaScan<? extends SofiaIntegration<? extends FrameType>> getScan() { 
         return (SofiaScan<? extends SofiaIntegration<? extends FrameType>>) super.getScan(); 
     }
-    
+
     @Override
     public SofiaInstrument<?> getInstrument() { return (SofiaInstrument<?>) super.getInstrument(); }
 
@@ -55,12 +55,12 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
         if(getScan().mode.isChopping) return getScan().chopper.frequency;
         return super.getModulationFrequency(signalMode);
     }
-    
-  
-    public double getMeanPWV() {
+
+
+    protected double getMeanPWV() {
         double sum = 0.0;
         int n=0;
-        
+
         for(SofiaFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
             sum += exposure.PWV;
             n++;
@@ -69,21 +69,21 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
     }
 
     //public double getMeanPWV() { return ((SofiaScan<?>) scan).environment.pwv.midPoint(); }
-    
-    public double getModelPWV() {
+
+    protected double getModelPWV() {
         info("Estimating PWV based on altitude...");
         double pwv41k = hasOption("pwv41k") ? option("pwv41k").getDouble() * Unit.um : 29.0 * Unit.um;
         double b = 1.0 / (hasOption("pwvscale") ? option("pwvscale").getDouble() : 5.0);
         double altkf = getScan().aircraft.altitude.midPoint() / (1000.0 * Unit.ft);
         return pwv41k * Math.exp(-b * (altkf - 41.0));
     }
-    
-   @Override
+
+    @Override
     public void validate() {  
         validatePWV();    
         super.validate();
     }
-    
+
     private void validatePWV() {
         double pwv = getMeanPWV();
         if(pwv == 0.0 || Double.isNaN(pwv)) {
@@ -92,61 +92,61 @@ public abstract class SofiaIntegration<FrameType extends SofiaFrame> extends Gro
         }
 
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
-        
+
         if(!hasOption("tau.pwv")) {
             try { getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }  
     }
-    
+
 
     @Override
     public void setTau() throws Exception {
         if(!hasOption("tau")) return;
-        
+
         String source = option("tau").getValue().toLowerCase();
-        
+
         if(source.equals("atran")) setVaccaTau();
         else if(source.equals("pwvmodel")) setPWVModelTau();
         else super.setTau();
     }
-    
-    
-    public void setVaccaTau() throws Exception {
+
+
+    private void setVaccaTau() throws Exception {
         AtranModel model = new AtranModel(getOptions());
         double altitude = getScan().aircraft.altitude.midPoint();
         double elevation = 0.5 * (getFirstFrame().horizontal.EL() + getLastFrame().horizontal.EL());
-        
+
         double C = model.getRelativeTransmission(altitude, elevation);
-        
+
         info("Applying Bill Vacca's atmospheric correction: " + Util.f3.format(C));
-        
+
         setTau(-Math.log(model.getReferenceTransmission() * C) * Math.sin(elevation));
     }
-    
-    public void setPWVModelTau() throws Exception {
+
+    private void setPWVModelTau() throws Exception {
         double pwv = getModelPWV() / Unit.um;
-        
+
         info("Using PWV model to correct fluxes: PWV = " + Util.f1.format(pwv));  
-        
+
         try { getOptions().process("tau.pwv", Double.toString(pwv)); }
         catch(LockedException e) {}
-        
+
         this.setTau("pwv", pwv);
     }
-    
-    
+
+
     public Vector2D getMeanChopperPosition() {
         Vector2D mean = new Vector2D();
         int n = 0;
-        
+
         for(SofiaFrame frame : this) if(frame != null) {
             mean.add(frame.chopperPosition);
             n++;
         }
-        
+
         if(n > 0) mean.scale(1.0 / n);
-          
+
         return mean;        
     }
 

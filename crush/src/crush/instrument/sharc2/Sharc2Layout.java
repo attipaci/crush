@@ -32,7 +32,7 @@ import crush.instrument.SingleEndedLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
+class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
     /**
      * 
      */
@@ -41,7 +41,7 @@ public class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
     private Vector2D pixelSize = Sharc2Pixel.defaultSize;
 
     
-    public Sharc2Layout(Sharc2 instrument) {
+    Sharc2Layout(Sharc2 instrument) {
         super(instrument);
     }
 
@@ -67,7 +67,7 @@ public class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
         setReferencePosition(center);
     }
     
-    public double getAreaFactor() {
+    double getAreaFactor() {
         return pixelSize.x() * pixelSize.y() / (Sharc2Pixel.defaultSize.x() * Sharc2Pixel.defaultSize.y());   
     }
     
@@ -95,7 +95,7 @@ public class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
     }
 
     
-    public Vector2D getFocalPlanePosition(double row, double col) {
+    Vector2D getFocalPlanePosition(double row, double col) {
         return new Vector2D(-pixelSize.x() * col, pixelSize.y() * row);
     }
 

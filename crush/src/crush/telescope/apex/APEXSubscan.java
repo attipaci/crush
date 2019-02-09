@@ -40,7 +40,6 @@ import jnum.Util;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
-import jnum.fits.FitsToolkit;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 
@@ -51,17 +50,11 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	private static final long serialVersionUID = 2929947229904002745L;
 	public int nodPhase = 0;
 
-	
-	//public String bandID;
-	
-	protected Thread thread;
 	private Chopper chopper;
-	
-	
-	
+		
 	double pwv = Double.NaN;
 	
-	public APEXSubscan(APEXScan<? extends APEXSubscan<? extends FrameType>> parent) {
+	protected APEXSubscan(APEXScan<? extends APEXSubscan<? extends FrameType>> parent) {
 		super(parent);
 	}
 	
@@ -118,7 +111,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		}
 	}
 	
-	public void markChopped() {
+	private void markChopped() {
 		if(nodPhase == 0) 
 			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");
 		
@@ -181,21 +174,21 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
     }
     */
 	
-	public void readData(Fits fits) throws Exception {
+	void readData(Fits fits) throws Exception {
         readData((BinaryTableHDU) fits.getHDU(1));
         fits.close();
     }
     
 
-	public void readData(BinaryTableHDU hdu) throws Exception { 
+	void readData(BinaryTableHDU hdu) throws Exception { 
 	    new DataTable(hdu).read();
 	}
 
-	class DataTable extends HDUReader {
+	private class DataTable extends HDUReader {
 	    private float[] data;
 	    private int channels;
 
-	    public DataTable(TableHDU<?> hdu) throws FitsException { 
+	    DataTable(TableHDU<?> hdu) throws FitsException { 
 	        super(hdu); 
  
 	        int iData = hdu.findColumn("DATA");
@@ -222,8 +215,8 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	    }
 	}
 
-	
-	public void writeData(String fromName, String toName) throws IOException, FitsException {
+	/*
+	void writeData(String fromName, String toName) throws IOException, FitsException {
 		Fits fits = new Fits(new File(fromName), fromName.endsWith(".gz"));
 		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
 			
@@ -240,13 +233,14 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		FitsToolkit.write(fits, toName);
 		fits.close();
 	}
+	*/
 	
-	public void readDataPar(Fits fits) throws Exception {
+	void readDataPar(Fits fits) throws Exception {
 	    readDataPar((BinaryTableHDU) fits.getHDU(1));
 	    fits.close();
 	}
 	
-	public void readDataPar(BinaryTableHDU hdu) throws Exception {
+	void readDataPar(BinaryTableHDU hdu) throws Exception {
 		final Header header = hdu.getHeader();	
 		final int frames = header.getIntValue("NAXIS2");
 		
@@ -266,13 +260,13 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		new DataParTable(hdu).read(); 
 	}
 	
-	class DataParTable extends HDUReader {
+	private class DataParTable extends HDUReader {
 		private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
 		private int[] phase;
 		private boolean chopperIncluded;
 		private final static double m900 = -900.0;
 		
-		public DataParTable(TableHDU<?> hdu) throws FitsException {
+		DataParTable(TableHDU<?> hdu) throws FitsException {
 			super(hdu);
 
 			final Header header = hdu.getHeader();		
@@ -456,12 +450,12 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		}
 	}
 	
-	public void readMonitor(Fits fits) throws IOException, FitsException {
+	void readMonitor(Fits fits) throws IOException, FitsException {
 	    readMonitor((BinaryTableHDU) fits.getHDU(1));
 	    fits.close();
 	}
 
-	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException {    
+	protected void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException {    
 	    
 	    if(hasOption("tau.pwv")) return;
 	    
@@ -499,10 +493,10 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 	@SuppressWarnings("unchecked")
 	@Override
 	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame(getScan());
+		return (FrameType) new APEXFrame(this);
 	}
 			
-	public void fitsRCP() {
+	void fitsRCP() {
 		info("Using RCP data contained in the FITS.");
 		for(Pixel pixel : getInstrument().getPixels()) pixel.setPosition(((APEXPixel) pixel).fitsPosition.copy());
 	}

@@ -26,13 +26,13 @@ package crush.instrument.polka;
 
 import crush.instrument.laboca.*;
 
-public class PolKaScan extends LabocaScan {
+class PolKaScan extends LabocaScan {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8542870092250553685L;
 	
-	public PolKaScan(Laboca instrument) {
+	PolKaScan(Laboca instrument) {
 		super(instrument);
 	}
 	

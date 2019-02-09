@@ -25,7 +25,6 @@ package crush.instrument.laboca;
 
 import crush.*;
 import crush.instrument.FieldGainProvider;
-import crush.instrument.Response;
 import crush.telescope.apex.*;
 import jnum.Configurator;
 import jnum.Constant;
@@ -48,7 +47,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	double blindTimeScale = 0.3 * Unit.sec;
 	double rmsHe3 = 0.0;
 	
-	public LabocaSubscan(APEXScan<LabocaSubscan> parent) {
+	protected LabocaSubscan(APEXScan<LabocaSubscan> parent) {
 		super(parent);
 	}
 	
@@ -92,10 +91,10 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 		);		
 	}
 	
-	public void temperatureCorrect() {
+	private void temperatureCorrect() {
 		info("Correcting for He3 temperature drifts.");
 		
-		Response mode = (Response) getInstrument().modalities.get("temperature").get(0);
+		LabocaHe3Response mode = (LabocaHe3Response) getInstrument().modalities.get("temperature").get(0);
 		Signal signal = getSignal(mode);
 		
 		if(signal == null) {
@@ -118,7 +117,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 		
 	}
 	
-	public void writeTemperatureGains(String path) throws IOException {
+	private void writeTemperatureGains(String path) throws IOException {
 		// Now write to a file
 		String fileName = path + File.separator + "he3-gains-" + getScan().getID() + ".dat";
 		getInstrument().writeTemperatureGains(fileName, getASCIIHeader());
@@ -133,7 +132,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 		}
 	}
 	
-	public void setBlindTemperatures() {
+	private void setBlindTemperatures() {
 	     
 		ChannelGroup<LabocaPixel> blindChannels = getInstrument().getBlindChannels();
 		if(blindChannels.size() < 1) {
@@ -168,7 +167,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	
 	// TODO broken, FITS libs do not handle curled row structure well...
 	@Override
-	public void readMonitor(BinaryTableHDU hdu)  throws IOException, FitsException {
+	protected void readMonitor(BinaryTableHDU hdu)  throws IOException, FitsException {
 	    
 	    super.readMonitor(hdu);
 	    
@@ -205,7 +204,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	
 	
 	// TODO reimplement with localized data...
-	public void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {
+	private void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {
 		
 		// plus or minus in days;
 		final double smoothFWHM = he3TimeScale / Unit.day;
@@ -248,7 +247,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	
 	@Override
 	public LabocaFrame getFrameInstance() {
-		return new LabocaFrame(getScan());
+		return new LabocaFrame(this);
 	}
 	
 	@Override

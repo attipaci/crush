@@ -57,7 +57,7 @@ public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends H
 	public int iMJD;	
 
 	
-	public CSOScan(CSOInstrument<?> instrument) {
+	protected CSOScan(CSOInstrument<?> instrument) {
 		super(instrument);
 		
 		/* Legacy crush coordinates, based on another telescope and map...

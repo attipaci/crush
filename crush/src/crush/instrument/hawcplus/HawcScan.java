@@ -47,7 +47,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HawcScan extends SofiaScan<HawcIntegration> {	
+class HawcScan extends SofiaScan<HawcIntegration> {	
     /**
      * 
      */
@@ -61,7 +61,7 @@ public class HawcScan extends SofiaScan<HawcIntegration> {
     double focusTOffset;
 
 
-    public HawcScan(Hawc instrument) {
+    HawcScan(Hawc instrument) {
         super(instrument);
         // Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);

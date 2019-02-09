@@ -26,12 +26,13 @@ package crush.instrument.scuba2;
 
 
 import crush.Channel;
+import jnum.Copiable;
 import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 
-public class Scuba2Subarray implements Cloneable {
+class Scuba2Subarray implements Cloneable, Copiable<Scuba2Subarray> {
 	Scuba2 scuba2;
 	String id;
 	int channelOffset;
@@ -42,7 +43,7 @@ public class Scuba2Subarray implements Cloneable {
 
 	double scaling = 1.0;
 	
-	public Scuba2Subarray(Scuba2 parent, String id) {
+	Scuba2Subarray(Scuba2 parent, String id) {
 		scuba2 = parent;
 		this.id = id;
 		setOptions();
@@ -54,33 +55,34 @@ public class Scuba2Subarray implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	public Scuba2Subarray copy() {
+	@Override
+    public Scuba2Subarray copy() {
 		Scuba2Subarray copy = clone();
 		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = focalPlanePixelOffset.copy();
 		copy.scuba2 = null;
 		return copy;
 	}
 
-	public Vector2D getPhysicalPixelPosition(double row, double col) {
+	Vector2D getPhysicalPixelPosition(double row, double col) {
 		Vector2D position = new Vector2D();
 		getPhysicalPixelPosition(row, col, position);
 		return position;
 	}
 	
-	public void getPhysicalPixelPosition(double row, double col, Vector2D position) {
+	void getPhysicalPixelPosition(double row, double col, Vector2D position) {
 		position.set((isMirrored ? -1.0 : 1.0) * col, row);
 		position.rotate(orientation);
 		position.add(focalPlanePixelOffset);
 		position.scale(scuba2.getLayout().physicalPixelSize);
 	}
 	
-	public void setOptions() {
+	private void setOptions() {
 		if(scuba2.hasOption(id + ".rotation")) orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;
 		if(scuba2.hasOption(id + ".position")) focalPlanePixelOffset = scuba2.option(id + ".position").getVector2D();
 		isMirrored = scuba2.hasOption("mirror");
 	}
 	
-	public Scuba2Pixel getPixel(int subarrayIndex) {
+	Scuba2Pixel getPixel(int subarrayIndex) {
 		return scuba2.get(channelOffset + subarrayIndex);
 	}
 	

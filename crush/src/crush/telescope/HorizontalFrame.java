@@ -44,7 +44,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	public double zenithTau = 0.0;
 	
-	public HorizontalFrame(GroundBasedScan<? extends GroundBasedIntegration<?>> parent) {
+	protected HorizontalFrame(GroundBasedIntegration<? extends HorizontalFrame> parent) {
 		super(parent);
 	}
 	

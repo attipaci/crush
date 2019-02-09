@@ -44,11 +44,11 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     private SphericalProjection projection; // Set by the first call to getProjection()
     
     
-    public TelescopeInstrument(String name, int size) {
+    protected TelescopeInstrument(String name, int size) {
         super(name, size);
     }
 
-    public TelescopeInstrument(String name) {
+    protected TelescopeInstrument(String name) {
         super(name);
     }
     

@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
+class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	/**
 	 * 
 	 */
@@ -47,12 +47,12 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	
 	ArrayList<Scuba2Fits> files = new ArrayList<Scuba2Fits>(4);
 	
-	public double totalIntegrationTime;
-	public int rawFrames;
+	double totalIntegrationTime;
+	int rawFrames;
 
 	int[] readoutLevel;
 	
-	public Scuba2Subscan(Scuba2Scan parent) {
+	Scuba2Subscan(Scuba2Scan parent) {
 		super(parent);
 	}	
 	
@@ -71,7 +71,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		printEquivalentTaus();	
 	}
 	
-	public void setJCMTTableTau() throws Exception {
+	private void setJCMTTableTau() throws Exception {
 		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
 		String spec = getScan().getShortDateString();
 		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
@@ -101,7 +101,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		
 	}
 	
-	public void printEquivalentTaus() {	
+	private void printEquivalentTaus() {	
 		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / getScan().horizontal.sinLat())
@@ -112,11 +112,11 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	
 	@Override
 	public Scuba2Frame getFrameInstance() {
-		return new Scuba2Frame(getScan());
+		return new Scuba2Frame(this);
 	}
 	
 	
-	public void read() throws FitsException, UnsupportedIntegrationException, IOException {
+	void read() throws FitsException, UnsupportedIntegrationException, IOException {
 		clear();
 		
 		Scuba2Scan scuba2Scan = getScan();
@@ -182,13 +182,13 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	    }
     }
 	
-	public void readDarkSquidData(int subarrayIndex, BinaryTableHDU hdu) throws FitsException {
+	private void readDarkSquidData(int subarrayIndex, BinaryTableHDU hdu) throws FitsException {
 	    int[][] data = (int[][]) hdu.getRow(0)[hdu.findColumn("DATA")];
 	    for(int t=0; t<size(); t++) get(t).setDarkSquid(subarrayIndex, data[t]);
 	}
 	
 	
-	public BinaryTableHDU getJcmtHDU(BasicHDU<?>[] HDU) {
+	private BinaryTableHDU getJcmtHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
 			if(extName != null) if(extName.endsWith("JCMTSTATE")) return (BinaryTableHDU) HDU[i];
@@ -196,7 +196,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		return null;		
 	}
 
-	public BinaryTableHDU getDarkSquidHDU(BasicHDU<?>[] HDU) {
+	private BinaryTableHDU getDarkSquidHDU(BasicHDU<?>[] HDU) {
         for(int i=1; i<HDU.length; i++) {
             String extName = HDU[i].getHeader().getStringValue("EXTNAME");
             if(extName != null) if(extName.endsWith("DKSQUID.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
@@ -204,7 +204,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
         return null;        
     }
 	
-	public BinaryTableHDU getFlatcalHDU(BasicHDU<?>[] HDU) {
+	private BinaryTableHDU getFlatcalHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
 			if(extName != null) if(extName.endsWith("FLATCAL.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
@@ -212,7 +212,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		return null;		
 	}
 	
-	public void darkCorrect() {
+	private void darkCorrect() {
         info("Applying dark SQUID correction.");
         
         new Fork<Void>() {
@@ -235,7 +235,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	@Override
 	public String getID() { return Integer.toString(integrationNo+1); }
 	
-	public void parsePrimaryHeader(Header header) throws HeaderCardException, UnsupportedIntegrationException {
+	private void parsePrimaryHeader(Header header) throws HeaderCardException, UnsupportedIntegrationException {
 		integrationNo = header.getIntValue("NSUBSCAN") - 1;
 		
 		boolean isDark = header.getDoubleValue("SHUTTER", 1.0) == 0.0;
@@ -264,7 +264,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		getInstrument().integrationTime = getInstrument().samplingInterval = totalIntegrationTime / rawFrames;
 	}
 	
-	public void readCoordinateData(BinaryTableHDU hdu) throws FitsException {
+	private void readCoordinateData(BinaryTableHDU hdu) throws FitsException {
 		
 		// TODO chop phase and beam (L/R/M?)...	
 		final Scuba2Scan scuba2Scan = getScan();			
@@ -328,7 +328,7 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 				// Check to see if the frame has valid astrometry...
 				if(Double.isNaN(AZ[i])) return;
 				
-				final Scuba2Frame frame = new Scuba2Frame(scuba2Scan);
+				final Scuba2Frame frame = getFrameInstance();
 
 				//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
 				frame.MJD = MJDTAI[i] + TAI2TT;

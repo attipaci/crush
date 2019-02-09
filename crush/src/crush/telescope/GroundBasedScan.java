@@ -51,7 +51,7 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     public double LST = Double.NaN;
 
 
-    public GroundBasedScan(TelescopeInstrument<?> instrument) {
+    protected GroundBasedScan(TelescopeInstrument<?> instrument) {
         super(instrument);
     }
 

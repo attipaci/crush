@@ -71,7 +71,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	
 	Vector2D pointingOffset;
 	
-	public APEXScan(APEXInstrument<?> instrument) {
+	protected APEXScan(APEXInstrument<?> instrument) {
 		super(instrument);
 	}
 	

@@ -15,11 +15,11 @@ public class APEXPixel extends Pixel {
     public int type;
     public int beIndex = 0; // Starting from 0...
     
-    public APEXPixel(APEXInstrument<? extends Channel> instrument, int fixedIndex) {
+    protected APEXPixel(APEXInstrument<? extends Channel> instrument, int fixedIndex) {
         super(instrument, fixedIndex);
     }
 
-    public APEXPixel(APEXInstrument<? extends Channel> instrument, String id, int fixedIndex) {
+    protected APEXPixel(APEXInstrument<? extends Channel> instrument, String id, int fixedIndex) {
         super(instrument, id, fixedIndex);
     }
     

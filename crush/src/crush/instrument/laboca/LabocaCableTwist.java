@@ -29,7 +29,7 @@ import crush.instrument.ZeroMeanGains;
  * @author Attila Kovacs <attila@sigmyne.com>
  *
  */
-public class LabocaCableTwist extends ZeroMeanGains {
+class LabocaCableTwist extends ZeroMeanGains {
 	/**
 	 * 
 	 */

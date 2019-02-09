@@ -50,7 +50,7 @@ public abstract class TelescopeFrame extends Frame {
     private float transmission = 1.0F;
 
        
-    public TelescopeFrame(TelescopeScan<? extends Integration<? extends TelescopeFrame>> parent) {
+    protected TelescopeFrame(Integration<? extends TelescopeFrame> parent) {
         super(parent);
     }
     
@@ -71,9 +71,8 @@ public abstract class TelescopeFrame extends Frame {
     }
     
     @Override
-    public TelescopeInstrument<?> getInstrument() { return getScan().getInstrument(); }
+    public TelescopeInstrument<?> getInstrument() { return (TelescopeInstrument<?>) getIntegration().getInstrument(); }
   
-    
     public float getTransmission() { return transmission; }
     
     protected void setTransmission(float value) { transmission = value; }

@@ -34,9 +34,7 @@ public class APEXFrame extends HorizontalFrame {
 	public int chopperPhase;
 	public int nodFlag;
 	
-	public static double skydipFactor = 1.0;
-	
-	public APEXFrame(APEXScan<? extends APEXSubscan<? extends APEXFrame>> parent) {
+	protected APEXFrame(APEXSubscan<? extends APEXFrame> parent) {
 		super(parent);
 	}
 	
@@ -46,22 +44,17 @@ public class APEXFrame extends HorizontalFrame {
 	    return (APEXScan<? extends APEXSubscan<? extends APEXFrame>>) super.getScan();
 	}
 
-	@Override
-	public void setZenithTau(double value) {
-		super.setZenithTau(skydipFactor * value);
-	}
-	
-	public void parse(float[][] fitsData) {
+	void parse(float[][] fitsData) {
 		data = new float[fitsData.length];
 		for(int c=0; c<fitsData.length; c++) data[c] = fitsData[c][0];		
 	}
 	
-	public void parse(float[] flatData, int from, int channels) {
+	void parse(float[] flatData, int from, int channels) {
 		data = new float[channels];
 		System.arraycopy(flatData, from, data, 0, channels);
 	}
 	
-	public void parse(float[] flatData) {
+	void parse(float[] flatData) {
 		data = flatData;
 	}
 	
