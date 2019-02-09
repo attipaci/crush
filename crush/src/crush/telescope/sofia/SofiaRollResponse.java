@@ -24,21 +24,18 @@ package crush.telescope.sofia;
 
 import crush.instrument.FrameResponse;
 
-public class RollResponse extends FrameResponse<SofiaFrame> {
+public class SofiaRollResponse extends FrameResponse<SofiaFrame> {
     /**
      * 
      */
     private static final long serialVersionUID = 4687041979297880692L;
 
-    public RollResponse() {
+    public SofiaRollResponse() {
         setDerivative(2);
     }
     
     @Override
-    protected double getValue(SofiaFrame exposure) throws Exception {
+    protected final double getValue(SofiaFrame exposure) throws Exception {
         return exposure.getRollAngle();
     }
-
-
-    
 }

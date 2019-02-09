@@ -27,7 +27,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import crush.polarization.StokesResponse;
-import jnum.Flagging;
+import jnum.CopiableContent;
+import jnum.data.Flagging;
 import jnum.math.Angle;
 import jnum.math.Coordinate2D;
 import jnum.math.Vector2D;
@@ -44,7 +45,7 @@ import jnum.util.*;
  * @author Attila Kovacs <attila@sigmyne.com>
  *
  */
-public abstract class Frame implements Serializable, Cloneable, Flagging {
+public abstract class Frame implements Serializable, Cloneable, CopiableContent<Frame>, Flagging {
 	/**
 	 * 
 	 */
@@ -73,16 +74,34 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	private boolean isValid = false;
 	
-	
+	/**
+	 * Constructs a frame for the specified integration, with initial index of -1. You must still add this frame to the integration
+	 * explicitly using {@link Integration#add())}, which will set the index appropriately.
+	 * 
+	 * 
+	 * @param parent   The integration to which this frame belongs
+	 */
 	public Frame(Integration<? extends Frame> parent) {
 	    setParent(parent);
 	    index = -1;
 	}
 	
+	/**
+	 * (Re)assign this frame to the specified integration. This method should only be called by
+	 * the constructor and/or {@link Integration#add()} to ensure consistency.
+	 * 
+	 * 
+	 * @param parent   The new parent integration for this frame.
+	 */
 	void setParent(Integration<? extends Frame> parent) {
 	    integration = parent;
 	}
 	
+	/**
+	 * Returns the integration to which this frame belongs.
+	 * 
+	 * @return
+	 */
 	public Integration<?> getIntegration() { return integration; }
 	
 	/**
@@ -112,9 +131,14 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	public Frame copy(boolean withContents) {
+    @Override
+    public Frame copy() {
+        return copy(true);
+    }
+    
+	@Override
+    public Frame copy(boolean withContents) {
 		Frame copy = clone();
-		
 				
 		if(data != null) {
 			copy.data = new float[data.length];
@@ -134,18 +158,19 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		return copy;
 	}
 	
+	
 	protected void create(int size) {
 		data = new float[size];
 		sampleFlag = new byte[size];
 	}
 	
 	@Override
-	public final boolean isFlagged(final int pattern) {
+	public final boolean isFlagged(final long pattern) {
 		return (flag & pattern) != 0;
 	}
 	
 	@Override
-	public final boolean isUnflagged(final int pattern) {
+	public final boolean isUnflagged(final long pattern) {
 		return (flag & pattern) == 0;
 	}
 	
@@ -160,12 +185,12 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	}
 	
 	@Override
-	public final void flag(final int pattern) {
+	public final void flag(final long pattern) {
 		flag |= pattern;
 	}
 	
 	@Override
-	public final void unflag(final int pattern) {
+	public final void unflag(final long pattern) {
 		flag &= ~pattern;
 	}
 	
@@ -174,7 +199,9 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		flag = 0;
 	}
 	
-	public final int getFlags() { return flag; }
+	@Override
+    public final long getFlags() { return flag; }
+	
 	
 	public final synchronized void addDependents(double dp) {
 		dependents += dp;

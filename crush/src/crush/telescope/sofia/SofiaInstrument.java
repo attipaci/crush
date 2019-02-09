@@ -126,14 +126,14 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         super.createModalities();
         
         try {
-            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), LOSResponse.class); 
+            Modality<?> losResponse = new Modality<SofiaLOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), SofiaLOSResponse.class); 
             losResponse.setGainFlag(HawcPixel.FLAG_LOS_RESPONSE);
             addModality(losResponse);
         }
         catch(NoSuchFieldException e) { error(e); }
             
         try { 
-            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), RollResponse.class);
+            Modality<?> rollResponse = new Modality<SofiaRollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), SofiaRollResponse.class);
             rollResponse.setGainFlag(HawcPixel.FLAG_ROLL_RESPONSE);
             addModality(rollResponse);
         }

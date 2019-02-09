@@ -111,12 +111,13 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
 
         for(HirmesPixel channel : hirmes) {   
             if(channel.detArray != hirmes.detArray) channel.flag(Channel.FLAG_DEAD);
-            else if(channel.isDark()) channel.flag(blindFlag);
+            else if(channel.isDarkSQUID()) channel.flag(blindFlag);
             else if(channel.sub == Hirmes.HIRES_SUBARRAY) {
                 if(channel.subcol != hirmes.hiresColUsed) channel.flag(blindFlag);
             }
             else if(hirmes.mode == Hirmes.IMAGING_MODE) {
                 Pixel pixel = channel.getPixel();
+                if(pixel.getPosition() == null) continue;
                 if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) channel.flag(blindFlag);
                 if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) channel.flag(blindFlag);
             }

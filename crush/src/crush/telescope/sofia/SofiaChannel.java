@@ -20,24 +20,24 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+
 package crush.telescope.sofia;
 
-import crush.instrument.FrameResponse;
+import crush.Channel;
+import crush.Instrument;
 
-public class LOSResponse extends FrameResponse<SofiaFrame> {
+public class SofiaChannel extends Channel {
     /**
      * 
      */
-    private static final long serialVersionUID = -2854400538563120633L;
+    private static final long serialVersionUID = 5106268489594345916L;
 
-    public LOSResponse() {
-        setDerivative(2);
+    public double losGain = 1.0, rollGain = 1.0;
+    
+    protected SofiaChannel(Instrument<?> instrument, int fixedIndex) {
+        super(instrument, fixedIndex);
     }
     
-    @Override
-    protected double getValue(SofiaFrame exposure) throws Exception {
-        return exposure.getLOSAngle();
-    }
-    
-  
+    public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
+    public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
 }

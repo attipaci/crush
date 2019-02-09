@@ -25,19 +25,20 @@ package crush.instrument.hawcplus;
 
 
 import crush.Channel;
+import crush.telescope.sofia.SofiaChannel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class HawcPixel extends Channel {
+public class HawcPixel extends SofiaChannel {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
 	
 	public int pol = -1, sub = -1, subrow = -1, col = -1, mux = -1, row = -1, biasLine = -1, seriesArray = -1;
-	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0, losGain = 1.0, rollGain = 1.0;
+	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
 	
 	int fitsIndex, fitsRow, fitsCol;
 	
@@ -127,7 +128,6 @@ public class HawcPixel extends Channel {
 	public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
 	public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
 	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
-	public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
-	public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
+
 
 }

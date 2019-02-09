@@ -37,7 +37,7 @@ public class Scuba2He3Response extends FrameResponse<Scuba2Frame> {
 	}
 
     @Override
-    protected double getValue(Scuba2Frame exposure) throws Exception {
+    protected final double getValue(Scuba2Frame exposure) throws Exception {
         return exposure.detectorT;
     }
 

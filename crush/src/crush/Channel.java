@@ -31,8 +31,8 @@ import java.util.HashSet;
 
 import crush.instrument.Overlap;
 import jnum.Copiable;
-import jnum.Flagging;
 import jnum.Util;
+import jnum.data.Flagging;
 import jnum.text.SmartTokenizer;
 import jnum.util.FlagSpace;
 import jnum.util.FlagBlock;
@@ -132,12 +132,12 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 
 		
 	@Override
-	public final boolean isFlagged(final int pattern) {
+	public final boolean isFlagged(final long pattern) {
 		return (flag & pattern) != 0;
 	}
 	
 	@Override
-	public final boolean isUnflagged(final int pattern) {
+	public final boolean isUnflagged(final long pattern) {
 		return (flag & pattern) == 0;
 	}
 
@@ -152,12 +152,12 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	}
 	
 	@Override
-	public final void flag(final int pattern) {
+	public final void flag(final long pattern) {
 		flag |= pattern;
 	}
 	
 	@Override
-	public final void unflag(final int pattern) {
+	public final void unflag(final long pattern) {
 		flag &= ~pattern;
 	}
 
@@ -166,12 +166,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		flag = 0;
 	}
 	
-	/**
-	 * Returns all the bit-wise flags for this channel.
-	 * 
-	 * @return     The up-to 32 bitwise flags for this channel as an integer.
-	 */
-	public final int getFlags() { return flag; }
+	@Override
+    public final long getFlags() { return flag; }
 	
 	public double getFiltering(Integration<?> integration) {
 		final double nDrifts = Math.ceil(integration.getDuration() / filterTimeScale);

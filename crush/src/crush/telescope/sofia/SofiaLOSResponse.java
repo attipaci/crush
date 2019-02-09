@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,25 +20,22 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.instrument.laboca;
+package crush.telescope.sofia;
 
 import crush.instrument.FrameResponse;
 
-public class LabocaHe3Response extends FrameResponse<LabocaFrame> {
+public class SofiaLOSResponse extends FrameResponse<SofiaFrame> {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2854400538563120633L;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4390450615227012414L;
-
-	public LabocaHe3Response() {
-	    super(true);
-	}
-	
-    @Override
-    protected final double getValue(LabocaFrame exposure) throws Exception {
-        return exposure.he3Temp;
+    public SofiaLOSResponse() {
+        setDerivative(2);
     }
-
-	
+    
+    @Override
+    protected final double getValue(SofiaFrame exposure) throws Exception {
+        return exposure.getLOSAngle();
+    }
 }

@@ -1359,7 +1359,7 @@ implements TableFormatter.Entries, BasicMessaging {
         for(Channel channel : this) {
             gains[channel.getFixedIndex()] = (float) channel.gain;
             weights[channel.getFixedIndex()] = (float) channel.weight;
-            flags[channel.getFixedIndex()] = channel.getFlags();
+            flags[channel.getFixedIndex()] = (int) channel.getFlags();
         }
 
         sampleWeights();

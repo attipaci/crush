@@ -25,12 +25,13 @@ package crush.instrument.hirmes;
 
 
 import crush.Channel;
+import crush.telescope.sofia.SofiaChannel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class HirmesPixel extends Channel {
+public class HirmesPixel extends SofiaChannel {
     /**
      * 
      */
@@ -50,6 +51,7 @@ public class HirmesPixel extends Channel {
     HirmesPixel(Hirmes hirmes, int zeroIndex) {
         super(hirmes, zeroIndex);
         
+        
         readrow = zeroIndex / Hirmes.readoutCols;
         readcol = zeroIndex % Hirmes.readoutCols;
         int virtcol = (Hirmes.subCols-1) - readcol;
@@ -61,10 +63,8 @@ public class HirmesPixel extends Channel {
         if(virtcol < 0) {
             // Blind SQUIDs...
             flag(FLAG_BLIND);
-            detArray = 
-            subcol = -1;
-            col = -sub;
-            mux = readrow;
+            subcol = col = -(sub+1);
+            subrow = mux = readrow;
             pin = -1;
         }
         
@@ -176,8 +176,8 @@ public class HirmesPixel extends Channel {
         }
     }
 
-    boolean isDark() {
-        return subcol < 0 || getPixel().getPosition() == null;
+    boolean isDarkSQUID() {
+        return subcol < 0;
     }
         
     @Override
@@ -193,6 +193,8 @@ public class HirmesPixel extends Channel {
     
     @Override
     public String getID() {
+        if(isDarkSQUID()) return "dark" + mux;
+        
         return sub == Hirmes.HIRES_SUBARRAY ?
                 Hirmes.subID[sub] + subcol + "[" + subrow + "]" :
                 Hirmes.subID[sub] + "[" + subrow + "," + subcol + "]";
@@ -226,7 +228,5 @@ public class HirmesPixel extends Channel {
     public final static int FLAG_COL = softwareFlags.next('c', "Bad detector col gain").value();
     public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
     public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
-    public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
-    public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
 
 }

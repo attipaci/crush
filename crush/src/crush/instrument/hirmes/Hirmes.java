@@ -64,7 +64,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     private double z = 0.0;                 // Doppler shift. 
 
-    Hirmes() {
+    public Hirmes() {
         super("hirmes", pixels);
     }
 
@@ -363,7 +363,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     private void createDarkSquidLookup() {
         darkSquidLookup = new int[readoutRows];
         Arrays.fill(darkSquidLookup, -1);
-        for(HirmesPixel pixel : this) if(pixel.isDark()) darkSquidLookup[pixel.mux] = pixel.getIndex();
+        for(HirmesPixel pixel : this) if(pixel.isDarkSQUID()) darkSquidLookup[pixel.mux] = pixel.getIndex();
     }
 
 

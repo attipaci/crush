@@ -2773,7 +2773,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             channelGain[channel.index] = (float) channel.gain;
             channelOffset[channel.index] = (float) channel.offset;
             channelWeight[channel.index] = (float) channel.weight;
-            channelFlags[channel.index] = channel.getFlags();
+            channelFlags[channel.index] = (int) channel.getFlags();
             if(whitener != null) if(filterProfile != null) filterProfile[channel.index] = whitener.getValidProfile(channel);
             channelSpikes[channel.index] = (short) channel.spikes;
         }

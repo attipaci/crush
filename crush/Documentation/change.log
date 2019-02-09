@@ -9,6 +9,9 @@
 
 2.50-a1
 
+	[FIX] {HIRMES} Dark QUIDS on the blue subarray had duplicate IDs with
+	some detecting channels. Fixed.
+
 	[FIX] {ChannelLookup} contains(String) did not do what it was supposed
 	to.
 
@@ -55,6 +58,14 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[API] {SOFIA} LOS/Roll acceleration responses made to be SOFIA
+	generic.
+
+	[API] Improved Response class hierarchy.
+
+	[API] Reduced visibility for all specific instrument classes and
+	methods.
 
 	[API] Better management of pixels, which are now essentially just
 	another dynamically created group of channels, managed by the
