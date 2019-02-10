@@ -25,6 +25,7 @@ package crush;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.polarization.StokesResponse;
 import jnum.CopiableContent;
@@ -223,7 +224,7 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 		byte[] newSampleFlag = new byte[instrument.size()];
 		
 		sourceIndex = null; // discard old lookup table if it exists...
-			
+		
 		for(int k=instrument.size(); --k >= 0; ) {
 			final int oldk = instrument.get(k).index;
 			reduced[k] = data[oldk];
@@ -307,11 +308,11 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
     
     
 	public void scale(double factor) {
+	    if(factor == 1.0) return;
 		if(factor == 0.0) Arrays.fill(data, 0.0F);
-		else {
-			final float fScale = (float) factor;
-			for(int i=data.length; --i >= 0; ) data[i] *= fScale;	
-		}
+		
+		final float fScale = (float) factor;
+		IntStream.range(0, data.length).parallel().forEach(i -> data[i] *= fScale);
 	}
 	
 	public void invert() { scale(-1.0); }
@@ -319,12 +320,12 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
    
 	public void addDataFrom(final Frame other, final double scaling) {
 		if(scaling == 0.0) return;
+		
 		final float fScale = (float) scaling;
 		
-		for(int i=data.length; --i >=0; ) {
-			data[i] += fScale * other.data[i];
-			sampleFlag[i] |= other.sampleFlag[i];
-		}
+		IntStream.range(0, data.length).parallel()
+		.peek(i -> data[i] += fScale * other.data[i])
+		.forEach(i -> sampleFlag[i] |= other.sampleFlag[i]);
 	}
 	
 	public void project(final Vector2D fpOffset, final Projector2D<?> projector) {

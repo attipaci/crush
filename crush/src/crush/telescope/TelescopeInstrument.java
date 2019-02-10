@@ -24,6 +24,7 @@
 package crush.telescope;
 
 
+
 import crush.Channel;
 import crush.Instrument;
 import jnum.astro.AstroProjector;
@@ -71,7 +72,9 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     @Override
     public SphericalGrid getGridInstance() { return new SphericalGrid(); }
     
-
+   
+    
+    
     // Returns the offset of the pointing center from the the rotation center for a given rotation...
     @Override
     public Vector2D getPointingOffset(double rotationAngle) {

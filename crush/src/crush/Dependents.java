@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -25,6 +25,8 @@ package crush;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import jnum.CopiableContent;
 
@@ -77,7 +79,7 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	 */
 	private static final long serialVersionUID = -2489033861985258941L;
 	private String name;
-	private Integration<?> integration;
+	private Integration<? extends Frame> integration;
 	private float[] forFrame, forChannel;
 	
 	public Dependents(Integration<?> owner, String name) {
@@ -129,44 +131,38 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 		forChannel[channel.index] += dp;
 	}
 	
-	
 	public synchronized void addForChannels(float[] dp) {
-		for(int i=forChannel.length; --i >= 0; ) forChannel[i] += dp[i];
+	    IntStream.range(0, forChannel.length).parallel().forEach(i -> forChannel[i] += dp[i]);
 	}
 	
 	public synchronized void addForFrames(float[] dp) {
-		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
+	    IntStream.range(0, forFrame.length).parallel().forEach(i -> forFrame[i] += dp[i]);
 	}
 	
 	public synchronized void addForChannels(double[] dp) {
-		for(int i=forChannel.length; --i >= 0; ) forChannel[i] += dp[i];
+	    IntStream.range(0, forChannel.length).parallel().forEach(i -> forChannel[i] += dp[i]);
 	}
 	
 	public synchronized void addForFrames(double[] dp) {
-		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
+	    IntStream.range(0, forFrame.length).parallel().forEach(i -> forFrame[i] += dp[i]);
 	}
 	
-	public synchronized void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
-	    int i=to;
+	public synchronized void clear(final List<? extends Channel> channels, final int from, final int to) { 
+	    IntStream.range(from, to).parallel().mapToObj(integration::get).filter(f -> f != null)
+	    .peek(f -> f.removeDependents(f.index))
+	    .forEach(f -> forFrame[f.index] = 0.0F);
 	    
-	    while(--i >= from) {
-            final Frame exposure = integration.get(i);
-            if(exposure != null) exposure.removeDependents(forFrame[i]);
-        }
-        
-        for(final Channel channel : channels) channel.removeDependents(forChannel[channel.index]);
-	    
-		Arrays.fill(forFrame, from, to,  0.0F);
-		Arrays.fill(forChannel,  0.0F);
+	    channels.parallelStream()
+	    .peek(c -> c.removeDependents(forChannel[c.index]))
+	    .forEach(c -> forChannel[c.index] = 0.0F);
 	}
 		
-	public synchronized void apply(final Iterable<? extends Channel> channels, final int from, int to) {
-		while(--to >= from) {
-			final Frame exposure = integration.get(to);
-			if(exposure != null) exposure.addDependents(forFrame[to]);
-		}
-		
-		for(final Channel channel : channels) channel.addDependents(forChannel[channel.index]);
+	public synchronized void apply(final List<? extends Channel> channels, final int from, int to) {
+	    IntStream.range(from, to).parallel().mapToObj(integration::get).filter(f -> f != null)
+        .forEach(f -> f.addDependents(forFrame[f.index]));
+
+        channels.parallelStream()
+        .forEach(c -> c.addDependents(forChannel[c.index]));
 	}
 	
 	public double get(final Frame exposure) { return forFrame[exposure.index]; }

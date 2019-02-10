@@ -161,8 +161,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 			return;
 		}
 		
-		for(LabocaFrame exposure : this) if(exposure != null) exposure.he3Temp = signal.valueAt(exposure); 
-		
+		validParallelStream().forEach(f -> f.he3Temp = signal.valueAt(f));		
 	}	
 	
 	// TODO broken, FITS libs do not handle curled row structure well...

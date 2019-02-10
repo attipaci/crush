@@ -24,6 +24,7 @@ package crush.filters;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Channel;
 import crush.ChannelGroup;
@@ -126,10 +127,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	protected abstract double responseAt(int fch);
 	
 	protected double countParms() {
-		final int minf = getHipassIndex();
-		double parms = 0.0;
-		for(int f = nf; --f >= minf; ) parms += rejectionAt(f);
-		return parms;
+		return IntStream.range(getHipassIndex(), nf).parallel().mapToDouble(f -> rejectionAt(f)).sum();
 	}
 	
 	protected abstract double getMeanPointResponse();
@@ -272,7 +270,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	protected void remove(Channel channel) {
 		// Subtract the rejected signal...
 		final int c = channel.getIndex();
-		for(int t = integration.size(); --t >= 0; ) remove(data[t], integration.get(t), c);
+		integration.validParallelStream().forEach(f -> remove(data[f.index], f, c));
 	}
 	
 	protected void remove(final float value, final Frame exposure, final int channel) {
@@ -314,10 +312,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 		// Remove the DC offset...
 		if(n > 0) {
 			final float ave = (float) (sum / n);
-			for(int t = integration.size(); --t >= 0; ) {
-				if(Float.isNaN(data[t])) data[t] = 0.0F;
-				else data[t] -= ave;			
-			}
+			IntStream.range(0, integration.size()).parallel().forEach(t -> data[t] = Float.isNaN(data[t]) ? 0.0F : data[t] - ave);
 		}
 		else Arrays.fill(data, 0, integration.size(), 0.0F);
 	}
@@ -333,14 +328,10 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 		updateProfile(channel);
 		
 		data[0] = 0.0F;
-		data[1] *= rejectionAt(nf);
+		data[1] *= rejectionAt(nf);	
 		
-		for(int i=2; i<data.length; ) {
-			final double rejection = rejectionAt(i >>> 1);
-			data[i++] *= rejection;
-			data[i++] *= rejection; 	
-		}
-		
+		IntStream.range(1, data.length>>>1).parallel().forEach(f -> { double r = rejectionAt(f); f<<=1; data[f] *= r; data[f+1] *= r; } );
+
 		integration.getFFT().amplitude2Real(data);
 	}
 	
@@ -348,10 +339,12 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	protected void dftFilter(Channel channel) {
 		// TODO make rejected a private field, initialize or throw away as needed (setDFT())
 		float[] rejected = new float[integration.size()];
-		for(int f=nf+1; --f >= 0; ) {
-			final double rejection = rejectionAt(f);
-			if(rejection > 0.0) dftFilter(channel, f, rejection, rejected);
-		}
+		
+		IntStream.rangeClosed(0, nf).parallel().forEach(f -> { 
+		    double r = rejectionAt(f); 
+		    if(r > 0.0) dftFilter(channel, f, r, rejected); 
+		}); 
+		
 		System.arraycopy(rejected, 0, data, 0, rejected.length);
 	}
 	
@@ -373,20 +366,16 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 		// Start from the 1/f filter cutoff
 		int minf = getHipassIndex();
 		
-		double sum = 0.0;
-		
 		// just calculate x=0 component -- O(N)
 		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		for(int f=minf; --f >= 0; ) {
-		    sum += Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0));
-		}
-		double norm = sum;
+		double norm = IntStream.range(0, minf).parallel().mapToDouble(f -> Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0))).sum();
 		
 		// Calculate the true source filtering above the hipass timescale...
 		// Consider a symmetric source profile, peaked at the origin --
 		// Its peak is simply the sum of the cosine terms, which are the real part of the amplitudes.
 		// So, the filter correction is simply the ratio of the sum of the filtered real amplitudes
 		// relative to the sum of the original real amplitudes.
+		double sum = 0.0;
 		
 		for(int f=nf; --f >= minf; ) {
 			double sourceResponse = Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0));
@@ -414,22 +403,10 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 		
 	protected void levelForChannel(Channel channel, float[] signal) {	
 		final int c = channel.getIndex();
-		double sum = 0.0;
-		int n = 0;
 		
-		for(int t=integration.size(); --t >= 0; ) {
-			final Frame exposure = integration.get(t);
-			if(exposure == null) continue;
-			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-			if(exposure.sampleFlag[c] != 0) continue;
-			
-			sum += signal[t];
-			n++;
-		} 
-		if(n > 0) {
-			final float ave = (float) (sum / n);
-			for(int t=integration.size(); --t >= 0; ) signal[t] -= ave;			
-		}
+		final float ave = (float) integration.validParallelStream(Frame.MODELING_FLAGS).filter(f -> f.sampleFlag[c] != 0).mapToDouble(f -> signal[f.index]).average().orElse(0.0);
+		
+	    if(ave != 0.0) IntStream.range(0,  integration.size()).parallel().forEach(t -> signal[t] -= ave);
 		else Arrays.fill(signal, 0, integration.size(), 0.0F);
 	}
 	
@@ -437,11 +414,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 	
 	protected void level(float[] signal) {
 		final float level = Statistics.mean(signal);
-
-		if(!Double.isNaN(level)) for(int i=integration.size(); --i >= 0; ) {
-			if(Float.isNaN(signal[i])) signal[i] = 0.0F;
-			else signal[i] -= level;
-		}
+		if(!Double.isNaN(level)) IntStream.range(0,  integration.size()).parallel().forEach(t -> signal[t] = Float.isNaN(signal[t]) ? 0.0F : signal[t] - level);
 	}
 	
 	public void setDFT(boolean value) { dft = value; }
@@ -498,11 +471,7 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
 			final int tof = (int) Math.round((i+1) * n);
 			
 			if(tof == fromf) response[i] = (float) responseAt(fromf);
-			else {
-				double sum = 0.0;
-				for(int f=tof; --f >= fromf; ) sum += responseAt(f);
-				response[i] = (float) (sum / (tof - fromf));
-			}
+			else response[i] = (float) IntStream.range(fromf, tof).mapToDouble(f -> responseAt(f)).sum() / (tof - fromf);
 		}
 		
 	}

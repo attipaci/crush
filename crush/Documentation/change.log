@@ -1,16 +1,18 @@
 >> port essential fixes back to 2.43...
+	- Instrument.standardWeights() / sampleWeights() w/o sqrt()
 	- build.xml fix (</copy> -> </move>
 	- ChannelLookup fix.
 	- AstroTime
 	- Sofia scan set validation
-	- jnum -> 0.24 fixes (AstroTime...)
+	- jnum -> 0.24 fixes (AstroTime, ArrayUtil)
 >> check Sharc2...
 >> check ChannelGroup.slim()...
 
 
 2.50-a1
 
-	
+	[FIX] Instrument.standardWeights() / sampleWeight() has unneeded
+	sqrt(). Fixed.	
 
 	[FIX] build.xml had bad closing tag </copy> instead of </move>.
 
@@ -98,6 +100,8 @@
 	crush.instrument and crush.telescope.
 
 	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
+
+	[CODE] Part upgraded to using Java 8 streams.
 
 	[CODE] {APEX} Channels / pixels are created dynamically from FITS.
 

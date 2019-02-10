@@ -129,8 +129,7 @@ public abstract class GroundBasedIntegration<FrameType extends HorizontalFrame> 
     public void setZenithTau(final double value) {
         info("Setting zenith tau to " + Util.f3.format(value));
         zenithTau = value;
-
-        for(FrameType frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
+        validParallelStream().forEach(f ->f.setZenithTau(value));
     }
     
     

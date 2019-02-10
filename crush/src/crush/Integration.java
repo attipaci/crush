@@ -27,6 +27,10 @@ package crush;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import crush.filters.*;
 import crush.instrument.Response;
@@ -171,10 +175,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public void setOptions(Configurator options) { instrument.setOptions(options); }
 
     public void reindex() {
-        for(int k=size(); --k >= 0; ) {
-            final Frame exposure = get(k);
-            if(exposure != null) exposure.index = k;
-        }
+        IntStream.range(0, size()).parallel().filter(k -> get(k) != null).forEach(k -> get(k).index = k);
     }
 
     public void nextIteration() {
@@ -318,7 +319,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         if(hasOption("jackknife.frames")) {
             notify("JACKKNIFE: Randomly inverted frames in source.");
-            for(Frame exposure : this) exposure.jackknife();
+            validParallelStream().forEach(f -> f.jackknife());
         }
     }
 
@@ -331,24 +332,28 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public double getDuration() { return size() * instrument.samplingInterval; }
 
+    public final Stream<FrameType> validStream() { return stream().filter(x -> x != null); }
+    
+    public final Stream<FrameType> validParallelStream() { return stream().filter(x -> x != null); }
+    
+    public final Stream<FrameType> validStream(int excludeFlags) {
+        return validStream().filter(x -> x.isUnflagged(excludeFlags));
+    }
+    
+    public final Stream<FrameType> validParallelStream(int excludeFlags) { 
+        return validParallelStream().filter(x -> x.isUnflagged(excludeFlags));
+    }
+    
     public void invert() {
-        new Fork<Void>() {
-            @Override
-            protected void process(FrameType frame) { frame.invert(); }
-        }.process();
+        validParallelStream().forEach(x -> x.invert());
     }
 
     public int getFrameCount(final int excludeFlags) {
-        int n=0;
-        for(Frame frame : this) if(frame != null) if(frame.isUnflagged(excludeFlags)) n++;
-        return n;
+        return (int) validParallelStream().count();
     }
 
-
     public int getFrameCount(final int excludeFlags, final Channel channel, final int excludeSamples) {
-        int n=0;
-        for(Frame frame : this) if(frame != null) if(frame.isUnflagged(excludeFlags)) if((frame.sampleFlag[channel.index] & excludeSamples) == 0) n++;
-        return n;
+        return (int) validParallelStream(excludeFlags).filter(x -> (x.sampleFlag[channel.index] & excludeSamples) == 0).count();
     }
 
     public void selectFrames() {
@@ -356,12 +361,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final int from = (int)range.min();
         final int to = Math.min(size(), (int)range.max());
 
-        for(int t=size(); --t >= to; ) remove(t);
-
-        if(from == 0) return;
-
-        final ArrayList<FrameType> selected = new ArrayList<>(to - from);
-        for(int t=from; t<to; t++) selected.add(get(t));
+        List<FrameType> selected = IntStream.range(from, to).mapToObj(i -> get(i)).collect(Collectors.toList());
 
         clear();
         addAll(selected);
@@ -374,12 +374,11 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final Range range = option("range").getRange();
 
         int[] n = getInts();
-
+        
         for(Frame frame : this) if(frame != null) {
-            for(final Channel channel : instrument) if(!range.contains(frame.data[channel.index])) {
-                frame.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-                n[channel.index]++;
-            }
+            instrument.parallelStream().filter(c -> !range.contains(frame.data[c.index]))
+            .peek(c -> frame.sampleFlag[c.index] |= Frame.SAMPLE_SKIP)
+            .forEach(c -> n[c.index]++);
         }
 
         if(!hasOption("range.flagfraction")) {
@@ -387,20 +386,14 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             return;
         }
 
-        int flagged = 0;
         final double f = 1.0 / getFrameCount(0);
         final double critical = option("range.flagfraction").getDouble();
 
-
-        for(final Channel channel : instrument) {
-            if(f * n[channel.index] > critical) {
-                channel.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD);
-                flagged++;
-            }
-        }
+        int flagged = (int) instrument.parallelStream().filter(c -> f * n[c.index] > critical)
+        .peek(c -> c.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD))
+        .count();
 
         recycle(n);
-
 
         info("Flagging out-of-range data. " + flagged + " channel(s) discarded.");
 
@@ -482,7 +475,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
     public void pointingAt(final Vector2D offset) {
-        for(Frame frame : this) if(frame != null) frame.pointingAt(offset);
+        validParallelStream().forEach(f -> f.pointingAt(offset));
     }
 
 
@@ -585,7 +578,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         return getFirstFrameFrom(0);
     }
 
-    public FrameType getFirstFrameFrom(int index) {
+    public FrameType getFirstFrameFrom(int index) { 
         int t=index;
         while(get(t) == null) t++;
         return get(t);
@@ -604,25 +597,18 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public boolean hasGaps(final int tolerance) {
         String text = "Checking for gaps: ";
+        
+        final FrameType first = getFirstFrame();
 
-        final Frame first = getFirstFrame();
-
-
-        for(int t=size(); --t > 0; ) {
-            final Frame frame = get(t);
-
-            if(frame == null) continue;
-
-            double gap = (frame.MJD - first.MJD) * Unit.day - (frame.index - first.index) * instrument.samplingInterval;
-
-            if((int) Math.round(gap / instrument.samplingInterval) > tolerance) { 
-                info(text + "Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
-                return true; 
-            }
-        }
-
-        info(text + "No gaps. :-)");
-        return false;
+        double gap = stream().parallel().filter(f -> f != null)
+        .mapToDouble(f -> (f.MJD - first.MJD) * Unit.day / instrument.samplingInterval - (f.index - first.index))
+        .filter(g -> g > tolerance)
+        .findFirst().orElse(0.0);
+        
+        if(gap > 0.0) warning(text + "Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
+        else info(text + "No gaps. :-)");
+        
+        return gap > 0.0;
     }
 
     public void fillGaps() {
@@ -692,17 +678,14 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void slim(int threads) {
         if(instrument.slim(Channel.FLAG_DEAD | Channel.FLAG_DISCARD, false)) {
-            new Fork<Void>() {
-                @Override
-                protected void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
-            }.process();
+            validParallelStream().forEach(f -> f.slimTo(instrument));
             instrument.reindex();
         }
     }
 
     public void scale(final double factor) {
         if(factor == 1.0) return;
-        for(Frame frame : this) if(frame != null) frame.scale(factor);
+        validParallelStream().forEach(x -> x.scale(factor));
     }
 
 
@@ -807,6 +790,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         parms.clear(channels, 0, size());
 
         final DataPoint[] aveOffset = instrument.getDataPoints();
+        
         for(int i=channels.size(); --i >= 0; ) {
             aveOffset[i].noData();
             instrument.get(i).inconsistencies = 0;
@@ -1038,7 +1022,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 super.init();
 
                 var = instrument.getDataPoints();
-                for(int i=instrument.size(); --i >= 0; ) var[i].noData();
+                Stream.of(var).parallel().forEach(x -> x.noData());
             }
 
             @Override
@@ -1076,7 +1060,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     }
                 }
 
-                for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
+                Stream.of(var).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
 
                 return var;
             }	
@@ -1099,7 +1083,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             protected void init() {
                 super.init();
                 var = instrument.getDataPoints();
-                for(int i=instrument.size(); --i >= 0; ) var[i].noData();
+                Stream.of(var).parallel().forEach(x -> x.noData());
             }
 
             @Override
@@ -1140,7 +1124,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     }
                     Instrument.recycle(localVar);
                 }
-                for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
+                
+                Stream.of(var).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
 
                 return var;
             }	
@@ -1157,8 +1142,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final ChannelGroup<? extends Channel> channels = instrument.getLiveChannels();
 
         final DataPoint[] var = instrument.getDataPoints();
-        for(DataPoint p : var) p.noData();
-
+        Stream.of(var).parallel().forEach(x -> x.noData());
 
         channels.new Fork<Void>() {
             private DataPoint[] dev2;
@@ -1339,8 +1323,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         final Range weightRange = option("weighting.frames.noiserange").getRange(true);
 
-        for(final Frame exposure : this) if(exposure != null) if(!weightRange.contains(exposure.relativeWeight)) 
-            exposure.flag(Frame.FLAG_WEIGHT);	
+        validParallelStream().filter(x -> !weightRange.contains(x.relativeWeight)).forEach(x -> x.flag(Frame.FLAG_WEIGHT));	
     }
 
     public void dejumpFrames() { 
@@ -1367,7 +1350,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         if(minFrames < 2) minFrames = Integer.MAX_VALUE;
 
         // Save the old time weights
-        for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
+        validParallelStream().forEach(x -> x.tempC = x.relativeWeight);
 
         final Dependents parms = getDependents("jumps");		
 
@@ -1406,7 +1389,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             if(hasOption("weighting.frames")) getTimeWeights(instrument);
         }
         // Otherwise, just reinstate the old weights...
-        else for(final Frame exposure : this) if(exposure != null) exposure.relativeWeight = exposure.tempC;
+        validParallelStream().forEach(x -> x.relativeWeight = x.tempC);
 
         comments.append(levelled + ":" + removed);
     }
@@ -1434,6 +1417,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void getTimeStream(final Channel channel, final double[] data) {
         final int c = channel.index;
+           
         final int nt = size();
         for(int t=nt; --t >= 0; ) {
             final Frame exposure = get(t);
@@ -1881,13 +1865,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         Fork<Integer> flagger = new Fork<Integer>() {
             private int spikyFrames = 0;
-
+            
             @Override
             protected void process(FrameType exposure) {
-                int frameSpikes = 0;
-
-                for(final Channel channel : instrument) if(channel.isUnflagged(channelFlags))
-                    if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) != 0) frameSpikes++;
+                int frameSpikes = (int) instrument.stream().filter(x -> x.isUnflagged(channelFlags)).filter(x -> (exposure.sampleFlag[x.index] & Frame.SAMPLE_SPIKE) != 0).count();
 
                 if(frameSpikes > minSpikes) {
                     exposure.flag(Frame.FLAG_SPIKY);
@@ -1925,7 +1906,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         new Fork<Void>() {
             @Override
             public void process(FrameType frame) {
-                for(final Channel channel : instrument) frame.data[channel.index] /= channel.temp;
+                instrument.stream().forEach(x -> frame.data[x.index] /= x.temp);
             }
         }.process();
 
@@ -1940,7 +1921,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         new Fork<Void>() {
             @Override
             public void process(FrameType frame) {
-                for(final Channel channel : instrument) frame.data[channel.index] *= channel.temp;
+                instrument.stream().forEach(x -> frame.data[x.index] *= x.temp);
             }
         }.process();
 
@@ -1950,7 +1931,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public void clearData() {
         new Fork<Void>() {
             @Override
-            public void process(FrameType frame) { for(final Channel channel : instrument) frame.data[channel.index] = 0.0F; }
+            public void process(FrameType frame) { 
+                instrument.stream().forEach(x -> frame.data[x.index] = 0.0F);
+             }
         }.process();
     }
 
@@ -1965,7 +1948,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         new Fork<Void>() {
             @Override
             public void process(FrameType frame) { 
-                for(final Channel channel : instrument) frame.data[channel.index] = channel.temp * (float) random.nextGaussian(); 	
+                instrument.stream().forEach(x -> frame.data[x.index] = x.temp * (float) random.nextGaussian());	
             }
         }.process();	
     }
@@ -1987,7 +1970,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public Vector2D[] getPositions(final int type) {
         final Vector2D[] position = new Vector2D[size()];
-        for(FrameType exposure : this) if(exposure != null) position[exposure.index] = exposure.getPosition(type);
+        validParallelStream().forEach(x -> position[x.index] = x.getPosition(type));
         return position;
     }
 
@@ -2031,7 +2014,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public Signal getPositionSignal(final Mode mode, final int type, final Motion direction) {
         final Vector2D[] pos = getSmoothPositions(type);
         final float[] data = new float[size()];	
-
+        
         for(int t=size(); --t >= 0; ) 
             data[t] = (pos[t] == null) ? Float.NaN : (float) direction.getValue(pos[t]);
 
@@ -2224,10 +2207,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final Frame[] buffer = new Frame[N];
 
         // Normalize window function to absolute integral 1
-        double norm = 0.0;
-        for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
-        for(int i=w.length; --i >= 0; ) w[i] /= norm;
-
+        final double norm = DoubleStream.of(w).parallel().map(Math::abs).sum();
+        IntStream.range(0, w.length).parallel().forEach(i -> w[i] /= norm);
+        
         new CRUSH.Fork<Void>(N, getThreadCount()) {
             @Override
             protected void processIndex(int k) { buffer[k] = getDownsampled(k); }
@@ -2406,7 +2388,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         new Fork<Void>() {
             @Override
             protected void process(FrameType frame) {
-                for(final Channel channel : instrument) if(channel.isUnflagged()) frame.data[channel.index] += value;
+                instrument.stream().filter(x -> x.isUnflagged()).forEach(x -> frame.data[x.index] += value);
             }
         }.process();
     }

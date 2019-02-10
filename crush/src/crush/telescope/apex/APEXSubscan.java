@@ -498,7 +498,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 			
 	void fitsRCP() {
 		info("Using RCP data contained in the FITS.");
-		for(Pixel pixel : getInstrument().getPixels()) pixel.setPosition(((APEXPixel) pixel).fitsPosition.copy());
+		getInstrument().getPixels().parallelStream().forEach(p -> p.setPosition(((APEXPixel) p).fitsPosition.copy()));
 	}
 
 	@Override

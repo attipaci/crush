@@ -58,12 +58,9 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		if(!hasOption("nochopper")) if(!hasOption("lab")) {
 			removeChopperDCOffset();
 
-			for(FrameType frame : this) if(frame != null) {
-				// Add chopper offset to the aggregated horizontal offset...
-				frame.horizontalOffset.add(frame.chopperPosition);
-				// Add the chopper offset to the absolute coordinates also...
-				frame.horizontal.addOffset(frame.chopperPosition);
-			}
+			validParallelStream()
+			.peek(f -> f.horizontalOffset.add(f.chopperPosition))        // Add chopper offset to the aggregated horizontal offset...
+			.forEach(f -> f.horizontal.addOffset(f.chopperPosition));    // Add the chopper offset to the absolute coordinates also...
 		}
 			
 		super.validate();
@@ -71,45 +68,25 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	
 	private void removeChopperDCOffset() {
 		double threshold = 0.4 * getInstrument().getMinBeamFWHM();
-		double sumP = 0.0, sumM = 0.0;
-		int nP = 0, nM = 0;
 			
-		for(FrameType frame : this) if(frame != null) {
-			sumP += frame.chopperPosition.x();
-			nP++;			
-		}
-		if(nP == 0) return;
+		double mean = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).average().orElse(Double.NaN);
+		if(Double.isNaN(mean)) return;
 		
-		final double mean = sumP / nP;
-		sumP = 0.0;
-		nP = 0;
+		double upper = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).filter(x -> x > threshold).average().orElse(Double.NaN);
+		double lower = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).filter(x -> -x > threshold).average().orElse(Double.NaN);
 		
-		for(FrameType frame : this) if(frame != null) {
-			frame.chopperPosition.subtractX(mean);
-			final double dx = frame.chopperPosition.x();
-			
-			if(dx > threshold) {
-				sumP += dx;
-				nP++;	
-			}
-			else if(dx < -threshold) {
-				sumM += dx;
-				nM++;				
-			}
-		}
-		
-		if(nP == 0 || nM == 0) {
+		if(Double.isNaN(upper) || Double.isNaN(lower)) {
 			getInstrument().forget("detect.chopped");
 			return;
 		}
 		
 		info("Removing chopper signal DC offset.");
 		
-		final double level = 0.5 * (sumP / nP + sumM / nM);
+		final double level = 0.5 * (upper + lower);
 		
 		CRUSH.values(this, "--> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", res: " + Util.f1.format(level / Unit.arcsec) + "\".");
 
-		for(FrameType frame : this) if(frame != null) frame.chopperPosition.subtractX(level);
+		validParallelStream().forEach(f -> f.chopperPosition.subtractX(level));
 		
 		return;
 	}

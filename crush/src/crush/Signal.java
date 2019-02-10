@@ -26,6 +26,7 @@ package crush;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import jnum.Constant;
 import jnum.Copiable;
@@ -112,22 +113,22 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	}
 		
 	public void scale(double factor) {
-		float fValue = (float) factor;
-		for(int t=value.length; --t >= 0; ) value[t] *= fValue;
-		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] *= fValue;
-		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= fValue;
+		final float fValue = (float) factor;
+		IntStream.range(0, value.length).parallel().forEach(t -> value[t] *= fValue);
+		IntStream.range(0, syncGains.length).parallel().forEach(k -> syncGains[k] /= fValue);
+		if(drifts != null) IntStream.range(0,  drifts.length).parallel().forEach(T -> drifts[T] *= fValue);
 	}
 	
 	public void add(double x) {
-		float fValue = (float) x;
-		for(int t=value.length; --t >= 0; ) value[t] += fValue;
-		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] += fValue;
+		final float fValue = (float) x;
+		IntStream.range(0, value.length).parallel().forEach(t -> value[t] += fValue);
+		if(drifts != null) IntStream.range(0,  drifts.length).parallel().forEach(T -> drifts[T] += fValue);
 	}
 	
 	public void subtract(double x) {
-		float fValue = (float) x;
-		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
-		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] -= fValue;
+		final float fValue = (float) x;
+		IntStream.range(0, value.length).parallel().forEach(t -> value[t] -= fValue);
+		if(drifts != null) IntStream.range(0,  drifts.length).parallel().forEach(T -> drifts[T] -= fValue);
 	}
 	
 	public void addDrifts() {
@@ -147,23 +148,14 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	public double getUnderlyingRMS() { return Math.sqrt(getUnderlyingVariance()); }
 	
 	public double getVariance() {
-		double sum = 0.0;
-		int n = 0;
-		for(int t=value.length; --t >= 0; ) if(!Float.isNaN(value[t])) {
-			sum += value[t] * value[t];
-			n++;
-		}	
-		return sum / n;
+	       return IntStream.range(0,  value.length).parallel().mapToDouble(i -> value[i])
+	                .filter(x -> !Double.isNaN(x)).map(x -> x*x).average().orElse(Double.NaN);
 	}
 
 	public double getUnderlyingVariance() {
-		double sum = 0.0;
-		int n = 0;
-		for(int t=value.length; --t >= 0; ) if(!Float.isNaN(value[t])) {
-			sum += value[t] * value[t] - 1.0;
-			n++;
-		}	
-		return sum / n;
+	    double var = IntStream.range(0,  value.length).parallel().mapToDouble(i -> value[i])
+	            .filter(x -> !Double.isNaN(x)).map(x -> x*x - 1.0).average().orElse(Double.NaN);
+	    return var > 0.0 ? var : 0.0;	    
 	}
 	
 	public final void removeDrifts() {
@@ -193,17 +185,11 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
-		double sum = 0.0;
-		int n=0;
+		final double ave = IntStream.range(from, to).parallel().mapToDouble(t -> value[t])
+		        .filter(x -> !Double.isNaN(x)).average().orElse(0.0);
 		
-		for(int t=from; t<to; t++) if(!Float.isNaN(value[t])) {
-			sum += value[t];
-			n++;
-		}
-		if(n == 0) return 0.0;
-			
-		float ave = (float) (sum / n);
-		for(int t=from; t<to; t++) value[t] -= ave;
+		IntStream.range(from, to).parallel().forEach(t -> value[t] -= ave);
+
 		return ave;
 	}
 		
@@ -233,19 +219,17 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	// f[n] = f[n-1] + h f'[n]
 	public void differentiate() {
 		final float dt = (float) (resolution * integration.getInstrument().samplingInterval);
-		
 		final int n = value.length;
-		final int nm1 = n-1;
 		
 		// v[n] = f'[n+0.5]
-		for(int t=0; t<nm1; t++) value[t] = (value[t+1] - value[t]) / dt;
+		IntStream.range(0, n-1).parallel().forEach(t -> value[t] = (value[t+1] - value[t]) / dt);
 
 		// the last value is based on the last difference...
 		value[n-1] = value[n-2];
 		
 		// otherwise, it's:
 		// v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
-		for(int t=nm1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
+		for(int t=n-1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
 		
 		isFloating = false;
 	}
@@ -287,7 +271,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	public void level(boolean isRobust) {
 		WeightedPoint center = isRobust ? getMedian() : getMean();
 		float fValue = (float) center.value();
-		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
+		IntStream.range(0, value.length).parallel().forEach(t -> value[t] -= fValue);
 	}
 
 	
@@ -461,7 +445,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;	
 		
-		for(int k=nc; --k >=0; ) dG[k] = G[k] - syncGains[k];
+		IntStream.range(0,  nc).parallel().forEach(k -> dG[k] = G[k] - syncGains[k]);
 		
 		integration.new Fork<Void>() {
 			@Override 

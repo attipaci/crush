@@ -25,6 +25,7 @@ package crush;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.IntStream;
 
 import crush.instrument.Overlap;
 import jnum.ExtraMath;
@@ -83,7 +84,7 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public double getVariance() {
 		double sum = 0.0, sumw = 0.0;
-		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0){
+		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0) {
 			sum += weight[t] * value[t] * value[t];
 			sumw += weight[t];
 		}	
@@ -110,8 +111,9 @@ public class CorrelatedSignal extends Signal {
 		
 		final double ave = Statistics.mean(value, weight, from, to).value();
 		if(Double.isNaN(ave)) return 0.0;
-		
-		for(int t=to; --t >= from; ) value[t] -= ave;
+	
+		IntStream.range(from, to).parallel().forEach(t -> value[t] -= ave);
+
 		return ave;
 	}
 	
@@ -279,9 +281,7 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	public double getParms() {
-		int n = 0;
-		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;	
-		return n * (1.0 - 1.0 / driftN);
+	    return IntStream.range(0, value.length).parallel().filter(t -> weight[t] > 0.0).count() / (1.0 - 1.0 / driftN);
 	}
 	
 	// Get correlated for all frames even those that are no good...

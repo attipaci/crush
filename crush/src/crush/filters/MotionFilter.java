@@ -23,6 +23,7 @@
 package crush.filters;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Integration;
 import crush.motion.Motion;
@@ -80,10 +81,9 @@ public class MotionFilter extends KillFilter {
 		
 		rangeCheck();
 		
-		int pass = 0;
 		final boolean[] reject = getRejectMask();
 		
-		for(int i=reject.length; --i >= 0; ) if(!reject[i]) pass++;
+		int pass = (int) IntStream.range(0, reject.length).parallel().filter(f -> !reject[f]).count();
 		
         buf.append(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
 		
@@ -120,9 +120,7 @@ public class MotionFilter extends KillFilter {
 		final float[] data = getTempData();
 		final boolean[] reject = getRejectMask();
 		
-		
-		for(int t=pos.length; --t >= 0; )
-			data[t] = pos[t] == null ? Float.NaN : (float) dir.getValue(pos[t]);
+		IntStream.range(0,  pos.length).parallel().forEach(t -> data[t] = pos[t] == null ? Float.NaN : (float) dir.getValue(pos[t]));
 
 		Arrays.fill(data, pos.length, data.length, 0.0F);
 		
@@ -154,7 +152,6 @@ public class MotionFilter extends KillFilter {
 			if(cutoff > criticalLevel) criticalLevel = cutoff;
 		}
 		
-
 		for(int i=2; i<data.length; i += 2) {
 			double value = ExtraMath.hypot(data[i], data[i+1]);
 			if(value > criticalLevel) reject[i>>1] = true;	

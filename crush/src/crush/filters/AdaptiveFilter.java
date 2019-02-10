@@ -23,6 +23,7 @@
 package crush.filters;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Channel;
 import crush.Frame;
@@ -106,10 +107,10 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	protected void accumulateProfile(Channel channel) {	
 	    final int c = channel.getIndex();
 	    
-		for(int i=profile.length; --i >= 0; ) {
-			channelProfiles[c][i] *= profile[i];
-			profile[i] = channelProfiles[c][i];
-		}	
+	    IntStream.range(0, profile.length).parallel().forEach(f -> {
+	        channelProfiles[c][f] *= profile[f];
+            profile[f] = channelProfiles[c][f];
+	    });
 	}
 	
 	@Override
@@ -135,9 +136,8 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		final int minF = (int) Math.ceil(hipassf / dF);
 		
 		if(profile == null) return 0.0;
-		double parms = 0.0;
-		for(int F=profile.length; --F >= minF; ) parms += 1.0 - profile[F] * profile[F];
-		return parms;
+		
+		return IntStream.range(minF, profile.length).parallel().mapToDouble(F ->  1.0 - profile[F] * profile[F]).sum();
 	}
 	
 
@@ -163,10 +163,9 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		sourceNorm = 0.0;
 		
 		// just calculate x=0 component -- O(N)
-		for(int F=sourceProfile.length; --F >= 0; ) {
-			sourceProfile[F] = 0.5F * (float) (Math.exp(a*(F-F0)*(F-F0)) + Math.exp(a*(F+F0)*(F+F0)));
-			sourceNorm += sourceProfile[F];
-		}
+		sourceNorm = IntStream.range(0, sourceProfile.length).parallel()
+		        .mapToDouble(F -> sourceProfile[F] = 0.5F * (float) (Math.exp(a*(F-F0)*(F-F0)) + Math.exp(a*(F+F0)*(F+F0))))
+		        .sum();
 	}
 	
 
@@ -174,13 +173,11 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	protected double calcPointResponse() {
 		int minF = (int) Math.ceil(getHipassIndex() * df / dF);
 		
-		double sum = 0.0;
-		
 		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		for(int F=minF; --F >= 0; ) sum += sourceProfile[F];
+		double sum = IntStream.range(0, minF).parallel().mapToDouble(F -> sourceProfile[F]).sum();
 			
 		// Calculate the true source filtering above the hipass timescale...
-		for(int F=profile.length; --F >= minF; ) sum += sourceProfile[F] * profile[F];
+		sum += IntStream.range(minF, profile.length).parallel().mapToDouble(F -> sourceProfile[F] * profile[F]).sum();
 
 		return sum / sourceNorm;
 	}

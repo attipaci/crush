@@ -405,8 +405,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
 
         }.process();
 
-        int jumpPixels = 0;
-        for(HawcPixel pixel : getInstrument()) if(pixel.hasJumps) jumpPixels++;
+        int jumpPixels = (int) getInstrument().parallelStream().filter(p -> p.hasJumps).count();
 
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
@@ -425,7 +424,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
             }
         }.process();
         
-        for(Channel channel : getInstrument()) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
+        getInstrument().parallelStream().filter(c -> c.isFlagged(Channel.FLAG_DISCARD)).forEach(c -> c.flag(Channel.FLAG_DEAD));
     }
 
     @Override
@@ -485,7 +484,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
 
     private void flagBlock(final Channel channel, final int from, int to, int pattern) {
         final int c = channel.getIndex();
-        
+
         while(--to >= from) {
             final Frame exposure = get(to);
             if(exposure != null) exposure.sampleFlag[c] |= pattern;

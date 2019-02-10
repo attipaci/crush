@@ -94,6 +94,7 @@ public abstract class CSOInstrument<ChannelType extends Channel> extends Telesco
             StringBuffer buf = new StringBuffer();
 
             if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
+                buf.append("\n");
                 buf.append("**************************************************************************\n");		
 
                 buf.append(getName().toUpperCase() + " is in non-standard orientation. "

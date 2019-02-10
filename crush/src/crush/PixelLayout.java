@@ -86,7 +86,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         copy.pixels = new ArrayList<>(pixels.size());
         
         final ChannelLookup<Channel> lookup = new ChannelLookup<>(instrument);
-        
+     
         for(int i=0; i<pixels.size(); i++) {
             Pixel p1 = pixels.get(i);
             Pixel p2 = p1.emptyCopy();
@@ -111,7 +111,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         
         setDefaultPixelPositions();
         
-        for(Pixel pixel : pixels) pixel.validate();
+        pixels.parallelStream().forEach(p -> p.validate());
         
         if(hasOption("rcp")) {
             try { readRCP(option("rcp").getPath()); }
@@ -126,7 +126,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
 
         if(hasOption("scramble")) scramble();
         
-        if(hasOption("uniform")) for(Pixel pixel : pixels) pixel.coupling = 1.0;
+        if(hasOption("uniform")) pixels.parallelStream().forEach(p -> p.coupling = 1.0);
     }
     
     
@@ -152,11 +152,11 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         return instrument.option(key);
     }
 
-    public int getPixelCount() {
+    public final int getPixelCount() {
         return pixels.size();
     }
 
-    public ArrayList<Pixel> getPixels() {
+    public final ArrayList<Pixel> getPixels() {
         return pixels;
     }
 
@@ -281,11 +281,8 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
     public void setRotation(double angle) { rotation = angle; }
     
     public void setReferencePosition(Vector2D position) {
-        Vector2D referencePosition = position.copy();
-        for(Pixel pixel : getPixels()) {
-            Vector2D v = pixel.getPosition();
-            if(v != null) v.subtract(referencePosition);
-        }
+        final Vector2D referencePosition = position.copy();
+        pixels.parallelStream().map(p -> p.getPosition()).filter(pos -> pos != null).forEach(pos -> pos.subtract(referencePosition));
     }
     
 
@@ -404,17 +401,17 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         if(hasOption("rcp.center")) {
             Vector2D offset = option("rcp.center").getVector2D();
             offset.scale(Unit.arcsec);
-            for(Pixel pixel : getPixels()) pixel.getPosition().subtract(offset);
+            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.subtract(offset));
         }
 
         if(hasOption("rcp.rotate")) {
             double angle = option("rcp.rotate").getDouble() * Unit.deg;
-            for(Pixel pixel : getPixels()) pixel.getPosition().rotate(angle);
+            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.rotate(angle));
         }
 
         if(hasOption("rcp.zoom")) {
             double zoom = option("rcp.zoom").getDouble();
-            for(Pixel pixel : getPixels()) pixel.getPosition().scale(zoom);
+            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.scale(zoom));
         }
 
     }

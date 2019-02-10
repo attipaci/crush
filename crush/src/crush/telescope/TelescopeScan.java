@@ -276,8 +276,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     
     @Override
     protected String getPointingString(Offset2D nativePointing) {   
-        String text = super.getPointingString(nativePointing);
-        
+        String text = super.getPointingString(nativePointing);      
         
         // Also print Nasmyth offsets if applicable...
         if(getInstrument().mount == Mount.LEFT_NASMYTH || getInstrument().mount == Mount.RIGHT_NASMYTH) {
@@ -290,7 +289,6 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         }
         
         return text;
-        
     }
     
    
@@ -306,7 +304,6 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         if(!Double.isNaN(equatorial.DEC())) c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
         c.add(new HeaderCard("EQUINOX", equatorial.epoch.getYear(), "Precession epoch"));   
     
-
         if(pointing != null) editPointingHeaderInfo(header);
     }
     
@@ -323,10 +320,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         c.add(new HeaderCard("PNT_DX", relative.x() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native X."));
         c.add(new HeaderCard("PNT_DY", relative.y() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native Y."));
         
-        pointing.editHeader(header, getInstrument().getSizeUnit());
-        
+        pointing.editHeader(header, getInstrument().getSizeUnit());     
     }
-    
     
     
     

@@ -23,6 +23,7 @@
 package crush.filters;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Channel;
 import crush.Frame;
@@ -197,7 +198,7 @@ public class WhiteningFilter extends AdaptiveFilter {
         // sigmaA = 0.5 / medA * sigmaP = 0.5 * medA / sqrt(pts)
         // wA = 4 * pts / (medA * medA) 
         final double weightScale = 4.0 / (medA * medA);
-        for(int F=nF; --F >= 0; ) A[F].scaleWeight(weightScale);
+        IntStream.range(0,  nF).parallel().forEach(F -> A[F].scaleWeight(weightScale));
 
         // Only whiten those frequencies which have a significant excess power
         // when compared to the specified level over the median spectral power.
@@ -217,7 +218,6 @@ public class WhiteningFilter extends AdaptiveFilter {
         }
 
         channel.oneOverFStat = profile[whiteNoiseBin] / profile[oneOverFBin];
-
     }
 
 
@@ -231,6 +231,4 @@ public class WhiteningFilter extends AdaptiveFilter {
     public String getConfigName() {
         return "filter.whiten";
     }
-
-
 }

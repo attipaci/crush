@@ -216,7 +216,7 @@ public class MultiFilter extends VariedFilter {
 		
 		// Subtract the rejected signal...
 		final int c = channel.getIndex();
-		for(int t = integration.size(); --t >= 0; ) remove(filtered[t], integration.get(t), c);	
+		integration.validParallelStream().forEach(f -> remove(filtered[f.index], f, c));
 		
 		Integration.recycle(filtered);
 	}

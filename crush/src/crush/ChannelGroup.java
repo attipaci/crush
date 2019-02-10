@@ -26,6 +26,7 @@ package crush;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import jnum.Copiable;
 import jnum.data.Statistics;
@@ -148,19 +149,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
         
         return 0;
     }
-    
-    
-    public ArrayList<String> getIDs() { 
-        ArrayList<String> ids = new ArrayList<>(size());
-        for(int i=0; i<size(); i++) ids.add(get(i).getID());
-        return ids;
-    }
-    
-    public ArrayList<Integer> getFixedIndices() {
-        ArrayList<Integer> indices = new ArrayList<>(size());
-        for(int i=0; i<size(); i++) indices.add(get(i).getFixedIndex());
-        return indices;
-    }
+
     
     /**
      * Flags channels as dead (with {@link Channel#FLAG_DEAD}) if they have any of the bit-wise flags enabled matching
@@ -170,7 +159,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
      *                      with {@link Channel#FLAG_DDEAD}.
      */
     public void killFlagged(final int flagPattern) {
-        for(Channel channel : this) if(channel.isFlagged(flagPattern)) channel.flag(Channel.FLAG_DEAD);
+        parallelStream().filter(x -> x.isFlagged(flagPattern)).forEach(x -> x.flag(Channel.FLAG_DEAD));
     }
 
     /**
@@ -182,19 +171,10 @@ implements Copiable<ChannelGroup<ChannelType>> {
      * @return              <code>true</code> if matching channels have been found and removed, otherwise <code>false</code>.
      */
     public boolean removeFlagged(int discardFlags) {
-        final int nc = size();
-        
-        boolean hasFlagged = false;
-        for(ChannelType channel : this) if(channel.isFlagged(discardFlags)) {
-            hasFlagged = true;
-            break;
-        }
-       
-        if(!hasFlagged) return false;
-        
-        ArrayList<ChannelType> keep = new ArrayList<>(nc);
-        for(int i=0; i<nc; i++) if(get(i).isUnflagged(discardFlags)) keep.add(get(i));
+        if(parallelStream().noneMatch(c -> c.isFlagged(discardFlags))) return false;
 
+        List<ChannelType> keep = stream().filter(c -> c.isUnflagged(discardFlags)).collect(Collectors.toList());
+       
         clear(); 
         addAll(keep);
         trimToSize();
@@ -206,11 +186,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
         Comparator<ChannelType> ordering = new Comparator<ChannelType>() {
             @Override
             public int compare(ChannelType c1, ChannelType c2) {
-                try {
-                    if(field.getInt(c1) < field.getInt(c2)) return -1;
-                    else if(field.getInt(c1) > field.getInt(c2)) return 1;
-                    else return 0;
-                }
+                try { Double.compare(field.getDouble(c1), field.getDouble(c2)); }
                 catch(IllegalAccessException e) { CRUSH.error(this, e); }
                 return 0;
             }				

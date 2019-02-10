@@ -512,20 +512,21 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     
     public void writeFlattenedFits(String fileName) throws FitsException, IOException {  
         Map2D image = getMap2D();
-        Fits fits = image.createFits(Float.class); 
         
-        int nHDU = fits.getNumberOfHDUs();
-        for(int i=0; i<nHDU; i++) {
-            Header header = fits.getHDU(i).getHeader();
-            image.editHeader(header);
-        }   
-        
-        addScanHDUsTo(fits);
-        
-        if(hasOption("write.flattened.gzip")) FitsToolkit.writeGZIP(fits, fileName);
-        else FitsToolkit.write(fits, fileName);
-        
-        fits.close();
+        try(Fits fits = image.createFits(Float.class)) { 
+            int nHDU = fits.getNumberOfHDUs();
+            for(int i=0; i<nHDU; i++) {
+                Header header = fits.getHDU(i).getHeader();
+                image.editHeader(header);
+            }   
+
+            addScanHDUsTo(fits);
+
+            if(hasOption("write.flattened.gzip")) FitsToolkit.writeGZIP(fits, fileName);
+            else FitsToolkit.write(fits, fileName);
+
+            fits.close();
+        }
     }
 
    

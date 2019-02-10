@@ -88,7 +88,7 @@ public class CorrelatedMode extends Mode {
 	private float normalizeGains(float[] gain) {
 		final float aveG = (float) getChannels().getTypicalGainMagnitude(gain, skipFlags & ~gainFlag);
 		if(aveG == 1.0) return 1.0F;
-		
+	
 		for(int i=gain.length; --i >= 0; ) gain[i] /= aveG;
 		return aveG;
 	}

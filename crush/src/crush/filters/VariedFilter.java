@@ -23,6 +23,7 @@
 package crush.filters;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Channel;
 import crush.Frame;
@@ -145,28 +146,24 @@ public abstract class VariedFilter extends Filter {
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
-		sourceNorm = 0.0;
-		
+
 		// just calculate x=0 component -- O(N)
-		for(int f=sourceProfile.length; --f >= 0; ) {
-			sourceProfile[f] = 0.5F * (float) (Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0)));
-			sourceNorm += sourceProfile[f];
-		}
+		sourceNorm = IntStream.range(0, sourceProfile.length).parallel()
+		        .mapToDouble(f -> sourceProfile[f] = 0.5F * (float) (Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0))))
+		        .sum();
 	}
 	
 	@Override
 	protected double calcPointResponse() {
 		// Start from the 1/f filter cutoff
 		final int minf = getHipassIndex();
-		
-		double sum = 0.0;
-		
+
 		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		for(int f=minf; --f >= 0; ) sum += sourceProfile[f];
-			
+		double sum = IntStream.range(0, minf).parallel().mapToDouble(f -> sourceProfile[f]).sum();
+	
 		// Calculate the true source filtering above the hipass timescale...
-		for(int f=nf+1; --f >= minf; ) sum += sourceProfile[f] * responseAt(f);	
-					
+		sum += IntStream.rangeClosed(minf, nf).parallel().mapToDouble(f -> sourceProfile[f] * responseAt(f)).sum();
+
 		return sum / sourceNorm;
 	}
 }

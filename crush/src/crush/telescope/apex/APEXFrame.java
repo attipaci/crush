@@ -46,7 +46,11 @@ public class APEXFrame extends HorizontalFrame {
 
 	void parse(float[][] fitsData) {
 		data = new float[fitsData.length];
-		for(int c=0; c<fitsData.length; c++) data[c] = fitsData[c][0];		
+	
+		for(int p=0, to=0; p<fitsData.length; p++) {
+		    System.arraycopy(fitsData[p], 0, data, to, fitsData[p].length);
+		    to += fitsData[p].length;
+		}	
 	}
 	
 	void parse(float[] flatData, int from, int channels) {

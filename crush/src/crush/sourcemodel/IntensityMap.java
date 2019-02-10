@@ -320,8 +320,6 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
         super.postProcess(scan);
 
         if(isEmpty()) return;
-
-        
         
         if(hasOption("pointing.suggest")) {
             double optimal = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * scan.getInstrument().getSizeUnit().value() : scan.getInstrument().getPointSize();

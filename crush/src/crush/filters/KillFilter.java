@@ -22,7 +22,9 @@
  ******************************************************************************/
 package crush.filters;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import crush.Integration;
 import jnum.Constant;
@@ -60,7 +62,7 @@ public class KillFilter extends FixedFilter {
 		
 		if(fromf > tof) return;
 		
-		for(int f=fromf; f<=tof; f++) reject[f] = true;
+		Arrays.fill(reject, fromf, tof, true);
 		
 		autoDFT();
 	}
@@ -93,9 +95,7 @@ public class KillFilter extends FixedFilter {
 
 	@Override
 	protected double countParms() {
-		int n = 0;
-		for(int i=getHipassIndex(); i<reject.length; i++) if(reject[i]) n++;
-		return n;
+	    return (int) IntStream.range(getHipassIndex(), reject.length).parallel().filter(f -> reject[f]).count();
 	}
 
 	@Override

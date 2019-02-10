@@ -26,6 +26,7 @@ package crush;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.IntStream;
 import java.text.*;
 
 import crush.instrument.GeometricIndexed;
@@ -333,7 +334,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(options.containsKey("flag")) flagFields(options.option("flag"));
 
-        for(Channel channel : this) if(channel.weight == 0.0) channel.flag(Channel.FLAG_DEAD);
+        parallelStream().filter(channel -> channel.weight == 0.0).forEach(channel -> channel.flag(Channel.FLAG_DEAD));
 
         setChannelFlagDefaults();
     }
@@ -678,8 +679,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public Unit getSizeUnit() { return arcsec; }
 
     public void census() {
-        mappingChannels = 0;      
-        for(Channel channel : getObservingChannels()) if(channel.isUnflagged()) if(channel.weight > 0.0) mappingChannels++;
+        mappingChannels = (int) getObservingChannels().parallelStream().filter(x -> x.isUnflagged()).filter(x -> x.weight > 0.0).count();
     }
 
     public String getConfigPath() {
@@ -880,8 +880,8 @@ implements TableFormatter.Entries, BasicMessaging {
             sumG2 += G2;
         }
         double w = sumG2 > 0.0 ? sum / sumG2 : 1.0;
-
-        for(Channel channel : this) channel.weight = w;
+        
+        parallelStream().forEach(x -> x.weight = w);
     }
 
 
@@ -994,14 +994,14 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     public synchronized void standardWeights() {
-        if(standardWeights) return;
-        for(Channel channel : this) channel.weight /= Math.sqrt(integrationTime);
+        if(standardWeights) return;     
+        parallelStream().forEach(x -> x.weight /= integrationTime);
         standardWeights = true;
     }
 
     public synchronized void sampleWeights() {
         if(!standardWeights) return;
-        for(Channel channel : this) channel.weight *= Math.sqrt(integrationTime);
+        parallelStream().forEach(x -> x.weight *= integrationTime);
         standardWeights = false;
     }
 
@@ -1156,7 +1156,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     public void reindex() {
-        for(int k=size(); --k >= 0; ) get(k).index = k;
+        IntStream.range(0, size()).parallel().forEach(i -> get(i).index = i);
     }
 
 
@@ -1188,7 +1188,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void loadTempHardwareGains() {
-        for(Channel channel : this) channel.temp = (float) channel.getReadoutGain();
+        parallelStream().forEach(x -> x.temp = (float) x.getReadoutGain());
     }
 
     public double[] getSourceGains(final boolean filterCorrected) {
@@ -1209,25 +1209,15 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public double getMinBeamFWHM() {
-        double min = Double.POSITIVE_INFINITY;
-        for(Pixel pixel : getPixels()) min = Math.min(pixel.getResolution(), min);
-        return min;
+        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).min().orElse(Double.NaN);
     }
 
     public double getMaxBeamFWHM() {
-        double max = Double.NEGATIVE_INFINITY;
-        for(Pixel pixel : getPixels()) max = Math.min(pixel.getResolution(), max);
-        return max;
+        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).max().orElse(Double.NaN);
     }
 
-    public double getAverageBeamFWHM() {
-        double sum = 0.0;
-        int n=0;
-        for(Pixel pixel : getPixels()) {
-            sum += pixel.getResolution();
-            n++;
-        }
-        return sum / n;
+    public double getAverageBeamFWHM() { 
+        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).average().orElse(Double.NaN);
     }
 
     public double getAverageFiltering() {
