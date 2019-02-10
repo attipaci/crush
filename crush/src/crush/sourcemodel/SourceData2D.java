@@ -313,22 +313,22 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
    
     @Override
     public void writeFits(String fileName) throws FitsException, IOException {        
-        Fits fits = getData().createFits(Float.class); 
-        
-        int nHDU = fits.getNumberOfHDUs();
-        for(int i=0; i<nHDU; i++) {
-            Header header = fits.getHDU(i).getHeader();
-            editHeader(header);
-            File f = new File(fileName);
-            header.addValue("FILENAME", f.getName(), "Name at creation");       
-        }   
-        
-        addScanHDUsTo(fits);
-        
-        if(hasOption("gzip")) FitsToolkit.writeGZIP(fits, fileName);
-        else FitsToolkit.write(fits, fileName);
-        
-        fits.close();
+        try(Fits fits = getData().createFits(Float.class)) {
+            int nHDU = fits.getNumberOfHDUs();
+            for(int i=0; i<nHDU; i++) {
+                Header header = fits.getHDU(i).getHeader();
+                editHeader(header);
+                File f = new File(fileName);
+                header.addValue("FILENAME", f.getName(), "Name at creation");       
+            }   
+
+            addScanHDUsTo(fits);
+
+            if(hasOption("gzip")) FitsToolkit.writeGZIP(fits, fileName);
+            else FitsToolkit.write(fits, fileName);
+
+            fits.close();
+        }
     }
     
     

@@ -117,7 +117,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 		try { addModality(new CorrelatedModality("amps", "a", divisions.get("amps"), LabocaPixel.class.getField("ampGain"))); }
 		catch(NoSuchFieldException e) { error(e); }
 	
-		try { addModality(new Modality<LabocaHe3Response>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
+		try { addModality(new Modality<>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
 		catch(NoSuchFieldException e) { error(e); }
 
 		modalities.get("boxes").setGainFlag(LabocaPixel.FLAG_BOX);
@@ -134,7 +134,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
     protected void readWiring(String fileName) throws IOException {	
 		info("Loading wiring data from " + fileName);
 		
-		final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(this);
+		final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<>(this);
 	
 		new LineParser() {
             @Override
@@ -172,7 +172,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 	void readTemperatureGains(String fileName) throws IOException {
 		info("Loading He3 gains from " + fileName);
 		
-        final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(this);
+        final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<>(this);
         
 		new LineParser() {
             @Override
@@ -189,20 +189,21 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 	
 	
 	void writeTemperatureGains(String fileName, String header) throws IOException {		
-		PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
-		out.println("# He3 Temperature Gains Data.");
-		out.println("# ");
-		if(header != null) {
-			out.println(header);
-			out.println("# ");
-		}
-		out.println("# BEch\tGain");
-		out.println("#     \t(V/K)");
-		out.println("# ----\t-----");
-		for(LabocaPixel pixel : this) out.println(pixel.getID() + "\t" + Util.e6.format(pixel.temperatureGain));
-		
-		out.flush();
-		out.close();
+	    try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)))) {
+	        out.println("# He3 Temperature Gains Data.");
+	        out.println("# ");
+	        if(header != null) {
+	            out.println(header);
+	            out.println("# ");
+	        }
+	        out.println("# BEch\tGain");
+	        out.println("#     \t(V/K)");
+	        out.println("# ----\t-----");
+	        for(LabocaPixel pixel : this) out.println(pixel.getID() + "\t" + Util.e6.format(pixel.temperatureGain));
+
+	        out.flush();
+	        out.close();
+	    }
 		notify("Written He3 gain data to " + fileName + ".");
 		
 	}

@@ -52,7 +52,7 @@ public class ChopNodPhotometry extends PointPhotometry {
 
     @Override
     public void process(Scan<?> scan) {		
-        Hashtable<String, Datum> data = new Hashtable<String, Datum>();
+        Hashtable<String, Datum> data = new Hashtable<>();
 
         for(Integration<?> integration : scan) extractData(integration, data);
 

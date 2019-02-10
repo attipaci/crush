@@ -371,7 +371,7 @@ public class Pixel extends ChannelGroup<Channel> implements Metric<Pixel> {
     
     public synchronized void addOverlap(Overlap<Pixel> overlap) {
         if(overlap.a != this && overlap.b != this) return;
-        if(overlaps == null) overlaps = new HashSet<Overlap<Pixel>>();
+        if(overlaps == null) overlaps = new HashSet<>();
         overlaps.add(overlap);      
     }
     

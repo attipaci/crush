@@ -49,18 +49,19 @@ public final class ESORename {
 		String ext = ".fits";
 		if(isCompressed) ext += fileName.substring(fileName.lastIndexOf("."));
 	
-		Fits fits = new Fits(file, isCompressed);	
-		String origName = fits.getHDU(0).getHeader().getStringValue("ORIGFILE") + ext;
-		fits.close();
-		
-		String stem = "";
-		if(fileName.contains(File.separator)) stem += fileName.substring(0, 1 + fileName.lastIndexOf(File.separator));
-		File origFile = new File(stem + origName);
-		
-		System.err.println(" --> " + origName);
-		
-		file.renameTo(origFile);
-		
+		try(Fits fits = new Fits(file, isCompressed)) {	
+		    String origName = fits.getHDU(0).getHeader().getStringValue("ORIGFILE") + ext;
+		    fits.close();
+
+		    String stem = "";
+		    if(fileName.contains(File.separator)) stem += fileName.substring(0, 1 + fileName.lastIndexOf(File.separator));
+		    File origFile = new File(stem + origName);
+
+		    System.err.println(" --> " + origName);
+
+		    file.renameTo(origFile);
+		}
+
 	}
 	
 	private static void usage() {

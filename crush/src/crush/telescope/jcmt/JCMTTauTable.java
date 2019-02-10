@@ -45,7 +45,7 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 	 * 
 	 */
 	private static final long serialVersionUID = -2346424548165913964L;
-	private static Hashtable<String, JCMTTauTable> tables = new Hashtable<String, JCMTTauTable>();
+	private static Hashtable<String, JCMTTauTable> tables = new Hashtable<>();
 	public String fileName;
 	public double timeWindow = 0.5 * Unit.hour;
 	

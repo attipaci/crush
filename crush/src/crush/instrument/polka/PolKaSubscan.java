@@ -121,7 +121,7 @@ class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
         if(!isWaveplateValid() || hasOption("waveplate.tp")) { 
             hasTimeStamps = false;
             warning("Invalid waveplate data. Will attempt workaround...");
-            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(polka);
+            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<>(polka);
             
             
             //!calcMeanWavePlateFrequency();
@@ -141,7 +141,7 @@ class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
         if(hasOption("waveplate.tpchar")) {
             trim();
 
-            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(polka);
+            ChannelLookup<LabocaPixel> lookup = new ChannelLookup<>(polka);
             
             LabocaPixel channel = hasOption("waveplate.tpchannel") ? lookup.get(option("waveplate.tpchannel").getValue()) : lookup.get(polka.getReferencePixelFixedIndex());
 
@@ -310,7 +310,7 @@ class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
         if(offsetChannel == null) return null;
         int c = offsetChannel.getIndex();
 
-        ArrayList<Double> crossings = new ArrayList<Double>();
+        ArrayList<Double> crossings = new ArrayList<>();
         double lastCrossing = Double.NaN;
         double tolerance = 100 * Unit.ms / Unit.day;
 

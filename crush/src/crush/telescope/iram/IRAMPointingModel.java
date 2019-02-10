@@ -112,12 +112,13 @@ public class IRAMPointingModel {
 	}
 	
 	public void write(String fileName) throws IOException {
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		for(int i=1; i<P.length; i++) 
-			out.println("P" + i + " = " + Util.f2.format(P[i]) + ", " + Util.f2.format(c[i]) + ", " + Util.f2.format(s[i])); 
-		out.println("TX = " + Util.f2.format(dxdT));
-		out.println("TY = " + Util.f2.format(dydT));
-		out.close();
+	    try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+	        for(int i=1; i<P.length; i++) 
+	            out.println("P" + i + " = " + Util.f2.format(P[i]) + ", " + Util.f2.format(c[i]) + ", " + Util.f2.format(s[i])); 
+	        out.println("TX = " + Util.f2.format(dxdT));
+	        out.println("TY = " + Util.f2.format(dydT));
+	        out.close();
+	    }
 	}
 	
 	public void read(String fileName) throws IOException {

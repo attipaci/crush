@@ -14,7 +14,7 @@ class ItemGroup<ItemType extends Item> extends ArrayList<ItemType> {
     // 2. The collection has a method that returns another collection
     //    with the same generic type, ItemType with an upper bound of Item.
     public ItemGroup<ItemType> getItems() {
-        ItemGroup<ItemType> items = new ItemGroup<ItemType>();
+        ItemGroup<ItemType> items = new ItemGroup<>();
         items.addAll(this);
         return items;
     }

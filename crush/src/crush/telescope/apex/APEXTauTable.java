@@ -44,7 +44,7 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	 */
 	private static final long serialVersionUID = -7962217110619389946L;
 	
-	private static Hashtable<String, APEXTauTable> tables = new Hashtable<String, APEXTauTable>();
+	private static Hashtable<String, APEXTauTable> tables = new Hashtable<>();
 
 	public String fileName;
 	public double timeWindow = 1.5 * Unit.hour;

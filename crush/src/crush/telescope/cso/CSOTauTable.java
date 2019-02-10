@@ -46,7 +46,7 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	 */
 	private static final long serialVersionUID = -7962217110619389946L;
 	
-	private static Hashtable<String, CSOTauTable> tables = new Hashtable<String, CSOTauTable>();
+	private static Hashtable<String, CSOTauTable> tables = new Hashtable<>();
 
 	public String fileName;
 	public double timeWindow = 0.5 * Unit.hour;

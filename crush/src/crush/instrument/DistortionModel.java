@@ -126,7 +126,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 
 	@Override
 	public String toString() {
-		ArrayList<Term> sorted = new ArrayList<Term>(keySet());
+		ArrayList<Term> sorted = new ArrayList<>(keySet());
 		Collections.sort(sorted);
 		
 		StringBuffer buf = new StringBuffer();

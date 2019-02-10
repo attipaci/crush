@@ -30,7 +30,7 @@ import jnum.math.Vector2D;
 
 
 public class RCPFile {
-	Hashtable<Integer, Entry> table = new Hashtable<Integer, Entry>();
+	Hashtable<Integer, Entry> table = new Hashtable<>();
 	
 	public RCPFile(String fileName) throws IOException {
 		Vector2D offset = new Vector2D();
@@ -51,19 +51,20 @@ public class RCPFile {
 		
 		System.err.print("Reading " + fileName + "... ");
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line = null;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			Entry entry = new Entry();
-			try { 
-				entry.parse(line); 
-				table.put(entry.index, entry);
-			}
-			catch(IllegalArgumentException e) {}
+		try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)))) {
+		    String line = null;
+
+		    while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+		        Entry entry = new Entry();
+		        try { 
+		            entry.parse(line); 
+		            table.put(entry.index, entry);
+		        }
+		        catch(IllegalArgumentException e) {}
+		    }
+		    in.close();
 		}
-		in.close();
-		
+
 		System.err.println(table.size() + " entries found.");
 	}
 
@@ -76,7 +77,7 @@ public class RCPFile {
 	
 	public void print() {
 		Set<Integer> keys = table.keySet();
-		Vector<Integer> list = new Vector<Integer>(keys); 
+		Vector<Integer> list = new Vector<>(keys); 
 		Collections.sort(list);
 		for(int i : list) System.out.println(table.get(i));	
 	}

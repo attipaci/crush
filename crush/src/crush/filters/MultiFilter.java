@@ -36,7 +36,7 @@ public class MultiFilter extends VariedFilter {
 	 */
 	private static final long serialVersionUID = -9155204147970228847L;
 
-	private ArrayList<Filter> filters = new ArrayList<Filter>();
+	private ArrayList<Filter> filters = new ArrayList<>();
 	
 	private int enabled = 0;
 	

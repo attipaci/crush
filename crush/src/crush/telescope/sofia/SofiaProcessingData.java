@@ -63,7 +63,7 @@ public class SofiaProcessingData extends SofiaData {
         String list = header.getString("ASSC_AOR");
         if(list == null) associatedAORs = null;
         else {
-            associatedAORs = new TreeSet<String>();
+            associatedAORs = new TreeSet<>();
             StringTokenizer tokens = new StringTokenizer(list, ",");
             while(tokens.hasMoreTokens()) associatedAORs.add(tokens.nextToken().trim());
         }
@@ -71,7 +71,7 @@ public class SofiaProcessingData extends SofiaData {
         list = header.getString("ASSC_MSN");
         if(list == null) associatedMissionIDs = null;
         else {
-            associatedMissionIDs = new TreeSet<String>();
+            associatedMissionIDs = new TreeSet<>();
             StringTokenizer tokens = new StringTokenizer(list, ",");
             while(tokens.hasMoreTokens()) associatedMissionIDs.add(tokens.nextToken().trim());
         }
@@ -79,7 +79,7 @@ public class SofiaProcessingData extends SofiaData {
         list = header.getString("ASSC_FRQ");
         if(list == null) associatedFrequencies = null;
         else {
-            associatedFrequencies = new TreeSet<Float>();
+            associatedFrequencies = new TreeSet<>();
             StringTokenizer tokens = new StringTokenizer(list, " \t,");
             while(tokens.hasMoreTokens()) associatedFrequencies.add(Float.parseFloat(tokens.nextToken()));
         }
@@ -140,17 +140,17 @@ public class SofiaProcessingData extends SofiaData {
     }
 
     public void addAssociatedAOR(String id) {
-        if(associatedAORs == null) associatedAORs = new TreeSet<String>();
+        if(associatedAORs == null) associatedAORs = new TreeSet<>();
         associatedAORs.add(id);
     }
     
     public void addAssociatedMissionID(String id) {
-        if(associatedMissionIDs == null) associatedMissionIDs = new TreeSet<String>();
+        if(associatedMissionIDs == null) associatedMissionIDs = new TreeSet<>();
         associatedMissionIDs.add(id);
     }
     
     public void addAssociatedFrequency(double value) {
-        if(associatedFrequencies == null) associatedFrequencies = new TreeSet<Float>();
+        if(associatedFrequencies == null) associatedFrequencies = new TreeSet<>();
         associatedFrequencies.add((float) value);
     }
     

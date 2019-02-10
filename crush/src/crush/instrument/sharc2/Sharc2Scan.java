@@ -207,8 +207,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 	private String fixSourceName(String name) {
 		int serial = getSerial();
 		String fileName = getInstrument().getConfigPath() + "sourcename-2002.fix";
-		try { 
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)))) {
 			String line = null;
 			while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 				StringTokenizer tokens = new StringTokenizer(line);

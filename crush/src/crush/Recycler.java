@@ -173,10 +173,10 @@ public class Recycler {
 			points = null;
 		}
 		if(size() != capacity) {
-		    ints = new ArrayBlockingQueue<int[]>(capacity);
-			floats = new ArrayBlockingQueue<float[]>(capacity);
-			doubles = new ArrayBlockingQueue<double[]>(capacity);
-			points = new ArrayBlockingQueue<DataPoint[]>(capacity);
+		    ints = new ArrayBlockingQueue<>(capacity);
+			floats = new ArrayBlockingQueue<>(capacity);
+			doubles = new ArrayBlockingQueue<>(capacity);
+			points = new ArrayBlockingQueue<>(capacity);
 		}
 	}
 	

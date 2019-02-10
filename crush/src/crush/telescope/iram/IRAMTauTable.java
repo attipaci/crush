@@ -49,7 +49,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 
 	public double timeWindow = 15.0 * Unit.min;
 	
-	private static Hashtable<String, IRAMTauTable> tables = new Hashtable<String, IRAMTauTable>();
+	private static Hashtable<String, IRAMTauTable> tables = new Hashtable<>();
 
 	public static IRAMTauTable get(String fileName, String timeZone) throws IOException {
 		IRAMTauTable table = tables.get(fileName);

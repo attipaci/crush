@@ -68,7 +68,7 @@ public class SkyDipModel {
 	int attempts = 3;
 	
 	Minimizer minimizer;
-	Vector<Parameter> parameters = new Vector<Parameter>();
+	Vector<Parameter> parameters = new Vector<>();
 	
 	
 	public void setOptions(Configurator options) {

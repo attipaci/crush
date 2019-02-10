@@ -276,15 +276,15 @@ public class PixelMap extends SourceModel2D {
 		double[] sourceGain = getFirstScan().getInstrument().getSourceGains(false);
 		
 		String fileName = path + File.separator + getDefaultCoreName() + ".rcp";
-		PrintStream out = new PrintStream(new FileOutputStream(fileName));
-		
-		Instrument<?> instrument = getFirstScan().getInstrument();
-		for(Channel channel : instrument) channel.coupling = sourceGain[channel.getIndex()] / channel.gain;
-	
-		instrument.getLayout().printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
-		
-		out.flush();
-		out.close();
+		try(PrintStream out = new PrintStream(new FileOutputStream(fileName))) {
+		    Instrument<?> instrument = getFirstScan().getInstrument();
+		    for(Channel channel : instrument) channel.coupling = sourceGain[channel.getIndex()] / channel.gain;
+
+		    instrument.getLayout().printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
+
+		    out.flush();
+		    out.close();
+		}
 		CRUSH.notify(this, "Written " + fileName);
 	}
 

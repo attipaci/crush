@@ -119,7 +119,7 @@ public class Mode implements Serializable {
     public int size() { return channels.size(); }
 
     private void addCoupledMode(CoupledMode m) {
-        if(coupledModes == null) coupledModes = new Vector<CoupledMode>();
+        if(coupledModes == null) coupledModes = new Vector<>();
         coupledModes.add(m);        
     }
 

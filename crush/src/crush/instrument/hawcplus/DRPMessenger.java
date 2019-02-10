@@ -56,7 +56,7 @@ class DRPMessenger extends Thread {
 		int capacity = options.hasOption("fifo") ? options.option("fifo").getInt() : DEFAULT_QUEUE_CAPACITY;
 	
 		address = new InetSocketAddress(host, port);
-		queue = new ArrayBlockingQueue<Message>(capacity);
+		queue = new ArrayBlockingQueue<>(capacity);
 		
 		info("Hello!");
 		
@@ -99,31 +99,32 @@ class DRPMessenger extends Thread {
 	
 	private synchronized void send(Message message) throws IOException {
 		if(message == null) return;
-				
-		Socket socket = new Socket();
-		socket.setReuseAddress(true);
-		socket.setPerformancePreferences(2, 1, 0); // connection, latency, bandwidth
-		socket.setTcpNoDelay(true);
-		socket.setTrafficClass(0x10);	// low delay
-		socket.setSoTimeout(timeoutMillis);
-		socket.connect(address);
 			
-		@SuppressWarnings("resource")
-        OutputStream out = socket.getOutputStream();
-		
-		// TODO additional check. Is it needed?
-		if(out == null) {
+		try(Socket socket = new Socket()) {
+		    socket.setReuseAddress(true);
+		    socket.setPerformancePreferences(2, 1, 0); // connection, latency, bandwidth
+		    socket.setTcpNoDelay(true);
+		    socket.setTrafficClass(0x10);	// low delay
+		    socket.setSoTimeout(timeoutMillis);
+		    socket.connect(address);
+
+		    @SuppressWarnings("resource")
+		    OutputStream out = socket.getOutputStream();
+
+		    // TODO additional check. Is it needed?
+		    if(out == null) {
+		        socket.close();
+		        throw new IOException("Socket has no output stream.");
+		    }
+
+		    String text = message.toString();
+		    out.write(text.getBytes());
+
+		    if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text);
+
+		    out.flush();
 		    socket.close();
-		    throw new IOException("Socket has no output stream.");
 		}
-		
-		String text = message.toString();
-		out.write(text.getBytes());
-		
-		if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text);
-		
-		out.flush();
-		socket.close();
 	}
 	
 	void clear() {

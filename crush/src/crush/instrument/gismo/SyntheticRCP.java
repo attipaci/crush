@@ -38,8 +38,8 @@ import jnum.text.SmartTokenizer;
 
 
 public class SyntheticRCP {
-	ArrayList<Coefficient> xcoeffs = new ArrayList<Coefficient>();
-	ArrayList<Coefficient> ycoeffs = new ArrayList<Coefficient>();
+	ArrayList<Coefficient> xcoeffs = new ArrayList<>();
+	ArrayList<Coefficient> ycoeffs = new ArrayList<>();
 	
 	Hashtable<Integer,Double> sourceGains;
 	Hashtable<Integer,Double> skyGains;
@@ -79,8 +79,8 @@ public class SyntheticRCP {
 	public void gainsFrom(String rcpFile) throws IOException {		
 		CRUSH.info(this, "Loading gains from " + rcpFile);
 		
-		sourceGains = new Hashtable<Integer, Double>();
-		skyGains = new Hashtable<Integer, Double>();
+		sourceGains = new Hashtable<>();
+		skyGains = new Hashtable<>();
 	
 		new LineParser() {
             @Override

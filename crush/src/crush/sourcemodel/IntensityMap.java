@@ -252,19 +252,20 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     public void applyModel(String fileName) throws Exception {
         info("Applying source model:");
 
-        Fits fits = new Fits(new File(fileName));
-        Map2D model = Map2D.read(fits, 0);
-        fits.close();
+        try(Fits fits = new Fits(new File(fileName))) {
+            Map2D model = Map2D.read(fits, 0);
+            fits.close();
 
-        /*
-		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
-		if(renorm != 1.0) {
-			CRUSH.detail(this " --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
-			model.scale(renorm);
-		}
-         */
+            /*
+		    double renorm = map.getImageBeamArea() / model.getImageBeamArea();
+		    if(renorm != 1.0) {
+			    CRUSH.detail(this " --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
+			    model.scale(renorm);
+		    }
+            */
 
-        map.resampleFrom(model);
+            map.resampleFrom(model);
+        }
 
         resetProcessing();
         nextGeneration();
@@ -285,19 +286,20 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     public void injectSourceMap(String fileName) throws Exception {
         info("Injecting source structure.");
 
-        Fits fits = new Fits(new File(fileName));
-        Map2D model = Map2D.read(fits, 0);
-        fits.close();
+        try(Fits fits = new Fits(new File(fileName))) {
+            Map2D model = Map2D.read(fits, 0);
+            fits.close();
 
-        /*
-		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
-		if(renorm != 1.0) {
-			CRUSH.detail(this, " --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
-			model.scale(renorm);
-		}
-         */
+            /*
+		    double renorm = map.getImageBeamArea() / model.getImageBeamArea();
+		    if(renorm != 1.0) {
+			    CRUSH.detail(this, " --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
+			    model.scale(renorm);
+		    }
+             */
 
-        map.resampleFrom(model);
+            map.resampleFrom(model);
+        }
 
         double scaling = hasOption("source.inject.scale") ? option("source.inject.scale").getDouble() : 1.0;
 

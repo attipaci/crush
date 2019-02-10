@@ -165,7 +165,7 @@ class HawcScan extends SofiaScan<HawcIntegration> {
 
     @Override
     public void addIntegrationsFrom(BasicHDU<?>[] HDU) throws Exception {
-        ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
+        ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<>();
 
         for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
             Header header = HDU[i].getHeader();

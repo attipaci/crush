@@ -277,7 +277,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public synchronized void addOverlap(Overlap<Channel> overlap) {
 		if(overlap.a != this && overlap.b != this) return;
-		if(overlaps == null) overlaps = new HashSet<Overlap<Channel>>();
+		if(overlaps == null) overlaps = new HashSet<>();
 		overlaps.add(overlap);		
 	}
 	

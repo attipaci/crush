@@ -121,25 +121,25 @@ public class ChopperPhases extends PhaseSet {
         if(!(subscan instanceof Chopping)) return;
         Chopping chopped = (Chopping) subscan;
         
-        final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));  
-        
-        out.println("# CRUSH Photometry Nod-cycle Data");
-        out.println("# =============================================================================");
-        out.println(subscan.getASCIIHeader());
-        out.println("# Chop Frequency: " + Util.f3.format(chopped.getChopper().frequency / Unit.Hz) + "Hz"); 
-        out.println("# Pixel: " + channel.getID());
-        out.println("# Source Phase: " + channel.sourcePhase);
-        out.println();
-        out.println("# chop#\tSignal\t\tCorrected");
-        
+        try(final PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println("# CRUSH Photometry Nod-cycle Data");
+            out.println("# =============================================================================");
+            out.println(subscan.getASCIIHeader());
+            out.println("# Chop Frequency: " + Util.f3.format(chopped.getChopper().frequency / Unit.Hz) + "Hz"); 
+            out.println("# Pixel: " + channel.getID());
+            out.println("# Source Phase: " + channel.sourcePhase);
+            out.println();
+            out.println("# chop#\tSignal\t\tCorrected");
 
-        for(int i=1; i < size(); i++) out.println("  " + i
-                + "\t" + getChopSignal(channel, i).toString(Util.e5)
-                + "\t" + getBGCorrectedChopSignal(channel, i, bgChannels, sourceGain).toString(Util.e5));
-        
-        out.println();
-        out.println();
-        out.close();
+
+            for(int i=1; i < size(); i++) out.println("  " + i
+                    + "\t" + getChopSignal(channel, i).toString(Util.e5)
+                    + "\t" + getBGCorrectedChopSignal(channel, i, bgChannels, sourceGain).toString(Util.e5));
+
+            out.println();
+            out.println();
+            out.close();
+        }
     }
     
     public void writeLRSpectrum(final Channel channel, String fileName) throws IOException {
@@ -148,38 +148,38 @@ public class ChopperPhases extends PhaseSet {
         if(!(subscan instanceof Chopping)) return;
         Chopping chopped = (Chopping) subscan;
         
-        final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-    
-        out.println("# CRUSH Photometry Nod-cycle Spectrum");
-        out.println("# =============================================================================");
-        out.println(subscan.getASCIIHeader());
-        out.println("# Chop Frequency: " + Util.f3.format(chopped.getChopper().frequency / Unit.Hz) + "Hz"); 
-        out.println("# Pixel: " + channel.getID());
-        out.println("# Source Phase: " + channel.sourcePhase);
-        out.println();
-        out.println("# Freq(Hz)\tAmplitude\tPhase(deg)");
-    
-        final double[] data = new double[ExtraMath.pow2ceil(size())];
-        final double dF = 0.5 * chopped.getChopper().frequency / data.length;
-        final double mean = getLROffset(channel).value();
-        
-        for(int i=1; i < size(); i++) {
-            final WeightedPoint point = getChopSignal(channel, i);
-            point.subtract(mean);
-            data[i] = DataPoint.significanceOf(point);
+        try(final PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println("# CRUSH Photometry Nod-cycle Spectrum");
+            out.println("# =============================================================================");
+            out.println(subscan.getASCIIHeader());
+            out.println("# Chop Frequency: " + Util.f3.format(chopped.getChopper().frequency / Unit.Hz) + "Hz"); 
+            out.println("# Pixel: " + channel.getID());
+            out.println("# Source Phase: " + channel.sourcePhase);
+            out.println();
+            out.println("# Freq(Hz)\tAmplitude\tPhase(deg)");
+
+            final double[] data = new double[ExtraMath.pow2ceil(size())];
+            final double dF = 0.5 * chopped.getChopper().frequency / data.length;
+            final double mean = getLROffset(channel).value();
+
+            for(int i=1; i < size(); i++) {
+                final WeightedPoint point = getChopSignal(channel, i);
+                point.subtract(mean);
+                data[i] = DataPoint.significanceOf(point);
+            }
+
+            new DoubleFFT(CRUSH.executor).real2Amplitude(data);
+
+            out.println(data[0]);
+            for(int i=2; i < data.length; i+=2) {
+                out.println("  " + (i*dF) + "\t" + Util.e5.format(ExtraMath.hypot(data[i], data[i+1])) + "\t" + Util.f5.format(Math.atan2(data[i+1], data[i])));
+            }
+            out.println(data[1]);
+
+            out.println();
+            out.println();
+            out.close();
         }
-            
-        new DoubleFFT(CRUSH.executor).real2Amplitude(data);
-            
-        out.println(data[0]);
-        for(int i=2; i < data.length; i+=2) {
-            out.println("  " + (i*dF) + "\t" + Util.e5.format(ExtraMath.hypot(data[i], data[i+1])) + "\t" + Util.f5.format(Math.atan2(data[i+1], data[i])));
-        }
-        out.println(data[1]);
-            
-        out.println();
-        out.println();
-        out.close();
     }
     
     public WeightedPoint getLROffset(final Channel channel) {

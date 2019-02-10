@@ -40,8 +40,8 @@ public class Pipeline implements Runnable, Serializable {
 	
 	CRUSH crush;
 	
-	List<Scan<?>> scans = new ArrayList<Scan<?>>();
-	List<String> ordering = new ArrayList<String>();
+	List<Scan<?>> scans = new ArrayList<>();
+	List<String> ordering = new ArrayList<>();
 	SourceModel scanSource;
 	
 	

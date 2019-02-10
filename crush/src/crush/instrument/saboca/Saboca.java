@@ -87,7 +87,7 @@ public class Saboca extends APEXInstrument<SabocaPixel> implements NonOverlappin
     protected void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
-		final ChannelLookup<SabocaPixel> lookup = new ChannelLookup<SabocaPixel>(this);
+		final ChannelLookup<SabocaPixel> lookup = new ChannelLookup<>(this);
 	
 		new LineParser() {
             @Override

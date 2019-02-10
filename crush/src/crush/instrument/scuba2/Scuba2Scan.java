@@ -202,14 +202,14 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 		
 		if(subIDs == null) files = getFitsFiles(scanDescriptor, '*');
 		else {
-			files = new ArrayList<Scuba2Fits>();
+			files = new ArrayList<>();
 			for(String id : subIDs) files.addAll(getFitsFiles(scanDescriptor, id.toLowerCase().charAt(0)));
 		}
 		return files;
 	}
 	
 	private ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor, char subarrayCode) throws FileNotFoundException {
-		ArrayList<Scuba2Fits> scanFiles = new ArrayList<Scuba2Fits>();
+		ArrayList<Scuba2Fits> scanFiles = new ArrayList<>();
 
 		String path = getDataPath();
 		descriptor = scanDescriptor;

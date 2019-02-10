@@ -100,7 +100,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
     public ChannelGroup<ChannelType> createGroup() {
         // All good channels
-        ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name, size());
+        ChannelGroup<ChannelType> channels = new ChannelGroup<>(name, size());
         channels.addAll(this);
         return channels;
     }
@@ -151,13 +151,13 @@ implements Copiable<ChannelGroup<ChannelType>> {
     
     
     public ArrayList<String> getIDs() { 
-        ArrayList<String> ids = new ArrayList<String>(size());
+        ArrayList<String> ids = new ArrayList<>(size());
         for(int i=0; i<size(); i++) ids.add(get(i).getID());
         return ids;
     }
     
     public ArrayList<Integer> getFixedIndices() {
-        ArrayList<Integer> indices = new ArrayList<Integer>(size());
+        ArrayList<Integer> indices = new ArrayList<>(size());
         for(int i=0; i<size(); i++) indices.add(get(i).getFixedIndex());
         return indices;
     }
@@ -192,7 +192,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
        
         if(!hasFlagged) return false;
         
-        ArrayList<ChannelType> keep = new ArrayList<ChannelType>(nc);
+        ArrayList<ChannelType> keep = new ArrayList<>(nc);
         for(int i=0; i<nc; i++) if(get(i).isUnflagged(discardFlags)) keep.add(get(i));
 
         clear(); 

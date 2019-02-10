@@ -46,7 +46,7 @@ public abstract class Photometry extends SourceModel {
 
     public Photometry(Instrument<?> instrument) {
         super(instrument);
-        fluxes = new Hashtable<String, DataPoint>(instrument.storeChannels);
+        fluxes = new Hashtable<>(instrument.storeChannels);
     }
 
 
@@ -54,7 +54,7 @@ public abstract class Photometry extends SourceModel {
     public Photometry copy(boolean withContents) {
         Photometry copy = (Photometry) super.copy(withContents);
         if(fluxes != null) {
-            copy.fluxes = new Hashtable<String, DataPoint>(getInstrument().size());
+            copy.fluxes = new Hashtable<>(getInstrument().size());
             if(withContents) for(Map.Entry<String, DataPoint> entry : fluxes.entrySet()) copy.fluxes.put(entry.getKey(), entry.getValue().copy());
         }
 

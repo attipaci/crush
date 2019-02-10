@@ -189,25 +189,26 @@ public class SkyDip extends SourceModel {
         fileName = coreName + ".dat";
 
 
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-        StringTokenizer header = new StringTokenizer(model.toString(), "\n");
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            StringTokenizer header = new StringTokenizer(model.toString(), "\n");
 
-        while(header.hasMoreTokens()) out.println("# " + header.nextToken());
-        out.println("#");
-        out.println("# EL\tobs\tmodel");
+            while(header.hasMoreTokens()) out.println("# " + header.nextToken());
+            out.println("#");
+            out.println("# EL\tobs\tmodel");
 
-        for(int i=0; i<data.length; i++) {
-            out.print(Util.f3.format(getEL(i) / Unit.deg) + "\t");
-            //out.print(data[i].weight > 0.0 ? Util.e3.format(data[i].value / model.Kelvin.value) : "...");
-            out.print(data[i].weight() > 0.0 ? Util.e3.format(data[i].value()) : "...");
-            out.print("\t");
-            //out.print(Util.e3.format(model.valueAt(getEL(i)) / model.Kelvin.value));
-            out.print(Util.e3.format(model.valueAt(getEL(i))));
-            out.println();
+            for(int i=0; i<data.length; i++) {
+                out.print(Util.f3.format(getEL(i) / Unit.deg) + "\t");
+                //out.print(data[i].weight > 0.0 ? Util.e3.format(data[i].value / model.Kelvin.value) : "...");
+                out.print(data[i].weight() > 0.0 ? Util.e3.format(data[i].value()) : "...");
+                out.print("\t");
+                //out.print(Util.e3.format(model.valueAt(getEL(i)) / model.Kelvin.value));
+                out.print(Util.e3.format(model.valueAt(getEL(i))));
+                out.println();
+            }
+
+            out.flush();
+            out.close();
         }
-
-        out.flush();
-        out.close();
 
         CRUSH.notify(this, "Written " + fileName);
 
@@ -234,52 +235,54 @@ public class SkyDip extends SourceModel {
 
     public void gnuplot(String coreName, String dataName, SkyDipModel model) throws IOException {
         String plotName = coreName + ".plt";
-        PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
+        
+        try(PrintWriter plot = new PrintWriter(new FileOutputStream(plotName))) {
+            plot.println("set xla 'Elevation (deg)'");
+            plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")'");
 
-        plot.println("set xla 'Elevation (deg)'");
-        plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")'");
+            Range dataRange = getSignalRange();
+            dataRange.grow(1.05);
 
-        Range dataRange = getSignalRange();
-        dataRange.grow(1.05);
+            Range elRange = getElevationRange();
+            elRange.grow(1.05);
+            elRange.scale(1.0 / Unit.deg);
 
-        Range elRange = getElevationRange();
-        elRange.grow(1.05);
-        elRange.scale(1.0 / Unit.deg);
+            plot.println("set xra [" + elRange.min() + ":" + elRange.max() + "]");
+            plot.println("set yra [" + dataRange.min() + ":" + dataRange.max() + "]");
 
-        plot.println("set xra [" + elRange.min() + ":" + elRange.max() + "]");
-        plot.println("set yra [" + dataRange.min() + ":" + dataRange.max() + "]");
+            if(model.elRange != null) {		
+                plot.println("set arrow 1 from " + (model.elRange.min() / Unit.deg) + ", " + dataRange.min()
+                + " to " + (model.elRange.min() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
+                plot.println("set arrow 2 from " + (model.elRange.max() / Unit.deg) + ", " + dataRange.min()
+                + " to " + (model.elRange.max() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
+            }
 
-        if(model.elRange != null) {		
-            plot.println("set arrow 1 from " + (model.elRange.min() / Unit.deg) + ", " + dataRange.min()
-            + " to " + (model.elRange.min() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
-            plot.println("set arrow 2 from " + (model.elRange.max() / Unit.deg) + ", " + dataRange.min()
-            + " to " + (model.elRange.max() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
+            plot.println("set term push");
+            plot.println("set term dumb");
+
+            plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.01,0.04 left font ',12'");
+
+
+            plot.println("plot \\");
+            String id = getFirstScan().getID().replace("_", " ");
+
+            plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + id + "'with linesp lt 1 pt 5 lw 1, \\");
+            plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
+                    + Util.f3.format(model.tau.rms()) + "' with lines lt -1 lw 3");
+
+            if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
+
+            if(hasOption("write.png")) gnuplotPNG(plot, coreName);
+
+            plot.println("set out");
+            plot.println("set term pop");
+
+            plot.println("unset label 1");
+            plot.println((hasOption("show") ? "" : "#")  + "replot");
+
+            plot.close();
         }
-
-        plot.println("set term push");
-        plot.println("set term dumb");
-
-        plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.01,0.04 left font ',12'");
-
-
-        plot.println("plot \\");
-        String id = getFirstScan().getID().replace("_", " ");
-
-        plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + id + "'with linesp lt 1 pt 5 lw 1, \\");
-        plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
-                + Util.f3.format(model.tau.rms()) + "' with lines lt -1 lw 3");
-
-        if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
-
-        if(hasOption("write.png")) gnuplotPNG(plot, coreName);
-
-        plot.println("set out");
-        plot.println("set term pop");
-
-        plot.println("unset label 1");
-        plot.println((hasOption("show") ? "" : "#")  + "replot");
-
-        plot.close();
+        
         CRUSH.notify(this, "Written " + plotName);
 
         if(hasOption("gnuplot")) {

@@ -536,7 +536,7 @@ public abstract class SourceModel2D extends SourceModel {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Collection<Scan<?>> findOutliers(double maxDistance) {
-        ArrayList<Scan<?>> outliers = new ArrayList<Scan<?>>();
+        ArrayList<Scan<?>> outliers = new ArrayList<>();
 
         int scans = numberOfScans();
         
@@ -570,7 +570,7 @@ public abstract class SourceModel2D extends SourceModel {
     }
 
     public Collection<Scan<?>> findSlewing(double maxSpan) {
-        ArrayList<Scan<?>> slews = new ArrayList<Scan<?>>();
+        ArrayList<Scan<?>> slews = new ArrayList<>();
         
         Coordinate2D ref = getProjection().getReference();
         double cosLat = (ref instanceof SphericalCoordinates) ? ((SphericalCoordinates) ref).cosLat() : 1.0;
@@ -965,7 +965,7 @@ public abstract class SourceModel2D extends SourceModel {
         }
 
     
-        final ImageArea<BufferedImageLayer> imager = new ImageArea<BufferedImageLayer>();
+        final ImageArea<BufferedImageLayer> imager = new ImageArea<>();
         final BufferedImageLayer image = new BufferedImageLayer(map);
 
         if(option.hasOption("scaling")) {

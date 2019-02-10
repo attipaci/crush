@@ -66,7 +66,7 @@ public class APEXLayout extends PixelLayout {
         Header header = hdu.getHeader();
 
         // Parse the feed type descriptions...
-        feedTypes = new Hashtable<Integer, String>();
+        feedTypes = new Hashtable<>();
         StringTokenizer typeCodes = new StringTokenizer(header.getStringValue("FDTYPCOD"), ",");
         while(typeCodes.hasMoreTokens()) {
             StringTokenizer assignment = new StringTokenizer(typeCodes.nextToken(), ":");
@@ -157,7 +157,7 @@ public class APEXLayout extends PixelLayout {
     
     
     public ArrayList<APEXPixel> getNeighbours(APEXPixel pixel, double radius) {
-        ArrayList<APEXPixel> neighbours = new ArrayList<APEXPixel>();
+        ArrayList<APEXPixel> neighbours = new ArrayList<>();
         for(Pixel p2 : getMappingPixels(0)) if(p2 != pixel) if(p2.distanceTo(pixel) <= radius) neighbours.add((APEXPixel) p2);
         return neighbours;      
     }

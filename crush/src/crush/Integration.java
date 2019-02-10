@@ -81,13 +81,13 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     private Instrument<?> instrument;
 
     public int integrationNo;	
-    
+
     public StringBuffer comments = new StringBuffer();
 
     public float gain = 1.0F;
 
-    public Hashtable<String, Dependents> dependents = new Hashtable<String, Dependents>(); 
-    private Hashtable<Mode, Signal> signals = new Hashtable<Mode, Signal>();	
+    public Hashtable<String, Dependents> dependents = new Hashtable<>(); 
+    private Hashtable<Mode, Signal> signals = new Hashtable<>();	
 
     public boolean approximateSourceMap = false;
     public int sourceGeneration = 0;
@@ -120,33 +120,33 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public Integration<FrameType> clone() { 
         Integration<FrameType> clone = (Integration<FrameType>) super.clone();
         // TODO redo it safely, s.t. existing reduction steps copy over as well?
-        clone.dependents = new Hashtable<String, Dependents>(); 
-        clone.signals = new Hashtable<Mode, Signal>();
+        clone.dependents = new Hashtable<>(); 
+        clone.signals = new Hashtable<>();
         clone.filter = null;
         if(this instanceof Chopping) ((Chopping) clone).setChopper(null);
 
         return clone;
     }
-   
+
     Integration<FrameType> cloneWithCopyOf(Instrument<?> instrument) {
         Integration<FrameType> clone = clone();
         clone.instrument = instrument.copy();
         return clone;
     }
-    
+
     void setParent(Scan<? extends Integration<? extends FrameType>> parent) {
         scan = parent;        
     }
-    
+
     @Override
     public boolean add(FrameType frame) {
-       if(frame != null) { 
-           frame.setParent(this);
-           frame.index = size();
-       }
-       return super.add(frame);
+        if(frame != null) { 
+            frame.setParent(this);
+            frame.index = size();
+        }
+        return super.add(frame);
     }
-    
+
     @Override
     public void add(int index, FrameType frame) {
         if(frame != null) {
@@ -155,7 +155,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         }
         super.add(index, frame);
     }
-   
+
 
     @Override
     public int compareTo(Integration<FrameType> other) {
@@ -163,13 +163,13 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     }
 
     public Scan<? extends Integration<? extends FrameType>> getScan() { return scan; }
-    
+
     public Instrument<?> getInstrument() { return instrument; }
-    
+
     public Configurator getOptions() { return instrument.getOptions(); }
-    
+
     public void setOptions(Configurator options) { instrument.setOptions(options); }
-    
+
     public void reindex() {
         for(int k=size(); --k >= 0; ) {
             final Frame exposure = get(k);
@@ -302,12 +302,12 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         System.gc();
 
         isValid = true;
-        
+
         if(hasOption("speedtest")) {
             speedTest();
             isValid = false;
         }
-       
+
     }
 
     public void jackknife() {
@@ -360,7 +360,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         if(from == 0) return;
 
-        final ArrayList<FrameType> selected = new ArrayList<FrameType>(to - from);
+        final ArrayList<FrameType> selected = new ArrayList<>(to - from);
         for(int t=from; t<to; t++) selected.add(get(t));
 
         clear();
@@ -448,7 +448,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         info("Applying scaling factor " + Util.f3.format(value));		
     }
 
-   
+
     public void calcScanSpeedStats() {
         aveScanSpeed = getTypicalScanningSpeed();
         info("Typical scanning speeds are " 
@@ -532,7 +532,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             Chopper chopper = ((Chopping) this).getChopper();
             if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
         }
-        */
+         */
 
         return Math.min(sourceSize / aveScanSpeed.value(), size() * instrument.integrationTime);
     }
@@ -632,7 +632,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final int n = (int) Math.ceil((getLastFrame().MJD - first.MJD) / instrument.samplingInterval);
         int padded = 0;
 
-        final ArrayList<FrameType> buffer = new ArrayList<FrameType>(n);
+        final ArrayList<FrameType> buffer = new ArrayList<>(n);
 
 
         for(int t=0; t < nt; t++) {
@@ -677,7 +677,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         if(from == 0) return;
 
-        final ArrayList<FrameType> timmed = new ArrayList<FrameType>(nt);
+        final ArrayList<FrameType> timmed = new ArrayList<>(nt);
         for( ; from<nt; from++) timmed.add(get(from));
 
         clear();
@@ -761,7 +761,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
         // Remove the drifts from all signals also to match bandpass..
-        final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
+        final ArrayList<Signal> sigs = new ArrayList<>(signals.values());
         new CRUSH.Fork<Void>(sigs.size(), getThreadCount()) {
             @Override
             protected void processIndex(int k) { sigs.get(k).level(from, to); }
@@ -788,7 +788,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         removeChannelDrifts(instrument, parms, driftN, robust);	
 
         // Remove the drifts from all signals also to match bandpass..
-        final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
+        final ArrayList<Signal> sigs = new ArrayList<>(signals.values());
 
         if(!sigs.isEmpty()) new CRUSH.Fork<Void>(sigs.size(), getThreadCount()) {
             @Override
@@ -1075,9 +1075,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                         Instrument.recycle(localVar);
                     }
                 }
-                
+
                 for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
-                
+
                 return var;
             }	
         };
@@ -1141,13 +1141,13 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     Instrument.recycle(localVar);
                 }
                 for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
-                
+
                 return var;
             }	
         };
 
         variances.process();
-        
+
         setWeightsFromVarianceStats(channels, variances.getResult());
     }
 
@@ -1186,21 +1186,21 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                         p.setValue(dev * dev);
                         p.setWeight(exposure.relativeWeight);
                     }	
-                
+
                 Statistics.Inplace.median(dev2, 0, points, var[channel.index]);
                 var[channel.index].scaleValue(1.0 / Statistics.medianNormalizedVariance);
             }
-            
+
         }.process();
 
         setWeightsFromVarianceStats(channels, var);
     }
 
-    
+
 
     private void setWeightsFromVarianceStats(ChannelGroup<?> channels, final DataPoint[] var) {
         if(var == null) return;
-       
+
         for(Channel channel : channels) {
             final DataPoint x = var[channel.index];
             if(x.weight() <= 0.0) return;
@@ -2194,7 +2194,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         for(Frame exposure : this) if(exposure != null) for(final Channel channel : channels) {
             if(Float.isNaN(exposure.data[channel.index]))
                 throw new IllegalStateException(comments + "> NaN: " + exposure.index + "," + channel.index);
-                
+
             if(Float.isInfinite(exposure.data[channel.index])) 
                 throw new IllegalStateException(comments + "> Inf: " + exposure.index + "," + channel.index);
         }
@@ -2367,7 +2367,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 }.process();		
     }
 
-   
+
 
     public Range getFrequencyRange(final ChannelGroup<?> channels) {
         Fork<Range> search = new Fork<Range>() {
@@ -2413,30 +2413,34 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void writeASCIITimeStream(String path) throws IOException {
         String filename = path + File.separator + getFileID() + ".tms";
-        final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
-        out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
-        final int nc = instrument.size();
 
-        String flagValue = "---";
 
-        for(final Frame exposure : this) {
-            boolean isEmpty = true;
+        try(final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000))) {
+            out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
+            final int nc = instrument.size();
 
-            //if(exposure != null) out.print(Util.f1.format(exposure.getNativeOffset().y() / Unit.arcsec) + "\t");
-            //else out.print("0.0\t");
+            String flagValue = "---";
 
-            if(exposure != null) if(exposure.isUnflagged(Frame.BAD_DATA)) {
-                isEmpty = false;
-                for(int c=0; c<nc; c++) 
-                    out.print((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE) != 0 ? flagValue + "\t\t" : Util.e5.format(exposure.data[c]) + "\t");
+            for(final Frame exposure : this) {
+                boolean isEmpty = true;
+
+                //if(exposure != null) out.print(Util.f1.format(exposure.getNativeOffset().y() / Unit.arcsec) + "\t");
+                //else out.print("0.0\t");
+
+                if(exposure != null) if(exposure.isUnflagged(Frame.BAD_DATA)) {
+                    isEmpty = false;
+                    for(int c=0; c<nc; c++) 
+                        out.print((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE) != 0 ? flagValue + "\t\t" : Util.e5.format(exposure.data[c]) + "\t");
+                }
+                if(isEmpty) for(int c=0; c<nc; c++) out.print(flagValue + "\t\t");
+
+                out.println();
+
             }
-            if(isEmpty) for(int c=0; c<nc; c++) out.print(flagValue + "\t\t");
-
-            out.println();
-
+            out.flush();
+            out.close();
         }
-        out.flush();
-        out.close();
+        
         notify("Written ASCII time-streams to " + filename);
     }
 
@@ -2518,17 +2522,18 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         if(covar == null) return;
 
-        Fits fits = new Fits();
-        BasicHDU<?> hdu = Fits.makeHDU(covar);
-        fits.addHDU(hdu);
+        try(Fits fits = new Fits()) {
+            BasicHDU<?> hdu = Fits.makeHDU(covar);
+            fits.addHDU(hdu);
 
-        FitsToolkit.write(fits, name);
-        fits.close();
+            FitsToolkit.write(fits, name);
+            fits.close();
+        }
     }
 
     protected double[][] condenseCovariance(double[][] covar) {
         int n = covar.length;
-        ArrayList<Integer> lookup = new ArrayList<Integer>(n);
+        ArrayList<Integer> lookup = new ArrayList<>(n);
 
         for(int i=0; i < n; i++) {
             for(int j=0; j < i; j++) if(!Double.isNaN(covar[i][j])) if(covar[i][j] != 0) {
@@ -2609,42 +2614,41 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final float[][] spectrum = getSpectra(windowName, windowSize);
         final double df = 1.0 / (instrument.samplingInterval * windowSize);
 
-        final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName), 1000000));
-
-        out.println("# CRUSH Residual Detector Power Spectra");
-        out.println();
-        out.println(getASCIIHeader());
-        out.println("# Window Function: " + windowName);
-        out.println("# Window Size: " + windowSize + " samples");
-        out.println("# PSD unit: 'Jy/sqrt(Hz)'");
-        out.println();
-        
-        // Column headers...
-        out.println("#       \tChannel PSD (labeled by channel IDs):");
-        out.print("# f(Hz) ");
-        
-        final int nc = instrument.size();
-        for(int i=0; i<nc; i++) out.print("\t" + instrument.get(i).getID());
-        out.println();
-        
-        for(int f=1; f<spectrum[0].length; f++) {
-            out.print(Util.e3.format(f*df));
-            for(int i=0; i<nc; i++) out.print("\t" + Util.e3.format(spectrum[i][f]));
+        try(final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName), 1000000))) {
+            out.println("# CRUSH Residual Detector Power Spectra");
             out.println();
+            out.println(getASCIIHeader());
+            out.println("# Window Function: " + windowName);
+            out.println("# Window Size: " + windowSize + " samples");
+            out.println("# PSD unit: 'Jy/sqrt(Hz)'");
+            out.println();
+
+            // Column headers...
+            out.println("#       \tChannel PSD (labeled by channel IDs):");
+            out.print("# f(Hz) ");
+
+            final int nc = instrument.size();
+            for(int i=0; i<nc; i++) out.print("\t" + instrument.get(i).getID());
+            out.println();
+
+            for(int f=1; f<spectrum[0].length; f++) {
+                out.print(Util.e3.format(f*df));
+                for(int i=0; i<nc; i++) out.print("\t" + Util.e3.format(spectrum[i][f]));
+                out.println();
+            }
+
+            out.flush();
+            out.close();
         }
 
-        out.flush();
-        out.close();
-
         notify("Written Power spectra to " + fileName);
-
     }
 
 
     public void writeCovariances(String path) {
 
         final double[][] covar = getCovariance(); 
-        List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<String>();
+        List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<>();
         String prefix = path + File.separator + "covar";
 
         // If no argument is specified, write the full covariance in backend channel ordering
@@ -2697,11 +2701,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         }
 
         if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
-            try { 
-                PrintStream out = new PrintStream(new FileOutputStream(path + File.separator + mode.name + "-" + getFileID() + ".tms"));
+            try(PrintStream out = new PrintStream(new FileOutputStream(path + File.separator + mode.name + "-" + getFileID() + ".tms"))) {
                 signals.get(mode).print(out);
-                notify("Written " + mode.name + ".tms");
                 out.close();
+                notify("Written " + mode.name + ".tms");
             }
             catch(IOException e) {}
         }
@@ -2725,21 +2728,21 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void writeScanPattern(String path) throws IOException {
         String fileName = path + File.separator + "pattern-" + getFileID() + ".dat";
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-
-        for(int i=0; i<size(); i++) {
-            Frame exposure = get(i);
-            if(exposure == null) out.println("---\t---");
-            else if(exposure.isFlagged()) out.println("...\t...");
-            else {
-                Vector2D offset = exposure.getNativeOffset();
-                out.println(Util.f1.format(offset.x() / Unit.arcsec) + "\t" + Util.f1.format(offset.y() / Unit.arcsec));
+       
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            for(int i=0; i<size(); i++) {
+                Frame exposure = get(i);
+                if(exposure == null) out.println("---\t---");
+                else if(exposure.isFlagged()) out.println("...\t...");
+                else {
+                    Vector2D offset = exposure.getNativeOffset();
+                    out.println(Util.f1.format(offset.x() / Unit.arcsec) + "\t" + Util.f1.format(offset.y() / Unit.arcsec));
+                }
             }
+            out.close();
         }
-        out.close();
 
         notify("Written " + fileName);
-
     }
 
     public void getFitsData(LinkedHashMap<String, Object> data) {
@@ -2835,8 +2838,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         // Then the ArrayList
         i = 0;
-        final ArrayList<Frame> frames = new ArrayList<Frame>();
-        final ArrayList<Channel> channels = new ArrayList<Channel>();
+        final ArrayList<Frame> frames = new ArrayList<>();
+        final ArrayList<Channel> channels = new ArrayList<>();
         frames.addAll(this);
         channels.addAll(instrument);
 
@@ -2986,13 +2989,13 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 (scan.size() > 1 ? "# Integration: " + getID() + "\n" : "") +
                 "# Exposure: " + (getFrameCount(Frame.SOURCE_FLAGS) * instrument.integrationTime) + " s.\n";
     }
-    
+
 
 
     public String getID() {
         return Integer.toString(integrationNo + 1);
     }
-    
+
     public int getPhase() { return 0; }
 
     public String getFullID(String separator) {
@@ -3131,19 +3134,20 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         for(Mode mode : modality) getCouplingGains(getSignal(mode), g);
 
         String fileName = path + File.separator + getFileID() + "." + name + "-coupling.dat";
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-        out.println(this.getASCIIHeader());
-        out.println("#");
-        out.println("# ch\tgain");
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println(this.getASCIIHeader());
+            out.println("#");
+            out.println("# ch\tgain");
 
-        for(int c=0; c<instrument.size(); c++) {
-            Channel channel = instrument.get(c);
-            if(g[c] != 0.0) out.println(channel.getID() + "\t" + Util.f3.format(g[c]));
+            for(int c=0; c<instrument.size(); c++) {
+                Channel channel = instrument.get(c);
+                if(g[c] != 0.0) out.println(channel.getID() + "\t" + Util.f3.format(g[c]));
+            }
+
+            notify("Written " + fileName);
+
+            out.close();
         }
-
-        notify("Written " + fileName);
-
-        out.close();	
     }
 
     private void getCouplingGains(Signal signal, double[] g) throws Exception {	
@@ -3172,56 +3176,61 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         if(modality == null) return;
 
         modality.updateAllGains(this, false);
-
+        
         String fileName = path + File.separator + getFileID() + "." + name + "-coupling.spec";
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-
-        out.println(this.getASCIIHeader());
-        out.println();
-
+            
         Complex[][] C = new Complex[instrument.size()][];
-
+        
         Channel[] allChannels = new Channel[instrument.storeChannels];
         for(Channel channel : instrument) allChannels[channel.getFixedIndex()] = channel;
 
         for(Mode mode : modality) getCouplingSpectrum(getSignal(mode), windowSize, C);
 
-        Complex z = new Complex();
+        
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println(this.getASCIIHeader());
+            out.println();  
+        
+            Complex z = new Complex();
 
-        int nF = C[0].length;
-        double df = 1.0 / (windowSize * instrument.samplingInterval);
+            final int nF = C[0].length;
+            final double df = 1.0 / (windowSize * instrument.samplingInterval);
 
-        for(int c=0; c < instrument.storeChannels; c++) {
-            Channel channel = allChannels[c];
-            z.set(channel == null ? 0.0 : C[channel.index][0].x(), 0.0);
-            out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
-        }
-        out.println();
-
-        // Write the bulk of the spectrum...
-        for(int f=1; f<nF; f++) {
-            out.print(Util.f5.format(f*df));
             for(int c=0; c < instrument.storeChannels; c++) {
                 Channel channel = allChannels[c];
-                if(channel == null) z.zero();
-                else z.copy(C[channel.index][f]);	
-                out.print("\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));		
+                z.set(channel == null ? 0.0 : C[channel.index][0].x(), 0.0);
+                out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
             }
             out.println();
-        }
 
-        // Write the Nyquist frequency component;
-        for(int c=0; c < instrument.storeChannels; c++) {
-            Channel channel = allChannels[c];
-            z.set(channel == null ? 0.0 : C[channel.index][0].y(), 0.0);
-            out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
-        }
-        out.println();	
+            // Write the bulk of the spectrum...
+            for(int f=1; f<nF; f++) {
+                out.print(Util.f5.format(f*df));
+                for(int c=0; c < instrument.storeChannels; c++) {
+                    Channel channel = allChannels[c];
+                    if(channel == null) z.zero();
+                    else z.copy(C[channel.index][f]);	
+                    out.print("\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));		
+                }
+                out.println();
+            }
 
+            // Write the Nyquist frequency component;
+            for(int c=0; c < instrument.storeChannels; c++) {
+                Channel channel = allChannels[c];
+                z.set(channel == null ? 0.0 : C[channel.index][0].y(), 0.0);
+                out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
+            }
+            out.println();	
+
+            out.close();
+        }
+        
+        
         notify("Written " + fileName);
-        out.close();
-
+        
         writeDelayedCoupling(path, name, C);
+
     }
 
     void getCouplingSpectrum(Signal signal, int windowSize, Complex[][] C) throws Exception {	
@@ -3264,27 +3273,27 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
         String fileName = path + File.separator + getFileID() + "." + name + "-coupling.delay";
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-
-        out.println(this.getASCIIHeader());
-        out.println();
-
-        int n = nF << 1;
-
-        final int nc = instrument.storeChannels;
-
-        for(int t=0; t<n; t++) {
-            out.print(Util.f5.format(t * instrument.samplingInterval));
-            for(int c=0; c<nc; c++) {
-                Channel channel = allChannels[c];
-                if(channel == null) out.print("\t---   ");					
-                else out.print("\t" + Util.e3.format(delay[channel.index][t]));
-            }
+       
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println(this.getASCIIHeader());
             out.println();
+
+            int n = nF << 1;
+
+            final int nc = instrument.storeChannels;
+
+            for(int t=0; t<n; t++) {
+                out.print(Util.f5.format(t * instrument.samplingInterval));
+                for(int c=0; c<nc; c++) {
+                    Channel channel = allChannels[c];
+                    if(channel == null) out.print("\t---   ");					
+                    else out.print("\t" + Util.e3.format(delay[channel.index][t]));
+                }
+                out.println();
+            }
+
+            out.close();
         }
-
-        out.close();
-
         notify("Written " + fileName);
     }
 
@@ -3404,8 +3413,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             for(int t=size()-nFrames; t<size(); t++) set(t, null);
         }
     }
-    
-    
+
+
     public Range2D searchCorners(final Collection<? extends Pixel> pixels, final Projector2D<?> p) {
         if(pixels.size() == 0) return null;
 
@@ -3472,9 +3481,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         return range;
     }
-    
-    
-    
+
+
+
 
     @Override
     public Object getTableEntry(String name) {
@@ -3504,10 +3513,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         }
         return op.getResult();
     }
-    
-    
+
+
     public <ReturnType> ReturnType fork(final ParallelPointOp<FrameType, ReturnType> op) {
-      
+
         Fork<ReturnType> fork = new Fork<ReturnType>() {
             private ParallelPointOp<FrameType, ReturnType> localOp;
 
@@ -3516,51 +3525,51 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 super.init();
                 localOp = op.newInstance();
             }
-            
+
             @Override
             protected void process(FrameType frame) {
                 localOp.process(frame);
             }
-          
+
             @Override
             public ReturnType getLocalResult() { return localOp.getResult(); }
-            
+
 
             @Override
             public ReturnType getResult() { 
                 ParallelPointOp<FrameType, ReturnType> globalOp = op.newInstance();
-                
+
                 for(ParallelTask<ReturnType> worker : getWorkers()) {
                     globalOp.mergeResult(worker.getLocalResult());
                 }
                 return globalOp.getResult();
             }
-            
+
         };
-        
+
         fork.process();
-        
+
         return fork.getResult();
     }
-    
-    
+
+
     public class FrameView extends Data1D {
         private ChannelGroup<?> channels;
         private FrameType frame;
         private int excludeFlags;
         private byte excludeSamples;
-        
+
         public FrameView() { this(instrument); }
-        
+
         public FrameView(ChannelGroup<?> channels) { this.channels = channels; }
-        
+
         public void setFrame(FrameType exposure) { this.frame = exposure; }
-        
+
         public void setExcludeFlags(int pattern) { this.excludeFlags = pattern; }
-        
+
         public void setExcludeSamples(byte pattern) { this.excludeSamples = pattern; }
-        
-        
+
+
         @Override
         public int size() {
             return channels.size();
@@ -3569,7 +3578,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         @Override
         public Number get(int i) {
             Channel channel = channels.get(i);
-            
+
             if(frame == null) return Float.NaN;
             if(frame.isFlagged(excludeFlags)) return Float.NaN;
             if((frame.sampleFlag[channel.index] & excludeSamples) != 0) return Float.NaN;
@@ -3597,31 +3606,31 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             for(int i=size(); --i >= 0; ) data[i] = frame.data[channels.get(i).index];
             return data;
         }
-        
+
     }
 
-    
+
     public class TimeStreamView extends Data1D {
         private Channel channel;
         private int from, to;
         private int excludeFlags;
         private byte excludeSamples;
-        
+
         public TimeStreamView() { this(0, Integration.this.size()); }
-        
+
         public TimeStreamView(int from, int to) { 
             this.from = Math.max(from, 0);
             this.to = Math.min(to, Integration.this.size());
             if(this.to < this.from) this.to = this.from;
         }
-        
+
         public void setChannel(Channel c) { this.channel = c; }
-        
+
         public void setExcludeFlags(int pattern) { this.excludeFlags = pattern; }
-        
+
         public void setExcludeSamples(byte pattern) { this.excludeSamples = pattern; }
-        
-        
+
+
         @Override
         public int size() { return to - from; }
 

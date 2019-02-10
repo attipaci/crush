@@ -2,8 +2,8 @@
 <project basedir="." default="build" name="crush">
 	<property environment="env"/>
 	<property name="debuglevel" value="source,lines,vars"/>
-	<property name="target" value="1.6"/>
-	<property name="source" value="1.6"/>
+	<property name="target" value="1.8"/>
+	<property name="source" value="1.8"/>
 
 	<property name="crush" value="crush"/>
 	<property name="jnum" value="jnum"/>
@@ -56,7 +56,7 @@
 			<fileset dir="${dependsdir}">
 				<include name="**/*.jar"/>
 			</fileset>
-		</copy>
+		</move>
 	</target>
 
 	<target name="init">

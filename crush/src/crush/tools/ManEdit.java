@@ -29,11 +29,10 @@ public class ManEdit {
 	String name;
 	
 	public static void main(String[] args) {
-		ArrayList<String> lines = new ArrayList<String>();
+		ArrayList<String> lines = new ArrayList<>();
 		ManEdit man = new ManEdit(args[0]);
 		
-		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
+		try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])))) {
 			String line = null;
 			while((line = in.readLine()) != null) lines.add(line);
 			in.close();
@@ -50,7 +49,7 @@ public class ManEdit {
 	public void edit(ArrayList<String> lines) {
 		int i=0;
 
-		ArrayList<String> edited = new ArrayList<String>();
+		ArrayList<String> edited = new ArrayList<>();
 		
 		edited.add("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">");
 		

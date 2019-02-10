@@ -67,7 +67,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
     private Instrument<? extends Channel> instrument;
     private double rotation = 0.0;
     
-    private ArrayList<Pixel> pixels = new ArrayList<Pixel>();
+    private ArrayList<Pixel> pixels = new ArrayList<>();
 
     public PixelLayout(Instrument<? extends Channel> instrument) {
         this.instrument = instrument;
@@ -83,9 +83,9 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         PixelLayout copy = clone();
              
         copy.instrument = instrument;
-        copy.pixels = new ArrayList<Pixel>(pixels.size());
+        copy.pixels = new ArrayList<>(pixels.size());
         
-        final ChannelLookup<Channel> lookup = new ChannelLookup<Channel>(instrument);
+        final ChannelLookup<Channel> lookup = new ChannelLookup<>(instrument);
         
         for(int i=0; i<pixels.size(); i++) {
             Pixel p1 = pixels.get(i);
@@ -162,7 +162,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
 
     public ArrayList<Pixel> getMappingPixels(int keepFlags) {
         int discardFlags = ~keepFlags;
-        ArrayList<Pixel> mappingPixels = new ArrayList<Pixel>(pixels.size());
+        ArrayList<Pixel> mappingPixels = new ArrayList<>(pixels.size());
         for(Pixel p : pixels) {
             if(p.getPosition() == null) continue;
             if(p.isFlagged(discardFlags)) continue;
@@ -177,7 +177,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
 
 
     public Hashtable<String, Pixel> getPixelLookup() {
-        Hashtable<String, Pixel> lookup = new Hashtable<String, Pixel>(pixels.size());
+        Hashtable<String, Pixel> lookup = new Hashtable<>(pixels.size());
         for(Pixel pixel : pixels) lookup.put(pixel.getID(), pixel);
         return lookup;
     }
@@ -229,7 +229,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
             }
         }
 
-        final ArrayList<Pixel> perimeter = new ArrayList<Pixel>(sections);
+        final ArrayList<Pixel> perimeter = new ArrayList<>(sections);
         for(int i=sections; --i >= 0; ) if(sPixel[i] != null) perimeter.add(sPixel[i]);
 
         return perimeter;
@@ -346,7 +346,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         
         if(removedChannels) {
             final int np = pixels.size();
-            final ArrayList<Pixel> slimmed = new ArrayList<Pixel>(np);
+            final ArrayList<Pixel> slimmed = new ArrayList<>(np);
             
             for(int k=0; k<np; k++) {
                 final Pixel pixel = pixels.get(k);

@@ -37,8 +37,8 @@ public abstract class PhaseSet extends ArrayList<PhaseData> {
     private static final long serialVersionUID = 3448515171055358173L;
 
     private Integration<?> integration;
-    protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
-    protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<String, PhaseDependents>();
+    protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<>();
+    protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<>();
 
     public double[] channelParms;
 
@@ -141,8 +141,8 @@ public abstract class PhaseSet extends ArrayList<PhaseData> {
     public void despike(double level) { 
         integration.comments.append(",P");
         
-        HashMap<Integer, Double> levels = new HashMap<Integer, Double>();
-        HashMap<Integer, Double> noise = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> levels = new HashMap<>();
+        HashMap<Integer, Double> noise = new HashMap<>();
 
         int spikes = 0;
 
@@ -232,9 +232,11 @@ public abstract class PhaseSet extends ArrayList<PhaseData> {
 
     public void write(String path) throws IOException {
         String filename = path + File.separator + integration.scan.getID() + "-" + integration.getFileID() + ".phases.tms";
-        PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
-        write(out);
-        out.close();
+        
+        try(PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)))) {
+            write(out);
+            out.close();
+        }
         CRUSH.notify(this, "Written phases to " + filename);
     }
 

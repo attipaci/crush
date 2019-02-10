@@ -130,7 +130,7 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 		}
 		catch(NoSuchFieldException e) { error(e); }	
 			
-		try { addModality(new Modality<Scuba2He3Response>("he3", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("he3Gain"), Scuba2He3Response.class));	}
+		try { addModality(new Modality<>("he3", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("he3Gain"), Scuba2He3Response.class));	}
 		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Scuba2Pixel.class.getField("gain"))); }
@@ -151,7 +151,7 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 	
 	
 	ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
-		ArrayList<Scuba2Pixel> pixels = new ArrayList<Scuba2Pixel>(Scuba2Subarray.PIXELS);
+		ArrayList<Scuba2Pixel> pixels = new ArrayList<>(Scuba2Subarray.PIXELS);
 		for(Scuba2Pixel pixel : this) if(pixel.subarrayNo == subarrayIndex) pixels.add(pixel);
 		return pixels;
 	}

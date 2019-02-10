@@ -56,7 +56,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	public double searchRadius = 15.0 * Unit.deg;
 	public double timeWindow = 1.0 * Unit.hour;
 	
-	private static Hashtable<String, PointingTable> tables = new Hashtable<String, PointingTable>();
+	private static Hashtable<String, PointingTable> tables = new Hashtable<>();
 	
 	public static PointingTable get(String fileName) throws IOException {
 		PointingTable table = tables.get(fileName);

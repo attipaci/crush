@@ -69,7 +69,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
     public APEXInstrument<?> getInstrument() { return (APEXInstrument<?>) super.getInstrument(); }
     
     public APEXScan<APEXSubscan<FrameType>> getScanInstance() {
-        return new APEXScan<APEXSubscan<FrameType>>(getInstrument());
+        return new APEXScan<>(getInstrument());
     }
 	
 	@Override

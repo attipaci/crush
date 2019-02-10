@@ -45,7 +45,7 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	 */
 	private static final long serialVersionUID = -6513008414302600380L;
 	
-	ArrayList<Scuba2Fits> files = new ArrayList<Scuba2Fits>(4);
+	ArrayList<Scuba2Fits> files = new ArrayList<>(4);
 	
 	double totalIntegrationTime;
 	int rawFrames;
@@ -134,28 +134,29 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, UnsupportedIntegrationException, IOException {
 		if(CRUSH.debug) CRUSH.detail(this, "<FILE> " + file.getFile().getName());
 		
-		Fits fits = new Fits(file.getFile());		
-		BasicHDU<?>[] HDU = fits.read();
-		
-		if(isFirstFile) {
-			parsePrimaryHeader(HDU[0].getHeader());
-			
-			// TODO WCS-TAB HDU has data timestamps...
-			// TODO could match when reading coordinates, or check if same size...
-			// Read the coordinate info etc. from the first subscan file.
-			readCoordinateData(getJcmtHDU(HDU));
+		try(Fits fits = new Fits(file.getFile())) {		
+		    BasicHDU<?>[] HDU = fits.read();
+
+		    if(isFirstFile) {
+		        parsePrimaryHeader(HDU[0].getHeader());
+
+		        // TODO WCS-TAB HDU has data timestamps...
+		        // TODO could match when reading coordinates, or check if same size...
+		        // Read the coordinate info etc. from the first subscan file.
+		        readCoordinateData(getJcmtHDU(HDU));
+		    }
+
+		    Scuba2Subarray subarray = getInstrument().subarray[file.getSubarrayIndex()];
+		    subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
+
+		    readArrayData((ImageHDU) HDU[0], fits.getStream(), subarray.channelOffset, (float) subarray.scaling);
+
+		    if(hasOption("darkcorrect")) readDarkSquidData(file.getSubarrayIndex(), getDarkSquidHDU(HDU));
+
+		    subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
+
+		    fits.close();
 		}
-		
-		Scuba2Subarray subarray = getInstrument().subarray[file.getSubarrayIndex()];
-		subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
-	
-		readArrayData((ImageHDU) HDU[0], fits.getStream(), subarray.channelOffset, (float) subarray.scaling);
-		
-		if(hasOption("darkcorrect")) readDarkSquidData(file.getSubarrayIndex(), getDarkSquidHDU(HDU));
-		
-		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
-		
-		fits.close();
 	}
 
 	private void setReadoutLevels(final int[][] DAC, final int channelOffset) {

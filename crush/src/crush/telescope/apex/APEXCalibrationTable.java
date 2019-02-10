@@ -45,7 +45,7 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 	 */
 	private static final long serialVersionUID = -3843930469196283911L;
 	
-	private static Hashtable<String, APEXCalibrationTable> tables = new Hashtable<String, APEXCalibrationTable>();
+	private static Hashtable<String, APEXCalibrationTable> tables = new Hashtable<>();
 		public String fileName;
 	public double timeWindow = 30 * Unit.min;
 	

@@ -75,7 +75,7 @@ virtually any fast-sampling scanning camera.
 #### Install Java (if not already installed)
    
   Download Java, e.g. from www.java.com. If you have Java already, check that 
-  it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
+  it is version 1.8.0 (a.k.a. Java 8) or later, by typing:
 
     > java -version
 

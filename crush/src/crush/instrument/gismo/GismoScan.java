@@ -170,7 +170,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		
 		if(hasOption("dataname.end")) endings = option("dataname.end").getList();
 		else {
-			endings = new ArrayList<String>();
+			endings = new ArrayList<>();
 			endings.add("GISMO.fits");
 		}
 			

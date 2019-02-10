@@ -47,9 +47,9 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
 
 
     ArrayList<ChannelGroup<HawcPixel>> subarrayGroups;
-     
+
     String bandID = "-";
-    
+
     boolean[] hasSubarray;
 
     boolean darkSquidCorrection = false;
@@ -69,10 +69,10 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
 
     @Override
     public String getFileID() { return "HAW"; }
-    
+
     @Override
     protected HawcLayout getLayoutInstance() { return new HawcLayout(this); }
-    
+
     @Override
     public HawcLayout getLayout() { return (HawcLayout) super.getLayout(); }
 
@@ -81,13 +81,13 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
 
 
 
-    
+
     @Override
     public void setOptions(Configurator options) {
         super.setOptions(options);
         if(drp == null) if(hasOption("drp")) initDRPMessages();
     }
-    
+
     private void initDRPMessages() {
         info("Activating DRP messages over TCP/IP.");
         try { drp = new DRPMessenger(option("drp")); }
@@ -111,7 +111,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
             for(int i=darkSquidLookup.length; --i >=0; ) if(darkSquidLookup[i] != null)
                 copy.darkSquidLookup[i] = Arrays.copyOf(darkSquidLookup[i], darkSquidLookup[i].length);
         }
-        
+
         if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
         if(detectorBias != null) {
             copy.detectorBias = new int[detectorBias.length][];
@@ -180,9 +180,9 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     protected void createGroups() {
         super.createGroups();
 
-        subarrayGroups = new ArrayList<ChannelGroup<HawcPixel>>(subarrays);
+        subarrayGroups = new ArrayList<>(subarrays);
         for(int pol=0; pol < polArrays; pol++) for(int sub=0; sub < polSubarrays; sub++) {
-            ChannelGroup<HawcPixel> g =  new ChannelGroup<HawcPixel>(polID[pol] + sub);
+            ChannelGroup<HawcPixel> g =  new ChannelGroup<>(polID[pol] + sub);
             subarrayGroups.add(g);
             addGroup(g);
         }
@@ -236,14 +236,14 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
         catch(NoSuchFieldException e) { error(e); }
 
     }
-  
+
     @Override
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
-        
+
         samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
         if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
-              
+
         spectral = null;    // Discard spectroscopy header data entirely...
 
         // TODO should not be necessary if the header is proper...
@@ -257,7 +257,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
         bandID = "-";
         String filter = instrumentData.spectralElement1;
         if(filter != null) if(filter.toLowerCase().startsWith("haw_")) bandID = filter.substring(4);
-        
+
         String mceMap = header.getString("MCEMAP");
         mceSubarray = new int[subarrays];
         Arrays.fill(mceSubarray, -1);
@@ -279,45 +279,47 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     }
 
 
-    
+
     @Override
     protected void loadChannelData() {
         super.loadChannelData();
-        
+
         if(hasOption("jumpdata")) {
             try { readJumpLevels(option("jumpdata").getPath()); }
             catch(Exception e) { warning(e); }
         }
     }
-    
+
     public void readJumpLevels(String fileName) throws IOException, FitsException {
         info("Loading jump levels from " + fileName);
-        
-        Fits fits = new Fits(fileName);
-        long[][] data = (long[][]) fits.getHDU(0).getData().getData();
-        
-        for(HawcPixel pixel : this) pixel.jumpLevel = data[pixel.col][pixel.row];
-       
+
+        try(Fits fits = new Fits(fileName)) {
+            long[][] data = (long[][]) fits.getHDU(0).getData().getData();
+
+            for(HawcPixel pixel : this) pixel.jumpLevel = data[pixel.col][pixel.row];
+
+            fits.close(); 
+        }
+
         registerConfigFile(fileName);
-        fits.close();   
     }
-    
+
     public final int getSubarrayIndex(String id) {
         id = id.toUpperCase();
-        
+
         if(id.equals("R0")) return R0;
         else if(id.equals("R1")) return R1;
         else if(id.equals("T0")) return T0;
         else if(id.equals("T1")) return T1;
         throw new IllegalArgumentException("Bad subarray ID: '" + id + "'.");
     }
-    
+
     public final String getSubarrayID(int sub) {
         return polID[sub>>1] + (sub&1);
     }
 
     public ChannelGroup<HawcPixel> getSubarrayChannels(String name, List<String> specs) {
-        final ChannelGroup<HawcPixel> channels = new ChannelGroup<HawcPixel>(name, size());
+        final ChannelGroup<HawcPixel> channels = new ChannelGroup<>(name, size());
 
         for(String id : specs) {
             try { channels.addAll(subarrayGroups.get(getSubarrayIndex(id))); }
@@ -338,7 +340,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
             for(int i=0; i<subs.size(); i++) {
                 CorrelatedMode mode = subs.get(i);
                 int sub = ((HawcPixel) mode.getChannel(0)).sub;
-                
+
                 subarrayGainRenorm[sub] = mode.normalizeGains();
                 info("--> " + getSubarrayID(sub) + " gain = " + Util.f3.format(subarrayGainRenorm[sub]));
             }
@@ -388,14 +390,14 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     @Override
     public void editHeader(Header header) throws HeaderCardException {           
         super.editHeader(header);
-               
+
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
         c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
         c.add(SofiaData.makeCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
-    
+
     @Override
     public void readData(BasicHDU<?>[] hdu) throws Exception {      
         for(int i=1; i<hdu.length; i++) {
@@ -458,7 +460,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
          */
 
         clear();
-        
+
         ensureCapacity(nSub * subarrayPixels);
         for(int c=0; c < pixels; c++) {
             HawcPixel pixel = new HawcPixel(this, c);
@@ -471,7 +473,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
 
         super.configure();
     }
-    
+
     @Override
     public void validate() {
         createDarkSquidLookup();
@@ -539,17 +541,18 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
             }
         }
 
-        final Fits fits = new Fits();
 
-        addHDU(fits, Fits.makeHDU(gainR), "R array gain");
-        addHDU(fits, Fits.makeHDU(gainT), "T array gain");
-        addHDU(fits, Fits.makeHDU(flagR), "R bad pixel mask");
-        addHDU(fits, Fits.makeHDU(flagT), "T bad pixel mask");
-        addHDU(fits, Fits.makeHDU(nonlinearR), "R array nonlinearity");
-        addHDU(fits, Fits.makeHDU(nonlinearT), "T array nonlinearity");
+        try(final Fits fits = new Fits()) {
+            addHDU(fits, Fits.makeHDU(gainR), "R array gain");
+            addHDU(fits, Fits.makeHDU(gainT), "T array gain");
+            addHDU(fits, Fits.makeHDU(flagR), "R bad pixel mask");
+            addHDU(fits, Fits.makeHDU(flagT), "T bad pixel mask");
+            addHDU(fits, Fits.makeHDU(nonlinearR), "R array nonlinearity");
+            addHDU(fits, Fits.makeHDU(nonlinearT), "T array nonlinearity");
 
-        FitsToolkit.write(fits, fileName);
-        fits.close();
+            FitsToolkit.write(fits, fileName);
+            fits.close();
+        }
 
         notify("Written flatfield to " + fileName);
     }
@@ -566,28 +569,28 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
         if(name.equals("band")) return bandID;
         return super.getTableEntry(name);
     }
-    
-    
+
+
     @Override
     public String getScanOptionsHelp() {
         return super.getScanOptionsHelp() + 
                 "     -subarray=     Comma-separated list of subarrays to use, e.g. 'R0,T0'.\n";
-                
+
     }
-    
+
     @Override
     public String getMapConfigHelp() {
         return super.getScanOptionsHelp() + 
                 "     -peakflux      Calibarate for peak fluxes (default is apertures).\n";
     }
-    
+
     @Override
     public String getReductionModesHelp() {
         return super.getReductionModesHelp() +
                 "     -write.flatfield  Write flatfield file for the chop-nod pipeline.\n";
     }
-    
-  
+
+
     final static int polArrays = 2;
     final static int polSubarrays = 2;
     final static int subarrays = polArrays * polSubarrays;
@@ -600,7 +603,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     final static int polArrayPixels = rows * polCols;
 
     final static int pixels = polArrays * polArrayPixels;
-    
+
     final static int DARK_SQUID_ROW = rows - 1;
 
 

@@ -1,4 +1,5 @@
 >> port essential fixes back to 2.43...
+	- build.xml fix (</copy> -> </move>
 	- ChannelLookup fix.
 	- AstroTime
 	- Sofia scan set validation
@@ -8,6 +9,10 @@
 
 
 2.50-a1
+
+	
+
+	[FIX] build.xml had bad closing tag </copy> instead of </move>.
 
 	[FIX] {HIRMES} Dark QUIDS on the blue subarray had duplicate IDs with
 	some detecting channels. Fixed.
@@ -58,6 +63,8 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[API] Upgraded source & build Java 1.6 -> 1.8.
 
 	[API] {SOFIA} LOS/Roll acceleration responses made to be SOFIA
 	generic.

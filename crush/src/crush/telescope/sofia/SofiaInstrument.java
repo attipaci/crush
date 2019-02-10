@@ -65,8 +65,8 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
     public SofiaArrayData array;
     public SofiaSpectroscopyData spectral;
 
-    Set<String> configFiles = new HashSet<String>();
-    Vector<String> history = new Vector<String>();
+    Set<String> configFiles = new HashSet<>();
+    Vector<String> history = new Vector<>();
 
     static {
         FitsFactory.setLongStringsEnabled(true);
@@ -97,7 +97,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
         if(spectral != null) copy.spectral = spectral.copy();
-        if(configFiles != null) copy.configFiles = new HashSet<String>(configFiles);
+        if(configFiles != null) copy.configFiles = new HashSet<>(configFiles);
 
         return copy;
     }
@@ -126,14 +126,14 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         super.createModalities();
         
         try {
-            Modality<?> losResponse = new Modality<SofiaLOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), SofiaLOSResponse.class); 
+            Modality<?> losResponse = new Modality<>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), SofiaLOSResponse.class); 
             losResponse.setGainFlag(HawcPixel.FLAG_LOS_RESPONSE);
             addModality(losResponse);
         }
         catch(NoSuchFieldException e) { error(e); }
             
         try { 
-            Modality<?> rollResponse = new Modality<SofiaRollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), SofiaRollResponse.class);
+            Modality<?> rollResponse = new Modality<>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), SofiaRollResponse.class);
             rollResponse.setGainFlag(HawcPixel.FLAG_ROLL_RESPONSE);
             addModality(rollResponse);
         }
@@ -187,9 +187,9 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
         SofiaScan<?> last = (SofiaScan<?>) Scan.getLatest(scans);
 
         // Associated IDs...
-        TreeSet<String> aors = new TreeSet<String>();
-        TreeSet<String> missionIDs = new TreeSet<String>();
-        TreeSet<Float> freqs = new TreeSet<Float>();
+        TreeSet<String> aors = new TreeSet<>();
+        TreeSet<String> missionIDs = new TreeSet<>();
+        TreeSet<Float> freqs = new TreeSet<>();
 
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?> scan = (SofiaScan<?>) scans.get(i);       
@@ -274,7 +274,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Teles
 
 
     public LinkedHashSet<String> getPreservedHeaderKeys() {
-        LinkedHashSet<String> keys = new LinkedHashSet<String>();
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
 
         // Add any additional keys that should be added to the FITS header can specified by the 'fits.addkeys' option
         if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {

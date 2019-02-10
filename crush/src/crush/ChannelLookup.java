@@ -44,8 +44,8 @@ public class ChannelLookup<ChannelType extends Channel> {
      * @param channels  The group of channels for which to construct the lookup for.
      */
     public ChannelLookup(ChannelGroup<? extends ChannelType> channels) {
-        ids = new HashMap<String, ChannelType>(channels.size());
-        fixedIndices = new HashMap<Integer, ChannelType>(channels.size());
+        ids = new HashMap<>(channels.size());
+        fixedIndices = new HashMap<>(channels.size());
         
         for(ChannelType channel : channels) {
             String id = channel.getID();

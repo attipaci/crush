@@ -189,7 +189,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> {
     protected void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
-		final ChannelLookup<GismoPixel> lookup = new ChannelLookup<GismoPixel>(this);
+		final ChannelLookup<GismoPixel> lookup = new ChannelLookup<>(this);
 		final int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		
 		new LineParser() {

@@ -53,14 +53,14 @@ public abstract class PointPhotometry extends Photometry {
     public PointPhotometry(Instrument<?> instrument) {
         super(instrument);
         sourceFlux = new DataPoint();
-        scanFluxes = new Hashtable<Scan<?>, DataPoint>();
+        scanFluxes = new Hashtable<>();
     }
     
     @Override
     public PointPhotometry copy(boolean withContents) {
         PointPhotometry copy = (PointPhotometry) super.copy(withContents);
         if(sourceFlux != null) copy.sourceFlux = sourceFlux.copy();
-        copy.scanFluxes = new Hashtable<Scan<?>, DataPoint>(scanFluxes.size());
+        copy.scanFluxes = new Hashtable<>(scanFluxes.size());
         copy.scanFluxes.putAll(scanFluxes);
         return copy;
     }
@@ -171,38 +171,39 @@ public abstract class PointPhotometry extends Photometry {
         String coreName = getOutputPath() + File.separator + this.getDefaultCoreName();
         String fileName = coreName + ".dat";
 
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-        out.println("# CRUSH Point Photometry Data File");
-        out.println("# =============================================================================");
-        out.println(getASCIIHeader());
-        out.println();
-
-        Unit Jy = new Unit("Jy/beam", getInstrument().janskyPerBeam());
-        out.println("# Final Combined Point Photometry:");
-        out.println("# =============================================================================");
-        out.println("# [" + sourceName + "]");
-        out.println("Flux    " + getFinalizedSourceFlux().toString(Jy));    
-        out.println("Time    " + Util.f1.format(integrationTime/Unit.min) + " min.");
-
-        double chi2 = getReducedChi2();
-        if(!Double.isNaN(chi2)) out.println("|rChi|  " + Util.s3.format(Math.sqrt(chi2)));
-
-        out.println();
-        out.println();
-
-        if(scanFluxes != null && numberOfScans() > 1) {
-            out.println("# Point Photometry breakdown by scan:");
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println("# CRUSH Point Photometry Data File");
             out.println("# =============================================================================");
-            for(int i=0; i<numberOfScans(); i++) {
-                Scan<?> scan = getScan(i);
-                DataPoint flux = scanFluxes.get(scan);  
-                if(flux == null) continue;
-                out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));
+            out.println(getASCIIHeader());
+            out.println();
+
+            Unit Jy = new Unit("Jy/beam", getInstrument().janskyPerBeam());
+            out.println("# Final Combined Point Photometry:");
+            out.println("# =============================================================================");
+            out.println("# [" + sourceName + "]");
+            out.println("Flux    " + getFinalizedSourceFlux().toString(Jy));    
+            out.println("Time    " + Util.f1.format(integrationTime/Unit.min) + " min.");
+
+            double chi2 = getReducedChi2();
+            if(!Double.isNaN(chi2)) out.println("|rChi|  " + Util.s3.format(Math.sqrt(chi2)));
+
+            out.println();
+            out.println();
+
+            if(scanFluxes != null && numberOfScans() > 1) {
+                out.println("# Point Photometry breakdown by scan:");
+                out.println("# =============================================================================");
+                for(int i=0; i<numberOfScans(); i++) {
+                    Scan<?> scan = getScan(i);
+                    DataPoint flux = scanFluxes.get(scan);  
+                    if(flux == null) continue;
+                    out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));
+                }
+
             }
 
+            out.close();
         }
-
-        out.close();
 
         CRUSH.notify(this, "Written " + fileName + "");
 
@@ -214,58 +215,59 @@ public abstract class PointPhotometry extends Photometry {
 
     public void gnuplot(String coreName, String dataName) throws IOException {
         String plotName = coreName + ".plt";
-        PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
+        
+        try(PrintWriter plot = new PrintWriter(new FileOutputStream(plotName))) {
+            DataPoint F = new DataPoint(sourceFlux);
 
-        DataPoint F = new DataPoint(sourceFlux);
+            double jansky = getInstrument().janskyPerBeam();
+            Unit Jy = new Unit("Jy/beam", jansky);
+            Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
+            Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
 
-        double jansky = getInstrument().janskyPerBeam();
-        Unit Jy = new Unit("Jy/beam", jansky);
-        Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
-        Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
+            String printValue = null;
+            double mag = Math.max(Math.abs(F.value()), F.rms()) ;       
+            if(mag > 1.0 * Jy.value()) printValue = F.toString(Jy);
+            else if(mag > 1.0 * mJy.value()) printValue = F.toString(mJy);
+            else printValue = F.toString(uJy);
 
-        String printValue = null;
-        double mag = Math.max(Math.abs(F.value()), F.rms()) ;       
-        if(mag > 1.0 * Jy.value()) printValue = F.toString(Jy);
-        else if(mag > 1.0 * mJy.value()) printValue = F.toString(mJy);
-        else printValue = F.toString(uJy);
+            F.scale(1.0 / jansky);  
 
-        F.scale(1.0 / jansky);  
+            plot.println("set title '" + sourceName.replace("_",  " ") + " / " + getInstrument().getName().toUpperCase() + "    " + printValue + "'");
+            plot.println("set xla 'Scans");
+            plot.println("set yla 'Photometry (Jy/beam)'");
 
-        plot.println("set title '" + sourceName.replace("_",  " ") + " / " + getInstrument().getName().toUpperCase() + "    " + printValue + "'");
-        plot.println("set xla 'Scans");
-        plot.println("set yla 'Photometry (Jy/beam)'");
+            plot.println("set term push");
+            plot.println("set term unknown");
 
-        plot.println("set term push");
-        plot.println("set term unknown");
+            plot.print("set xtics rotate by 45" + " right (");
+            for(int i=0; i<numberOfScans(); i++) {
+                if(i > 0) plot.print(", ");
+                plot.print("'" + getScan(i).getID() + "' " + i);
+            }
+            plot.println(")");
 
-        plot.print("set xtics rotate by 45" + " right (");
-        for(int i=0; i<numberOfScans(); i++) {
-            if(i > 0) plot.print(", ");
-            plot.print("'" + getScan(i).getID() + "' " + i);
+            plot.println("set xra [-0.5:" + (numberOfScans() - 0.5) + "]");
+
+            plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
+
+            plot.println("plot \\");
+            plot.println("  " + F.value() + " notitle lt -1, \\");
+            plot.println("  " + (F.value() - F.rms()) + " notitle lt 0, \\");
+            plot.println("  " + (F.value() + F.rms()) + " notitle lt 0, \\");
+            plot.println("  '" + dataName + "' index 1 using :2:4 notitle with yerr lt 1 pt 5 lw 1");
+
+            if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
+
+            if(hasOption("write.png")) gnuplotPNG(plot, coreName);
+
+            plot.println("set out");
+            plot.println("set term pop");
+
+            plot.println("unset label 1");      
+            plot.println((hasOption("show") ? "" : "#")  + "replot");
+
+            plot.close();
         }
-        plot.println(")");
-
-        plot.println("set xra [-0.5:" + (numberOfScans() - 0.5) + "]");
-
-        plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
-
-        plot.println("plot \\");
-        plot.println("  " + F.value() + " notitle lt -1, \\");
-        plot.println("  " + (F.value() - F.rms()) + " notitle lt 0, \\");
-        plot.println("  " + (F.value() + F.rms()) + " notitle lt 0, \\");
-        plot.println("  '" + dataName + "' index 1 using :2:4 notitle with yerr lt 1 pt 5 lw 1");
-
-        if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
-
-        if(hasOption("write.png")) gnuplotPNG(plot, coreName);
-
-        plot.println("set out");
-        plot.println("set term pop");
-
-        plot.println("unset label 1");      
-        plot.println((hasOption("show") ? "" : "#")  + "replot");
-
-        plot.close();
 
         CRUSH.notify(this, "Written " + plotName);
 

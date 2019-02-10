@@ -181,7 +181,7 @@ public class LabocaSubscan extends APEXSubscan<LabocaFrame> {
 	
 		final int n = hdu.getNRows();
 		
-		final ArrayList<Vector2D> table = new ArrayList<Vector2D>();
+		final ArrayList<Vector2D> table = new ArrayList<>();
 		final int iMJD = hdu.findColumn("MJD");
 		final int iLABEL = hdu.findColumn("MONPOINT");
 		final int iVALUE = hdu.findColumn("MONVALUE");

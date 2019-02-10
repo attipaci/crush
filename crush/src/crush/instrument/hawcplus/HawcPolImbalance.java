@@ -43,7 +43,4 @@ public class HawcPolImbalance extends ZeroMeanGains {
     public void setRawGain(Channel c, double value) throws Exception {
         throw new UnsupportedOperationException("Cannot set polarization imbalance gains.");
     }
-
-    
-
 }

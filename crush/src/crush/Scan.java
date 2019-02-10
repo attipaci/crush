@@ -253,7 +253,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
         double lastMJD = merged.getLastFrame().MJD;
 
-        ArrayList<IntegrationType> parts = new ArrayList<IntegrationType>();
+        ArrayList<IntegrationType> parts = new ArrayList<>();
 
         for(int i=1; i<size(); i++) {
             IntegrationType integration = get(i);
@@ -306,7 +306,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
         for(int i=0; i<table.length; i++) {
             IntegrationType integration = get(i);
-            LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
+            LinkedHashMap<String, Object> data = new LinkedHashMap<>();
             if(i == 0) first = data;
             integration.getFitsData(data);
             if(details) integration.addDetails(data);
@@ -536,7 +536,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ArrayList<Scan<IntegrationType>> split() {
         info("Splitting subscans into separate scans.");
-        ArrayList<Scan<IntegrationType>> scans = new ArrayList<Scan<IntegrationType>>();
+        ArrayList<Scan<IntegrationType>> scans = new ArrayList<>();
         for(IntegrationType integration : this) {
             Scan<IntegrationType> scan = (Scan<IntegrationType>) clone();
             if(size() > 1) scan.isSplit = true;
@@ -561,7 +561,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
         if(gains.hasOption("estimator")) if(gains.option("estimator").is("median")) isRobust = true; 
 
-        Hashtable<Integer, WeightedPoint[]> phaseGains = new Hashtable<Integer, WeightedPoint[]>();
+        Hashtable<Integer, WeightedPoint[]> phaseGains = new Hashtable<>();
 
         final boolean usePhases = hasOption("correlated." + modalityName + ".phasegains");
 

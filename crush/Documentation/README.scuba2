@@ -59,7 +59,7 @@ few GB or RAM (to fit the SCUBA-2 data), running any flavor of UNIX (such as
 Linux, BSD, or MacOS) or Windows. (CRUSH will also run on ARM-based platforms, 
 but don't expect blazing speeds on these mobile-class devices...)
 
-You will also need Java 6 (a.k.a 1.6.0) or later on the machine, but you
+You will also need Java 8 (a.k.a 1.8.0) or later on the machine, but you
 probably have that already... 
 
 Your main limitation will likely be the RAM available, which will limit how

@@ -58,7 +58,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     
     public GyroDrifts gyroDrifts;
 
-    Vector<String> history = new Vector<String>();
+    Vector<String> history = new Vector<>();
 
     public SofiaObservationData observation;
     public SofiaCollectionData mode;
@@ -79,7 +79,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     
 
     
-    LinkedHashMap<String, HeaderCard> preservedKeys = new LinkedHashMap<String, HeaderCard>();
+    LinkedHashMap<String, HeaderCard> preservedKeys = new LinkedHashMap<>();
 
     public SofiaScan(SofiaInstrument<?> instrument) {
         super(instrument);

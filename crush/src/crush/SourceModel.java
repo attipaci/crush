@@ -188,7 +188,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public void clearProcessBrief() { processBrief = new StringBuffer(); }
 
     public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
-        this.scans = new Vector<Scan<?>>(collection);
+        this.scans = new Vector<>(collection);
         for(Scan<?> scan : scans) scan.setSourceModel(this);		
 
         // TODO remove this if source.setInstrument works in Pipeline...
@@ -599,7 +599,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public static synchronized void setRecyclerCapacity(int size) {
         if(size <= 0) recycler = null;
-        else recycler = new ArrayBlockingQueue<SourceModel>(size);
+        else recycler = new ArrayBlockingQueue<>(size);
     }
 
 

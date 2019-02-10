@@ -82,7 +82,7 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 #### Step 1.
     
   Install Java (if necessary), e.g. from www.java.com. If you already have 
-  Java, check that it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
+  Java, check that it is version 1.8.0 (a.k.a. Java 8) or later, by typing:
 
     > java -version
 

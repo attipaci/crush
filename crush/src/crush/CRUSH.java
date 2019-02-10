@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private final static String version = "2.50-a1";
-    private final static String revision = "devel.22";
+    private final static String version = "2.50-a2";
+    private final static String revision = "devel.1";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -71,7 +71,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     
     
     public Instrument<?> instrument;
-    public Vector<Scan<?>> scans = new Vector<Scan<?>>();
+    public Vector<Scan<?>> scans = new Vector<>();
     public SourceModel source;
     public String[] commandLine;
     
@@ -82,7 +82,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public int parallelTasks = 1;
 
     private ArrayList<Pipeline> pipelines;
-    private Vector<Integration<?>> queue = new Vector<Integration<?>>();
+    private Vector<Integration<?>> queue = new Vector<>();
 
     private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
@@ -411,7 +411,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         info("Will use " + parallelScans + " x " + parallelTasks + " grid of threads.");
 
-        pipelines = new ArrayList<Pipeline>(parallelScans); 
+        pipelines = new ArrayList<>(parallelScans); 
         for(int i=0; i<parallelScans; i++) {
             Pipeline pipeline = new Pipeline(this, parallelTasks);
             pipeline.setSourceModel(source);
@@ -656,7 +656,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public void iterate() throws Exception {
         List<String> ordering = option("ordering").getLowerCaseList();
-        ArrayList<String> tasks = new ArrayList<String>(ordering.size());
+        ArrayList<String> tasks = new ArrayList<>(ordering.size());
 
         for(int i=0; i < ordering.size(); i++) {
             final String task = ordering.get(i);
@@ -881,23 +881,25 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         try {
             URLConnection connection = new URL("http://www.sigmyne.com/crush/v2/release.version").openConnection();
+
             try {
                 connection.setConnectTimeout(TCP_CONNECTION_TIMEOUT);
                 connection.setReadTimeout(TCP_READ_TIMEOUT);
                 connection.connect();
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                version = in.readLine();
-                in.close();
+                
+                try(BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    version = in.readLine();
+                    in.close();
+                }
+                catch(IOException e) {
+                    Util.warning(CRUSH.class, "Could not get version update information.");    
+                    if(debug) Util.warning(CRUSH.class, e);
+                }
             } 
             catch(SocketTimeoutException e) {
                 Util.warning(CRUSH.class, "Timed out while awaiting version update information.");
             }
-            catch(IOException e) {
-                Util.warning(CRUSH.class, "Could not get version update information.");    
-                if(debug) Util.warning(CRUSH.class, e);
-            }
-  
+            
         }
         catch(MalformedURLException e) { Util.error(CRUSH.class, e); }
         catch(IOException e) {

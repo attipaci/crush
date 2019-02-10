@@ -43,7 +43,7 @@ under the _Download_ tab.
 
 ### Java JDK
 
- You need a Java Developers Kit (JDK), 1.6.0 or later, containing the `javac`
+ You need a Java Developers Kit (JDK), 1.8.0 or later, containing the `javac`
  compiler. If you do not have javac on your system, grab a JDK e.g. from 
    
     java.oracle.com

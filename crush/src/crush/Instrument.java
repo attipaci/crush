@@ -151,8 +151,8 @@ implements TableFormatter.Entries, BasicMessaging {
 
         return copy;
     }
-    
-    
+
+
 
     public void setParent(Object o) { this.parent = o; }
 
@@ -181,25 +181,25 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     public Projector2D<?> getProjectorInstance(Coordinate2D reference) {      
-        return new Projector2D<Coordinate2D>(new DefaultProjection2D(reference));      
+        return new Projector2D<>(new DefaultProjection2D(reference));      
     }
 
 
     public Grid2D<?> getGridInstance() { return new FlatGrid2D(); }
 
-    
+
     protected abstract PixelLayout getLayoutInstance();
 
-    
+
     public PixelLayout createLayout() {
         layout = getLayoutInstance(); 
         return layout;
     }
 
-    
+
     public PixelLayout getLayout() { return layout; }
 
-    
+
     protected final void createEnsembles() {
         if(isEmpty()) return;
 
@@ -209,7 +209,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         hasEnsembles = true;
     }
-    
+
     @Override
     public boolean add(ChannelType channel) {
         channel.index = size();
@@ -267,7 +267,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(isEmpty()) return;
 
         reindex(); 
-        
+
         if(layout == null) createLayout();
         layout.validate();
 
@@ -314,13 +314,13 @@ implements TableFormatter.Entries, BasicMessaging {
             if(Double.isNaN(channel.variance)) channel.variance = channel.weight > 0.0 ? 1.0 / channel.weight : 0.0;
         }	
         census();
-        
+
         if(CRUSH.debug) {
             debug("mapping channels: " + mappingChannels);
             debug("mapping pixels: " + getMappingPixels(~getSourcelessChannelFlags()).size());
         }
     }
-    
+
 
     public void jackknife() {
         notify("JACKKNIFE: Randomly inverted channels in source.");
@@ -368,7 +368,7 @@ implements TableFormatter.Entries, BasicMessaging {
                 for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
         }  
     }
-    
+
     public void registerConfigFile(String fileName) {}
 
     public abstract String getTelescopeName();
@@ -398,7 +398,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void setDateOptions(double MJD) {
         setMJDOptions(MJD);
-        
+
         if(!options.containsKey("date")) return;
 
         Hashtable<String, Vector<String>> settings = option("date").conditionals;
@@ -423,7 +423,7 @@ implements TableFormatter.Entries, BasicMessaging {
             catch(ParseException e) { warning(e); }
         }
     }
-    
+
     private void setMJDOptions(double MJD) {
         if(!options.containsKey("mjd")) return;
 
@@ -597,8 +597,8 @@ implements TableFormatter.Entries, BasicMessaging {
     // TODO ability to flag groups divisions...
     // perhaps flag.group, and flag.division...
     public void flagChannels(Collection<String> list) {
-        ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
-        ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>("flag", list.size());
+        ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
+        ChannelGroup<ChannelType> channels = new ChannelGroup<>("flag", list.size());
 
         for(String spec : list) channels.add(spec, lookup); 
 
@@ -625,7 +625,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         info("Defining " + list.size() + " blind channels.");		
 
-        ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+        ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
 
         for(String id : list) {
             ChannelType channel = lookup.get(id);
@@ -641,8 +641,8 @@ implements TableFormatter.Entries, BasicMessaging {
             try { loadChannelData(option("pixeldata").getPath()); }
             catch(IOException e) { warning("Cannot read pixel data. Using default gains & flags."); }
         }	
-        
-        
+
+
         if(hasOption("wiring")) { 
             try { readWiring(option("wiring").getPath()); } 
             catch(IOException e) { warning("Cannot read wiring data. Specific channel divisions not established."); }
@@ -709,7 +709,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public int getNonDetectorFlags() { return Channel.FLAG_DEAD; }
 
     protected void createGroups() {
-        groups = new Hashtable<String, ChannelGroup<ChannelType>>();
+        groups = new Hashtable<>();
 
         addGroup("all", createGroup());
         addGroup("live", createGroup().discard(Channel.FLAG_DEAD));
@@ -719,11 +719,11 @@ implements TableFormatter.Entries, BasicMessaging {
         addGroup("blinds", createGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 
         if(options.containsKey("group")) {
-            ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+            ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
 
             Configurator option = option("group");
             for(String name : option.getTimeOrderedKeys()) {
-                ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
+                ChannelGroup<ChannelType> channels = new ChannelGroup<>(name);
                 for(String spec : option.option(name).getList()) channels.add(spec, lookup, Channel.FLAG_DEAD);
                 addGroup(name, channels);
             }
@@ -731,19 +731,19 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     protected void createDivisions() {
-        divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
+        divisions = new Hashtable<>();
 
-        addDivision(new ChannelDivision<ChannelType>("all", groups.get("all")));
-        addDivision(new ChannelDivision<ChannelType>("live", groups.get("live")));
-        addDivision(new ChannelDivision<ChannelType>("detectors", groups.get("detectors")));
-        addDivision(new ChannelDivision<ChannelType>("obs-channels", groups.get("obs-channels")));
-        addDivision(new ChannelDivision<ChannelType>("sensitive", groups.get("sensitive")));
-        addDivision(new ChannelDivision<ChannelType>("blinds", groups.get("blinds")));
+        addDivision(new ChannelDivision<>("all", groups.get("all")));
+        addDivision(new ChannelDivision<>("live", groups.get("live")));
+        addDivision(new ChannelDivision<>("detectors", groups.get("detectors")));
+        addDivision(new ChannelDivision<>("obs-channels", groups.get("obs-channels")));
+        addDivision(new ChannelDivision<>("sensitive", groups.get("sensitive")));
+        addDivision(new ChannelDivision<>("blinds", groups.get("blinds")));
 
         if(options.containsKey("division")) {
             Configurator option = option("division");
             for(String name : option.getTimeOrderedKeys()) {
-                ChannelDivision<ChannelType> division = new ChannelDivision<ChannelType>(name);
+                ChannelDivision<ChannelType> division = new ChannelDivision<>(name);
                 for(String groupName : option.option(name).getList()) {
                     ChannelGroup<ChannelType> group = groups.get(groupName);
                     if(group != null) division.add(group);
@@ -755,7 +755,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     protected void createModalities() {
-        modalities = new Hashtable<String, Modality<?>>();
+        modalities = new Hashtable<>();
 
         try { addModality(new CorrelatedModality("all", "Ca", divisions.get("all"), Channel.class.getField("gain"))); }
         catch(NoSuchFieldException e) { error(e); }
@@ -793,28 +793,28 @@ implements TableFormatter.Entries, BasicMessaging {
         addModality(gradients);
 
         // Add pointing response modes...
-        addModality(new Modality<PointingResponse>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
-        addModality(new Modality<PointingResponse>("telescope-y", "Ty", divisions.get("detectors"), PointingResponse.class));
+        addModality(new Modality<>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
+        addModality(new Modality<>("telescope-y", "Ty", divisions.get("detectors"), PointingResponse.class));
 
         // Add acceleration response modes...
-        addModality(new Modality<AccelerationResponse>("accel-x", "ax", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-y", "ay", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-x^2", "axs", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-y^2", "ays", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-|x|", "a|x|", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-|y|", "a|y|", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-mag", "am", divisions.get("detectors"), AccelerationResponse.class));
-        addModality(new Modality<AccelerationResponse>("accel-norm", "an", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-x", "ax", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-y", "ay", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-x^2", "axs", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-y^2", "ays", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-|x|", "a|x|", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-|y|", "a|y|", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-mag", "am", divisions.get("detectors"), AccelerationResponse.class));
+        addModality(new Modality<>("accel-norm", "an", divisions.get("detectors"), AccelerationResponse.class));
 
         // Add Chopper response modes...
-        addModality(new Modality<ChopperResponse>("chopper-x", "cx", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-y", "cy", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-x^2", "cxs", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-y^2", "cys", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-|x|", "c|x|", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-|y|", "c|y|", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-mag", "cm", divisions.get("detectors"), ChopperResponse.class));
-        addModality(new Modality<ChopperResponse>("chopper-norm", "cn", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-x", "cx", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-y", "cy", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-x^2", "cxs", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-y^2", "cys", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-|x|", "c|x|", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-|y|", "c|y|", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-mag", "cm", divisions.get("detectors"), ChopperResponse.class));
+        addModality(new Modality<>("chopper-norm", "cn", divisions.get("detectors"), ChopperResponse.class));
 
 
         if(hasOption("blind")) {
@@ -857,14 +857,14 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public List<String> getDivisionNames() {
-        ArrayList<String> keys = new ArrayList<String>();
+        ArrayList<String> keys = new ArrayList<>();
         for(String key : divisions.keySet()) keys.add(key);
         Collections.sort(keys);
         return keys;
     }
 
     public List<String> getModalityNames() {
-        ArrayList<String> keys = new ArrayList<String>();
+        ArrayList<String> keys = new ArrayList<>();
         for(String key : modalities.keySet()) keys.add(key);
         Collections.sort(keys);
         return keys;
@@ -906,7 +906,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         StringBuffer buf = new StringBuffer();
 
-        ArrayList<Integer> values = new ArrayList<Integer>(Channel.flagSpace.getValues());
+        ArrayList<Integer> values = new ArrayList<>(Channel.flagSpace.getValues());
         Collections.sort(values);
 
         for(int i=0; i<values.size(); i++) buf.append(prepend + Channel.flagSpace.get(values.get(i)) + "\n");
@@ -915,27 +915,29 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void writeChannelData(String filename, String header) throws IOException {
-        PrintWriter out = new PrintWriter(new FileOutputStream(filename));
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(filename))) {
 
-        out.println("# CRUSH Pixel Data File");
-        out.println("#");
-        if(header != null) {
-            out.println(header);
+            out.println("# CRUSH Pixel Data File");
             out.println("#");
-        }	
+            if(header != null) {
+                out.println(header);
+                out.println("#");
+            }	
 
-        out.print(getChannelFlagGuide("# Flag "));
-        out.println("#");
-        out.println("# " + getChannelDataHeader());
+            out.print(getChannelFlagGuide("# Flag "));
+            out.println("#");
+            out.println("# " + getChannelDataHeader());
 
-        standardWeights();
+            standardWeights();
 
-        for(ChannelType channel : this) out.println(channel);
-        out.close();
+            for(ChannelType channel : this) out.println(channel);
+            out.close();
 
-        notify("Written " + filename);
+            notify("Written " + filename);
 
-        sampleWeights();
+            sampleWeights();
+        }
+        catch(IOException e) { throw e; }
     }
 
 
@@ -946,7 +948,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public void loadChannelData(String fileName) throws IOException {
         info("Loading pixel data from " + fileName);
 
-        final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+        final ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
 
         // Channels not contained in the data file are assumed dead...
         for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
@@ -975,7 +977,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
 
-  
+
     public void flagInvalidPositions() {
         for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 1 * Unit.deg) 
             for(Channel channel : pixel) channel.flag(Channel.FLAG_BLIND);
@@ -1073,18 +1075,18 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public ChannelDivision<ChannelType> getDivision(String name, Field field, int discardFlags) throws IllegalAccessException {
-        HashMap<Integer, ChannelGroup<ChannelType>> table = new HashMap<Integer, ChannelGroup<ChannelType>>();
+        HashMap<Integer, ChannelGroup<ChannelType>> table = new HashMap<>();
 
         for(int i=0; i<size(); i++) {
             ChannelType channel = get(i);
             if(channel.isFlagged(discardFlags)) continue;
 
             int group = field.getInt(channel);
-            if(!table.containsKey(group)) table.put(group, new ChannelGroup<ChannelType>(field.getName() + "-" + group));
+            if(!table.containsKey(group)) table.put(group, new ChannelGroup<>(field.getName() + "-" + group));
             table.get(group).add(channel);
         }
 
-        ChannelDivision<ChannelType> organizer = new ChannelDivision<ChannelType>(name);
+        ChannelDivision<ChannelType> organizer = new ChannelDivision<>(name);
         for(int group : table.keySet()) organizer.add(table.get(group));
 
         return organizer;
@@ -1110,13 +1112,13 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public List<String> listModalities() {
-        ArrayList<String> names = new ArrayList<String>(modalities.keySet());
+        ArrayList<String> names = new ArrayList<>(modalities.keySet());
         Collections.sort(names);
         return names;
     }
 
     public List<String> listDivisions() {
-        ArrayList<String> names = new ArrayList<String>(divisions.keySet());
+        ArrayList<String> names = new ArrayList<>(divisions.keySet());
         Collections.sort(names);
         return names;
     }
@@ -1165,12 +1167,12 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public boolean slim(int discardFlags, boolean reindex) {
         if(!super.removeFlagged(discardFlags)) return false;
-        
+
         if(reindex) reindex();
-        
+
         // Re-create all groups / divisions / modalities from the reduced set of channels...
         createEnsembles();
-      
+
         if(layout != null) layout.slim(discardFlags);
 
         info("Slimmed to " + size() + " live channels.");
@@ -1402,7 +1404,7 @@ implements TableFormatter.Entries, BasicMessaging {
             protected void process(ChannelType channel) {
                 for(int k=channel.index; --k >= 0; ) {
                     final Channel other = get(k);
-                    final Overlap<Channel> overlap = new Overlap<Channel>(channel, other, channel.overlap(other, pointSize));
+                    final Overlap<Channel> overlap = new Overlap<>(channel, other, channel.overlap(other, pointSize));
                     if(overlap.isNull()) continue;
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
@@ -1416,10 +1418,10 @@ implements TableFormatter.Entries, BasicMessaging {
     // Sequential, because it is usually called from a parallel environment...
     private void calcGeometricOverlaps(final GeometricIndexed geometric, final double pointSize) {
         final double radius = 2.0 * pointSize;
-        final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+        final ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
 
         double nbeams = 2.0 * pointSize / getResolution();
-        final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>((int) Math.ceil(nbeams * nbeams));
+        final ArrayList<Integer> nearbyIndex = new ArrayList<>((int) Math.ceil(nbeams * nbeams));
 
         for(Channel channel : this) {
             nearbyIndex.clear();
@@ -1435,7 +1437,7 @@ implements TableFormatter.Entries, BasicMessaging {
                     final Channel other = lookup.get(fixedIndex);
                     if(other == null) continue;
 
-                    final Overlap<Channel> overlap = new Overlap<Channel>(channel, other, channel.overlap(other, pointSize));
+                    final Overlap<Channel> overlap = new Overlap<>(channel, other, channel.overlap(other, pointSize));
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
                 }
@@ -1450,11 +1452,11 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(!file.exists()) throw new IllegalArgumentException("Unknown instrument: '" + name + "'");
 
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-        String className = in.readLine();
-        in.close();
-        return (Instrument<?>) Class.forName(className).getConstructor().newInstance(); 
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+            String className = in.readLine();
+            in.close();
+            return (Instrument<?>) Class.forName(className).getConstructor().newInstance(); 
+        }
     }
 
     @Override

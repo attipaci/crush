@@ -88,12 +88,13 @@ public abstract class APEXInstrument<ChannelType extends Channel> extends Telesc
     
 
     public void readPar(String fileName) throws IOException, FitsException {
-        Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"));
+        try(Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"))) {
 
-        BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
-        readPar(hdu);
+            BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
+            readPar(hdu);
 
-        fits.close();
+            fits.close();
+        }
     }
 
     public final void readPar(Fits fits) throws IOException, FitsException {

@@ -395,25 +395,25 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
     }
 
     public void writeGainCoefficients(String fileName, String header) throws IOException {
-        PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-
-        out.println("# SHARC2 Non-linearity Coefficients ");
-        out.println("#");
-        if(header != null) {
-            out.println(header);
+        try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
+            out.println("# SHARC2 Non-linearity Coefficients ");
             out.println("#");
-        }
-        out.println("# row\tcol\tG(eps=0)\tI0(Vb=1V)\tT0 (K))");
-        out.println("# ----- ------- --------------  --------------- ----------");
+            if(header != null) {
+                out.println(header);
+                out.println("#");
+            }
+            out.println("# row\tcol\tG(eps=0)\tI0(Vb=1V)\tT0 (K))");
+            out.println("# ----- ------- --------------  --------------- ----------");
 
-        for(Sharc2Pixel pixel : this) {
-            out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
-            out.print(Util.f6.format(pixel.G0) + "\t");
-            out.print(Util.e4.format(-pixel.V0 / pixel.biasV) + "\t");
-            out.println(Util.f6.format(pixel.T0 / Unit.K));
-        }
+            for(Sharc2Pixel pixel : this) {
+                out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
+                out.print(Util.f6.format(pixel.G0) + "\t");
+                out.print(Util.e4.format(-pixel.V0 / pixel.biasV) + "\t");
+                out.println(Util.f6.format(pixel.T0 / Unit.K));
+            }
 
-        out.close();
+            out.close();
+        }
 
         notify("Written nonlinearity coefficients to " + fileName);
     }

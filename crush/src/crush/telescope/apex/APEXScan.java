@@ -139,7 +139,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	@SuppressWarnings("unchecked")
 	@Override
 	public SubscanType getIntegrationInstance() {
-		return (SubscanType) new APEXSubscan<APEXFrame>(this);
+		return (SubscanType) new APEXSubscan<>(this);
 	}
 	
 	public String getFileName(String path, String spec, String projectID) throws FileNotFoundException {
@@ -249,52 +249,51 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 	
 	}
 	
-	public void readScan(String fileName, boolean readFully) throws IOException, FitsException {	
-			
-		Fits fits = getFits(fileName);		
-		BasicHDU<?>[] hdu = fits.read();
+	public void readScan(String fileName, boolean readFully) throws IOException, FitsException {				
+	    try(Fits fits = getFits(fileName)) {
+	        BasicHDU<?>[] hdu = fits.read();
 
-        //@SuppressWarnings("resource")
-        //ArrayDataInput in = fits.getStream();
-    
-		// TODO Pick scan and instrument hdu's by name
-		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
-		
-		APEXInstrument<? extends Channel> instrument = getInstrument();
-		
-		instrument.readPar((BinaryTableHDU) hdu[2]);
-		instrument.configure();
-		clear();
-		
-		int[] bands = instrument.activeBands;
-		
-		int k=3;
-		for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
-			try {
-				SubscanType subscan = getIntegrationInstance();
-				subscan.integrationNo = i;
-				subscan.getInstrument().band = bands[j];
-				
-				info("Integration " + subscan.getID() + ": ");
-				
-				// HDUs for each integration can come in any order, so check EXTNAME...
-				for(int m=0; m<3; m++, k++) {
-					BinaryTableHDU table = (BinaryTableHDU) hdu[k];
-					
-					String extName = table.getHeader().getStringValue("EXTNAME");
-					
-					if(extName.equalsIgnoreCase("DATAPAR-MBFITS")) subscan.readDataPar(table);
-					else if(extName.equalsIgnoreCase("ARRAYDATA-MBFITS")) subscan.readData(table);
-					else if(extName.equalsIgnoreCase("MONITOR-MBFITS")) if(readMonitor()) subscan.readMonitor(table);
-				}
+	        //@SuppressWarnings("resource")
+	        //ArrayDataInput in = fits.getStream();
 
-				
-				add(subscan);
-			}
-			catch(Exception e) { error(e); }
-		}
-	
-		try { fits.close(); }
+	        // TODO Pick scan and instrument hdu's by name
+	        int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
+
+	        APEXInstrument<? extends Channel> instrument = getInstrument();
+
+	        instrument.readPar((BinaryTableHDU) hdu[2]);
+	        instrument.configure();
+	        clear();
+
+	        int[] bands = instrument.activeBands;
+
+	        int k=3;
+	        for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
+	            try {
+	                SubscanType subscan = getIntegrationInstance();
+	                subscan.integrationNo = i;
+	                subscan.getInstrument().band = bands[j];
+
+	                info("Integration " + subscan.getID() + ": ");
+
+	                // HDUs for each integration can come in any order, so check EXTNAME...
+	                for(int m=0; m<3; m++, k++) {
+	                    BinaryTableHDU table = (BinaryTableHDU) hdu[k];
+
+	                    String extName = table.getHeader().getStringValue("EXTNAME");
+
+	                    if(extName.equalsIgnoreCase("DATAPAR-MBFITS")) subscan.readDataPar(table);
+	                    else if(extName.equalsIgnoreCase("ARRAYDATA-MBFITS")) subscan.readData(table);
+	                    else if(extName.equalsIgnoreCase("MONITOR-MBFITS")) if(readMonitor()) subscan.readMonitor(table);
+	                }
+
+	                add(subscan);
+	            }
+	            catch(Exception e) { error(e); }
+	        }
+
+	        fits.close(); 
+	    }
 		catch(IOException e) {}
 		
 	}
