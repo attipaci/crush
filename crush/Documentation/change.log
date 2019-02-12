@@ -1,3 +1,5 @@
+>> HIRMES flattened images have null OBJECT
+>> Laboca validation problem. 
 >> port essential fixes back to 2.43...
 	- Instrument.standardWeights() / sampleWeights() w/o sqrt()
 	- build.xml fix (</copy> -> </move>
@@ -10,6 +12,9 @@
 
 
 2.50-a1
+
+	[FIX] Scan velocity and acceleration clipping weren't exactly working
+	as advertised. Fixed with complete overhaul of motion handling.
 
 	[FIX] Instrument.standardWeights() / sampleWeight() has unneeded
 	sqrt(). Fixed.	
@@ -65,6 +70,8 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[API] Complete overhaul of how motion signals are handled.
 
 	[API] Upgraded source & build Java 1.6 -> 1.8.
 

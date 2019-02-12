@@ -26,13 +26,13 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import crush.Integration;
+import crush.Signal;
 import crush.motion.Motion;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.math.Range;
-import jnum.math.Vector2D;
 
 
 // TODO account for point-source filtering, and Dependents...
@@ -71,10 +71,8 @@ public class MotionFilter extends KillFilter {
 		if(hasOption("harmonics")) harmonics = Math.max(1, option("harmonics").getInt());
 		oddHarmonicsOnly = hasOption("odd");
 		
-		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
-		
-		addFilter(pos, Motion.X, buf);
-		addFilter(pos, Motion.Y, buf);
+		addFilter(Motion.SCANNING, Motion.X, buf);
+		addFilter(Motion.SCANNING, Motion.Y, buf);
 		
 		expandFilter();
 		harmonize();
@@ -114,15 +112,16 @@ public class MotionFilter extends KillFilter {
 	}
 
 	
-	private void addFilter(Vector2D[] pos, Motion dir, StringBuffer buf) {
+	private void addFilter(int type, Motion dir, StringBuffer buf) {
 		makeTempData(); 
 		
 		final float[] data = getTempData();
 		final boolean[] reject = getRejectMask();
 		
-		IntStream.range(0,  pos.length).parallel().forEach(t -> data[t] = pos[t] == null ? Float.NaN : (float) dir.getValue(pos[t]));
-
-		Arrays.fill(data, pos.length, data.length, 0.0F);
+		Signal pos = integration.getPositionSignal(type, dir);
+		
+        System.arraycopy(pos.value, 0, data, 0, pos.length());
+		Arrays.fill(data, pos.length(), data.length, 0.0F);
 		
 		// Remove any constant scanning offset
 		levelData();

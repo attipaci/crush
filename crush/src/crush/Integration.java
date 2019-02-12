@@ -38,7 +38,6 @@ import crush.motion.Chopper;
 import crush.motion.Chopping;
 import crush.motion.Motion;
 import jnum.Configurator;
-import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.PointOp;
@@ -333,17 +332,17 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public double getDuration() { return size() * instrument.samplingInterval; }
 
     public final Stream<FrameType> validStream() { return stream().filter(x -> x != null); }
-    
+
     public final Stream<FrameType> validParallelStream() { return stream().filter(x -> x != null); }
-    
+
     public final Stream<FrameType> validStream(int excludeFlags) {
         return validStream().filter(x -> x.isUnflagged(excludeFlags));
     }
-    
+
     public final Stream<FrameType> validParallelStream(int excludeFlags) { 
         return validParallelStream().filter(x -> x.isUnflagged(excludeFlags));
     }
-    
+
     public void invert() {
         validParallelStream().forEach(x -> x.invert());
     }
@@ -374,7 +373,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final Range range = option("range").getRange();
 
         int[] n = getInts();
-        
+
         for(Frame frame : this) if(frame != null) {
             instrument.parallelStream().filter(c -> !range.contains(frame.data[c.index]))
             .peek(c -> frame.sampleFlag[c.index] |= Frame.SAMPLE_SKIP)
@@ -390,8 +389,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final double critical = option("range.flagfraction").getDouble();
 
         int flagged = (int) instrument.parallelStream().filter(c -> f * n[c.index] > critical)
-        .peek(c -> c.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD))
-        .count();
+                .peek(c -> c.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD))
+                .count();
 
         recycle(n);
 
@@ -597,17 +596,17 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public boolean hasGaps(final int tolerance) {
         String text = "Checking for gaps: ";
-        
+
         final FrameType first = getFirstFrame();
 
         double gap = stream().parallel().filter(f -> f != null)
-        .mapToDouble(f -> (f.MJD - first.MJD) * Unit.day / instrument.samplingInterval - (f.index - first.index))
-        .filter(g -> g > tolerance)
-        .findFirst().orElse(0.0);
-        
+                .mapToDouble(f -> (f.MJD - first.MJD) * Unit.day / instrument.samplingInterval - (f.index - first.index))
+                .filter(g -> g > tolerance)
+                .findFirst().orElse(0.0);
+
         if(gap > 0.0) warning(text + "Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
         else info(text + "No gaps. :-)");
-        
+
         return gap > 0.0;
     }
 
@@ -790,7 +789,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         parms.clear(channels, 0, size());
 
         final DataPoint[] aveOffset = instrument.getDataPoints();
-        
+
         for(int i=channels.size(); --i >= 0; ) {
             aveOffset[i].noData();
             instrument.get(i).inconsistencies = 0;
@@ -1124,7 +1123,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     }
                     Instrument.recycle(localVar);
                 }
-                
+
                 Stream.of(var).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
 
                 return var;
@@ -1417,7 +1416,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void getTimeStream(final Channel channel, final double[] data) {
         final int c = channel.index;
-           
+
         final int nt = size();
         for(int t=nt; --t >= 0; ) {
             final Frame exposure = get(t);
@@ -1805,7 +1804,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         // Only flag spiky channels if spikes are not in spiky frames
         final int frameFlags = Frame.MODELING_FLAGS;
 
-        for(Channel channel : instrument) channel.spikes = 0;
+        instrument.parallelStream().forEach(c -> c.spikes = 0);
 
         Fork<int[]> spikeCount = new Fork<int[]>() {
             private int[] channelSpikes;
@@ -1843,11 +1842,11 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         final int[] channelSpikes = spikeCount.getResult();
 
-        for(Channel channel : instrument) {
+        instrument.parallelStream().forEach(channel -> {
             channel.spikes = channelSpikes[channel.index];
             if(channel.spikes > maxChannelSpikes) channel.flag(Channel.FLAG_SPIKY);
             else channel.unflag(Channel.FLAG_SPIKY);
-        }
+        });
 
         Instrument.recycle(channelSpikes);
 
@@ -1865,7 +1864,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         Fork<Integer> flagger = new Fork<Integer>() {
             private int spikyFrames = 0;
-            
+
             @Override
             protected void process(FrameType exposure) {
                 int frameSpikes = (int) instrument.stream().filter(x -> x.isUnflagged(channelFlags)).filter(x -> (exposure.sampleFlag[x.index] & Frame.SAMPLE_SPIKE) != 0).count();
@@ -1933,7 +1932,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             @Override
             public void process(FrameType frame) { 
                 instrument.stream().forEach(x -> frame.data[x.index] = 0.0F);
-             }
+            }
         }.process();
     }
 
@@ -1967,120 +1966,103 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         }.process();
     }
 
-
-    public Vector2D[] getPositions(final int type) {
-        final Vector2D[] position = new Vector2D[size()];
-        validParallelStream().forEach(x -> position[x.index] = x.getPosition(type));
-        return position;
+    public final Signal getPositionSignal(final int type, final Motion direction) {
+        return getPositionSignal(null, type, direction);
     }
-
-    public Vector2D[] getSmoothPositions(int type) {
-        final int n = hasOption("positions.smooth") ? framesFor(option("positions.smooth").getDouble() * Unit.s) : 1;
-
-        final Vector2D[] pos = getPositions(type);
-        if(n < 2) return pos;
-
-        final Vector2D[] smooth = new Vector2D[size()];
-        int valids = n;
-
-        final Vector2D sum = new Vector2D();
-
-        for(int t=n; --t >= 0; ) {
-            if(pos[t] == null) valids--;
-            else sum.add(pos[t]);
-        }
-
-        final int nm = n >>> 1;
-        final int np = n - nm;
-        final int tot = size()-np-1;
-
-        for(int t=nm; t<tot; t++) {
-            if(pos[t + np] == null) valids--;
-            else sum.add(pos[t + np]);
-
-            if(valids > 0) {
-                smooth[t] = (Vector2D) sum.clone();
-                smooth[t].scale(1.0 / valids);
-            }
-
-            if(pos[t - nm] == null) valids++;
-            else sum.subtract(pos[t - nm]);
-        }
-
-        return smooth;
-    }
-
-
+        
     public Signal getPositionSignal(final Mode mode, final int type, final Motion direction) {
-        final Vector2D[] pos = getSmoothPositions(type);
         final float[] data = new float[size()];	
         
-        for(int t=size(); --t >= 0; ) 
-            data[t] = (pos[t] == null) ? Float.NaN : (float) direction.getValue(pos[t]);
+        validParallelStream().forEach(f -> {
+            Vector2D pos = f.getPosition(type);
+            data[f.index] = (pos == null) ? Float.NaN : (float) direction.getValue(pos);
+        });
 
         Signal signal = new Signal(mode, this, data, true);
+        
+        double fwhm = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
+        signal.smooth(fwhm);
+        
         return signal;
     }
+    
+    public Signal getScanningVelocitySignal(final Motion direction) {
+        return getVelocitySignal(Motion.SCANNING | Motion.CHOPPER, direction);
+    }
+    
+    public final Signal getVelocitySignal(final int type, final Motion direction) {
+        return getMotionSignal(1, type, direction);
+    }
 
-    public Vector2D[] getScanningVelocities() { 
-        final Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER);
-        final Vector2D[] v = new Vector2D[size()];
-
-        final double i2dt = 0.5 / instrument.samplingInterval;
-
-        for(int t=size()-1; --t > 0; ) {
-            if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
-            else {
-                v[t] = new Vector2D(pos[t+1].x() - pos[t-1].x(), pos[t+1].y() - pos[t-1].y());
-                v[t].scale(i2dt);
-            }		
-        }
-
-        // Extrapolate first and last...
-        if(size() > 1) v[0] = v[1];
-        if(size() > 2) v[size()-1] = v[size()-2];
-
-        return v;
+    public final Signal getAccelerationSignal(final int type, final Motion direction) {
+        return getMotionSignal(2, type, direction);
+    }
+  
+    public Signal getMotionSignal(int nth, final int type, final Motion direction) { 
+        Signal s = null;
+        
+        switch(direction) {
+        case X:
+        case Y:
+            s = getPositionSignal(type, direction);
+            s.differentiate(nth);
+            break;
+        case X2:
+        case Y2:
+            s = getMotionSignal(nth, type, direction == Motion.X2 ? Motion.X : Motion.Y);
+            s.square();
+            break;
+        case X_MAGNITUDE:
+        case Y_MAGNITUDE:
+            final Signal vComp = getMotionSignal(nth, type, direction == Motion.X_MAGNITUDE ? Motion.X : Motion.Y);
+            vComp.abs();
+            break;
+        case NORM:
+            Signal x = getMotionSignal(nth, type, Motion.X);
+            Signal y = getMotionSignal(nth, type, Motion.Y);
+            IntStream.range(0, x.length()).parallel().forEach(t -> x.value[t] = x.value[t] * x.value[t] + y.value[t] * y.value[t]);
+            return x;
+        case MAGNITUDE:
+            s = getMotionSignal(nth, type, Motion.NORM);
+            s.sqrt();
+            break;
+        default: 
+            throw new IllegalArgumentException("No motion in direction: " + direction);
+        } 
+        
+        return s;
     }
 
     public DataPoint getTypicalScanningSpeed() {
-        final Vector2D[] v = getScanningVelocities();       
-        float[] speed = getFloats();
+        Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
+        
+        double avev = v.length() > 10 ? Statistics.Inplace.robustMean(v.value, 0, v.length(), 0.1) : Statistics.Inplace.median(v.value, 0, v.length());
+        
+        // Now calculate the scatter...
+        IntStream.range(0,  v.length()).parallel().forEach(t -> v.value[t] -= avev);
+        v.square();
+        
+        double w = v.length() > 10 ? 
+                1.0 / Statistics.Inplace.robustMean(v.value, 0, v.length(), 0.1) 
+                : Statistics.medianNormalizedVariance / Statistics.Inplace.median(v.value, 0, v.length());
 
-        int n=0;
-        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) speed[n++] = (float) v[t].length();        
-
-        double avev = n > 10 ? Statistics.Inplace.robustMean(speed, 0, n, 0.1) : Statistics.Inplace.median(speed, 0, n);
-
-        for(int i=n; --i >= 0; ) {
-            final float dev = (float) (speed[i] - avev);
-            speed[i] = dev * dev;
-        }
-        double w = n > 10 ? 
-                1.0 / Statistics.Inplace.robustMean(speed, 0, n, 0.1) : 
-                    Statistics.medianNormalizedVariance / Statistics.Inplace.median(speed, 0, n);
-
-                recycle(speed);
-
-                return new DataPoint(new WeightedPoint(avev, w));    
+       return new DataPoint(new WeightedPoint(avev, w));    
     }
 
     public int velocityClip(final Range range) { 
-
+        Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
+        
         boolean isStrict = hasOption("vclip.strict");
 
-        final Vector2D[] v = getScanningVelocities();
         int flagged = 0, cut = 0;
 
         for(Frame frame : this) if(frame != null) {
-            final Vector2D value = v[frame.index];
-
-            if(value == null) {
+            if(!v.isValidAt(frame)) {
                 set(frame.index, null);
                 cut++;
             }
             else {	
-                final double speed = value.length();
+                final double speed = v.valueAt(frame);
 
                 if(speed < range.min()) {
                     if(isStrict) {
@@ -2096,7 +2078,6 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     set(frame.index, null);
                     cut++;
                 }
-
             }
         }
 
@@ -2110,18 +2091,16 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
     public int accelerationCut(final double maxA) {
-
-        final Vector2D[] a = getAccelerations();
+        Signal a = getAccelerationSignal(Motion.TELESCOPE, Motion.MAGNITUDE);
+        
         int cut = 0;
 
         for(Frame frame : this) if(frame != null) {
-            final Vector2D value = a[frame.index];
-
-            if(value == null) {
+            if(!a.isValidAt(frame)) {
                 set(frame.index, null);
                 cut++;
             }
-            else if(!(value.length() <= maxA)) {
+            else if(a.valueAt(frame) > maxA) {
                 set(frame.index, null);
                 cut++;
             }
@@ -2132,40 +2111,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         return cut;	
     }
 
-    public Vector2D[] getAccelerations() { 
-        final Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE);
-        final Vector2D[] a = new Vector2D[size()];
-
-        final double idt = 1.0 / instrument.samplingInterval;
-
-        for(int t=size()-1; --t > 0; ) {
-            if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
-            else {
-                a[t] = new Vector2D(
-                        Math.cos(pos[t].y()) * Math.IEEEremainder(pos[t+1].x() + pos[t-1].x() - 2.0*pos[t].x(), Constant.twoPi),
-                        pos[t+1].y() + pos[t-1].y() - 2.0*pos[t].y()
-                        );
-                a[t].scale(idt);
-            }
-        }
-
-        // Extrapolate to ends...
-        if(size() > 1) a[0] = a[1];
-        if(size() > 2) a[size()-1] = a[size()-2];
-
-        return a;
-    }
-
-    public Signal getAccelerationSignal(Mode mode, final Motion direction) {
-        final Vector2D[] a = getAccelerations();
-        final float[] data = new float[size()];	
-
-        for(int t=size(); --t >= 0; ) 
-            data[t] = a[t] == null ? Float.NaN : (float) direction.getValue(a[t]);
-
-        return new Signal(mode, this, data, false);
-    }
-
+  
 
 
     // TODO parallelize...
@@ -2209,7 +2155,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         // Normalize window function to absolute integral 1
         final double norm = DoubleStream.of(w).parallel().map(Math::abs).sum();
         IntStream.range(0, w.length).parallel().forEach(i -> w[i] /= norm);
-        
+
         new CRUSH.Fork<Void>(N, getThreadCount()) {
             @Override
             protected void processIndex(int k) { buffer[k] = getDownsampled(k); }
@@ -2422,7 +2368,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             out.flush();
             out.close();
         }
-        
+
         notify("Written ASCII time-streams to " + filename);
     }
 
@@ -2710,7 +2656,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public void writeScanPattern(String path) throws IOException {
         String fileName = path + File.separator + "pattern-" + getFileID() + ".dat";
-       
+
         try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
             for(int i=0; i<size(); i++) {
                 Frame exposure = get(i);
@@ -2771,102 +2717,6 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         data.put("Channel_Spikes", channelSpikes);
         if(whitener != null) data.put("Whitening_Profile", filterProfile);
         data.put("Noise_Spectrum", getSpectra());		
-    }
-
-
-    public void speedTest() {
-        Frame[] frame = new Frame[size()];
-        frame = toArray(frame);
-
-        Channel[] channel = new Channel[instrument.size()];
-        channel = instrument.toArray(channel);
-
-        int m=0;
-        int iters = 100;
-
-        // First the array...
-        int i = 0;
-        long a = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; ) for(int t=frame.length; --t >= 0; ) {
-            final Frame exposure = frame[t];
-            if(exposure != null) for(int c=channel.length; --c >= 0; ) {
-                final Channel pixel = channel[c];
-                i += exposure.sampleFlag[pixel.index];
-            }
-        }
-        a = System.currentTimeMillis() - a;
-        m += i; 
-
-        // Then the ArrayList
-        i = 0;
-        long b = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; )  for(Frame exposure : this) if(exposure != null) for(Channel pixel : instrument) 
-            i += exposure.sampleFlag[pixel.index];
-        b = System.currentTimeMillis() - b;
-        m += i;
-
-        // Then with two operations
-        i = 0;
-        int j=0;
-        long c = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; ) for(Frame exposure : this) if(exposure != null) for(Channel pixel : instrument) {
-            i += exposure.sampleFlag[pixel.index];
-            j += i;
-        }
-        c = System.currentTimeMillis() - c;
-        m += i;
-        m += j;
-
-
-        // Then the ArrayList
-        i = 0;
-        final ArrayList<Frame> frames = new ArrayList<>();
-        final ArrayList<Channel> channels = new ArrayList<>();
-        frames.addAll(this);
-        channels.addAll(instrument);
-
-        long d = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; )  for(Frame exposure : frames) if(exposure != null) for(Channel pixel : channels) 
-            i += exposure.sampleFlag[pixel.index];
-        d = System.currentTimeMillis() - d;
-        m += i;
-
-        // Then the ArrayList in inverted order
-        i = 0;
-        long e = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; ) for(Channel pixel : instrument) for(Frame exposure : this) if(exposure != null) 
-            i += exposure.sampleFlag[pixel.index];
-        e = System.currentTimeMillis() - e;
-        m += i;
-
-
-        // array (inverted order)...
-        i = 0;
-        long f = System.currentTimeMillis();
-        for(int k=iters; --k >= 0; ) for(int p=channel.length; --p >= 0; ) {
-            final Channel pixel = channel[p];
-            for(int t=frame.length; --t >= 0; ) {
-                final Frame exposure = frame[t];
-                if(exposure != null) i += exposure.sampleFlag[pixel.index];
-            }
-        }
-        f = System.currentTimeMillis() - f;
-        m += i; 
-
-        long addTime = c - b;
-        a -= addTime;
-        b -= addTime;
-        d -= addTime;
-        e -= addTime;
-        f -= addTime;
-
-        DecimalFormat df = Util.f2;
-
-        CRUSH.result(this, "> " + Integer.toHexString(m) + "\n"
-                + "# array:     " + df.format((double) a/iters) + " ms\t(inverted: " + df.format((double) f/iters) + " ms)\n"
-                + "# ArrayList: " + df.format((double) b/iters) + " ms\t(inverted: " + df.format((double) e/iters) + " ms)\n"
-                + "# Vector:    " + df.format((double) d/iters) + " ms");
-
     }
 
     public void detectChopper() {
@@ -3158,21 +3008,21 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         if(modality == null) return;
 
         modality.updateAllGains(this, false);
-        
+
         String fileName = path + File.separator + getFileID() + "." + name + "-coupling.spec";
-            
+
         Complex[][] C = new Complex[instrument.size()][];
-        
+
         Channel[] allChannels = new Channel[instrument.storeChannels];
         for(Channel channel : instrument) allChannels[channel.getFixedIndex()] = channel;
 
         for(Mode mode : modality) getCouplingSpectrum(getSignal(mode), windowSize, C);
 
-        
+
         try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
             out.println(this.getASCIIHeader());
             out.println();  
-        
+
             Complex z = new Complex();
 
             final int nF = C[0].length;
@@ -3207,10 +3057,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
             out.close();
         }
-        
-        
+
+
         notify("Written " + fileName);
-        
+
         writeDelayedCoupling(path, name, C);
 
     }
@@ -3220,7 +3070,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         Mode mode = signal.getMode();
         ChannelGroup<? extends Channel> channels = mode.getChannels();
-
+        
         for(int k=mode.size(); --k >= 0; ) {
             Channel channel = channels.get(k);
             C[channel.index] = spectrum[k];
@@ -3255,7 +3105,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
 
         String fileName = path + File.separator + getFileID() + "." + name + "-coupling.delay";
-       
+
         try(PrintWriter out = new PrintWriter(new FileOutputStream(fileName))) {
             out.println(this.getASCIIHeader());
             out.println();
@@ -3307,59 +3157,59 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     Complex[] getCouplingSpectrum(Signal signal, Channel channel, float gain, double[] w) {
         int windowSize = w.length;
         windowSize = ExtraMath.pow2ceil(windowSize);
-        int step = windowSize >>> 1;
+        int step = (windowSize >>> 1);
         int nt = size();
-        int nF = windowSize >>> 1;
+        int nF = step;
 
-                Complex[] c = Complex.createArray(nF);
+        Complex[] c = Complex.createArray(nF);
 
-                FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
-                FauxComplexArray.Float S = new FauxComplexArray.Float(nF);
+        FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
+        FauxComplexArray.Float S = new FauxComplexArray.Float(nF);
 
-                float[] d = D.getData();
-                float[] s = S.getData();
+        float[] d = D.getData();
+        float[] s = S.getData();
 
-                Complex dComponent = new Complex();
-                Complex sComponent = new Complex();
+        Complex dComponent = new Complex();
+        Complex sComponent = new Complex();
 
-                FloatFFT fft = getFFT();
-                double norm = 0.0;
+        FloatFFT fft = getFFT();
+        double norm = 0.0;
 
-                for(int from = 0; from < nt; from+=step) {
-                    int to = from + windowSize;
-                    if(to > nt) break;
+        for(int from = 0; from < nt; from += step) {
+            int to = from + windowSize;
+            if(to > nt) break;
 
-                    Arrays.fill(d, 0.0F);
-                    Arrays.fill(s, 0.0F);
+            Arrays.fill(d, 0.0F);
+            Arrays.fill(s, 0.0F);
 
-                    for(int k=windowSize; --k >= 0; ) {
-                        Frame exposure = get(from + k);
-                        if(exposure == null) continue;
-                        if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+            for(int k=windowSize; --k >= 0; ) {
+                Frame exposure = get(from + k);
+                if(exposure == null) continue;
+                if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 
-                        s[k] = (float) w[k] * signal.valueAt(exposure);
-                        d[k] = (float) (w[k] * exposure.data[channel.index] + gain * s[k]);
-                    }
+                s[k] = (float) w[k] * signal.valueAt(exposure);
+                d[k] = (float) (w[k] * exposure.data[channel.index] + gain * s[k]);
+            }
 
-                    fft.real2Amplitude(d);
-                    fft.real2Amplitude(s);
+            fft.real2Amplitude(d);
+            fft.real2Amplitude(s);
 
-                    for(int f=nF; --f >= 0; ) {
-                        D.get(f, dComponent);
-                        S.get(f, sComponent);
-                        norm += sComponent.absSquared();
+            for(int f=nF; --f >= 0; ) {
+                D.get(f, dComponent);
+                S.get(f, sComponent);
+                norm += sComponent.absSquared();
 
-                        sComponent.conjugate();
-                        dComponent.multiplyBy(sComponent);
-                        c[f].add(dComponent);
-                    }	
-                }
+                sComponent.conjugate();
+                dComponent.multiplyBy(sComponent);
+                c[f].add(dComponent);
+            }	
+        }
 
-                if(norm > 0.0) norm  = 1.0 / norm; 
+        if(norm > 0.0) norm  = 1.0 / norm; 
 
-                for(int i=nF; --i >= 0; ) c[i].scale(norm);
+        for(int i=nF; --i >= 0; ) c[i].scale(norm);
 
-                return c;
+        return c;
     }
 
 
@@ -3486,6 +3336,107 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     @Override
     public String toString() { return "Integration " + getFullID("|"); }
 
+    
+    
+
+
+    public void speedTest() {
+        Frame[] frame = new Frame[size()];
+        frame = toArray(frame);
+
+        Channel[] channel = new Channel[instrument.size()];
+        channel = instrument.toArray(channel);
+
+        int m=0;
+        int iters = 100;
+
+        // First the array...
+        int i = 0;
+        long a = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; ) for(int t=frame.length; --t >= 0; ) {
+            final Frame exposure = frame[t];
+            if(exposure != null) for(int c=channel.length; --c >= 0; ) {
+                final Channel pixel = channel[c];
+                i += exposure.sampleFlag[pixel.index];
+            }
+        }
+        a = System.currentTimeMillis() - a;
+        m += i; 
+
+        // Then the ArrayList
+        i = 0;
+        long b = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; )  for(Frame exposure : this) if(exposure != null) for(Channel pixel : instrument) 
+            i += exposure.sampleFlag[pixel.index];
+        b = System.currentTimeMillis() - b;
+        m += i;
+
+        // Then with two operations
+        i = 0;
+        int j=0;
+        long c = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; ) for(Frame exposure : this) if(exposure != null) for(Channel pixel : instrument) {
+            i += exposure.sampleFlag[pixel.index];
+            j += i;
+        }
+        c = System.currentTimeMillis() - c;
+        m += i;
+        m += j;
+
+
+        // Then the ArrayList
+        i = 0;
+        final ArrayList<Frame> frames = new ArrayList<>();
+        final ArrayList<Channel> channels = new ArrayList<>();
+        frames.addAll(this);
+        channels.addAll(instrument);
+
+        long d = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; )  for(Frame exposure : frames) if(exposure != null) for(Channel pixel : channels) 
+            i += exposure.sampleFlag[pixel.index];
+        d = System.currentTimeMillis() - d;
+        m += i;
+
+        // Then the ArrayList in inverted order
+        i = 0;
+        long e = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; ) for(Channel pixel : instrument) for(Frame exposure : this) if(exposure != null) 
+            i += exposure.sampleFlag[pixel.index];
+        e = System.currentTimeMillis() - e;
+        m += i;
+
+
+        // array (inverted order)...
+        i = 0;
+        long f = System.currentTimeMillis();
+        for(int k=iters; --k >= 0; ) for(int p=channel.length; --p >= 0; ) {
+            final Channel pixel = channel[p];
+            for(int t=frame.length; --t >= 0; ) {
+                final Frame exposure = frame[t];
+                if(exposure != null) i += exposure.sampleFlag[pixel.index];
+            }
+        }
+        f = System.currentTimeMillis() - f;
+        m += i; 
+
+        long addTime = c - b;
+        a -= addTime;
+        b -= addTime;
+        d -= addTime;
+        e -= addTime;
+        f -= addTime;
+
+        DecimalFormat df = Util.f2;
+
+        CRUSH.result(this, "> " + Integer.toHexString(m) + "\n"
+                + "# array:     " + df.format((double) a/iters) + " ms\t(inverted: " + df.format((double) f/iters) + " ms)\n"
+                + "# ArrayList: " + df.format((double) b/iters) + " ms\t(inverted: " + df.format((double) e/iters) + " ms)\n"
+                + "# Vector:    " + df.format((double) d/iters) + " ms");
+
+    }
+
+    
+    
 
 
     public <ReturnType> ReturnType loop(final PointOp<FrameType, ReturnType> op) {
@@ -3585,7 +3536,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         @Override
         public Object getCore() {
             float[] data = new float[size()];
-            for(int i=size(); --i >= 0; ) data[i] = frame.data[channels.get(i).index];
+            IntStream.range(0, size()).parallel().forEach(i -> data[i] = frame.data[channels.get(i).index]);
             return data;
         }
 
@@ -3643,7 +3594,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         @Override
         public Object getCore() {
             float[] data = new float[size()];
-            for(int i=size(); --i >= 0; ) data[i] = Integration.this.get(from + i).data[channel.index];
+            IntStream.range(0, size()).parallel().forEach(i -> data[i] = Integration.this.get(from + i).data[channel.index]);
             return data;
         }
     }

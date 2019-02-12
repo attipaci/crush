@@ -217,27 +217,26 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
 
     public ChannelGroup<ChannelType> discard(int flagPattern, int criterion) {
-
-        for(int i=size(); --i >= 0; ) {
-            Channel channel = get(i);
-            
+        ArrayList<ChannelType> keep = new ArrayList<>(size());
+        
+        for(ChannelType channel : this) {     
             switch(criterion) {
             case DISCARD_ANY_FLAG:
-                if(channel.isFlagged(flagPattern)) remove(i); break; 
-            case DISCARD_ALL_FLAGS:
-                if((channel.getFlags() & flagPattern) == flagPattern) remove(i); break; 
-            case DISCARD_MATCH_FLAGS:
-                if(channel.getFlags() == flagPattern) remove(i); break;
+                if(channel.isUnflagged(flagPattern)) keep.add(channel); break; 
             case KEEP_ANY_FLAG:
-                if(channel.isUnflagged(flagPattern)) remove(i); break; 
-            case KEEP_ALL_FLAGS:
-                if((channel.getFlags() & flagPattern) != flagPattern) remove(i); break; 
+                if(channel.isFlagged(flagPattern)) keep.add(channel); break; 
+            case DISCARD_MATCH_FLAGS:
+                if((channel.getFlags() & flagPattern) != flagPattern) keep.add(channel); break; 
             case KEEP_MATCH_FLAGS:
-                if(channel.getFlags() != flagPattern) remove(i); break;
+                if((channel.getFlags() & flagPattern) == flagPattern) keep.add(channel); break; 
             }	
         }
-
-        trimToSize();
+        
+        if(keep.size() < size()) {
+            clear();
+            addAll(keep);
+            trimToSize();
+        }
         return this;
     }
 
@@ -252,10 +251,8 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
 
     public static final int DISCARD_ANY_FLAG = 0;
-    public static final int DISCARD_ALL_FLAGS = 1;
-    public static final int DISCARD_MATCH_FLAGS = 2;
-    public static final int KEEP_ANY_FLAG = 3;
-    public static final int KEEP_ALL_FLAGS = 4;
-    public static final int KEEP_MATCH_FLAGS = 5;
+    public static final int DISCARD_MATCH_FLAGS = 1;
+    public static final int KEEP_ANY_FLAG = 2;
+    public static final int KEEP_MATCH_FLAGS = 3;
 
 }

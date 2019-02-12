@@ -365,8 +365,9 @@ implements TableFormatter.Entries, BasicMessaging {
     public void validate(Vector<Scan<?>> scans) throws Exception {
         if(hasOption("jackknife.alternate")) {
             notify("JACKKNIFE! Alternating scans.");
-            for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
+            IntStream.range(0,  size()).parallel().filter(i -> i%2 != 0).forEach(i -> {
                 for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
+            });
         }  
     }
 
@@ -563,34 +564,30 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
 
-    public void flag(Field pixelField, List<String> specs) {
+    public void flag(Field pixelField, List<String> valueRanges) {
         info("Flagging channels by " + pixelField.getName() + " values");
 
-        for(String spec : specs) {
+        for(String spec : valueRanges) {
             try { 
-                flag(pixelField, Integer.parseInt(spec)); 
-                continue;
+                double value = Double.parseDouble(spec);
+                flag(pixelField, value, value); 
             }
-            catch(NumberFormatException e) {}
-
-            Range r = Range.from(spec, false);
-            if(r.isEmpty()) r = Range.from(spec, true);
-            if(r.isEmpty()) {
-                warning("Could not parse flag." + pixelField.getName() + " indices from: " + spec);
-                continue;
+            catch(NumberFormatException e) {
+                Range r = Range.from(spec, false);
+                if(r.isEmpty()) r = Range.from(spec, true);
+                if(r.max() < r.min()) warning("Could not parse flag." + pixelField.getName() + " value range from: " + spec);
+                else flag(pixelField, r.min(), r.max()); 
             }
-
-            int from = (int) r.min();
-            int to = (int) r.max();
-
-            for(int i=from; i<=to; i++) flag(pixelField, i);   
         }
 
     }
 
-    public void flag(Field pixelField, int value) {
+    public void flag(Field pixelField, double fromValue, double toIncValue) {
         for(ChannelType channel : this) {
-            try { if(pixelField.getInt(channel) == value) channel.flag(Channel.FLAG_DEAD); }
+            try {
+                double dValue = pixelField.getDouble(channel);
+                if(dValue >= fromValue && dValue <= toIncValue) channel.flag(Channel.FLAG_DEAD); 
+            }
             catch(IllegalAccessException e) {}
         }
     }
@@ -605,19 +602,15 @@ implements TableFormatter.Entries, BasicMessaging {
 
         info("Flagging " + channels.size() + " channels.");
 
-        for(ChannelType channel : channels) channel.flag(Channel.FLAG_DEAD);
+        channels.parallelStream().forEach(c -> c.flag(Channel.FLAG_DEAD));
     }
 
-    public void killChannels(final int pattern, final int ignorePattern) {
+    public void killChannels(final int pattern) {
         // Anything flagged as blind so far should be flagged as dead instead...
-        for(Channel channel : this) if(channel.isFlagged(pattern)) if(channel.isUnflagged(ignorePattern)) {
-            channel.unflag(pattern);
-            channel.flag(Channel.FLAG_DEAD);
-        }
-    }
-
-    public void killChannels(int pattern) {
-        killChannels(pattern, 0);
+        parallelStream().filter(c -> c.isFlagged(pattern)).forEach(c -> {
+            c.unflag(pattern);
+            c.flag(Channel.FLAG_DEAD);
+        });
     }
 
 
@@ -628,13 +621,10 @@ implements TableFormatter.Entries, BasicMessaging {
 
         ChannelLookup<ChannelType> lookup = new ChannelLookup<>(this);
 
-        for(String id : list) {
-            ChannelType channel = lookup.get(id);
-            if(channel != null) {
-                channel.unflag();
-                channel.flag(Channel.FLAG_BLIND);
-            }
-        }
+        list.parallelStream().map(id -> lookup.get(id)).filter(c -> c != null).forEach(c -> {
+            c.unflag();
+            c.flag(Channel.FLAG_BLIND);
+        });
     }
 
     protected void loadChannelData() {
@@ -978,9 +968,9 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
 
-    public void flagInvalidPositions() {
+    public void flagInvalidPositions() {   
         for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 1 * Unit.deg) 
-            for(Channel channel : pixel) channel.flag(Channel.FLAG_BLIND);
+            pixel.parallelStream().forEach(c -> c.flag(Channel.FLAG_BLIND));
     }
 
 
@@ -1195,7 +1185,7 @@ implements TableFormatter.Entries, BasicMessaging {
         final double[] G = new double[size()];
         final boolean fixedGains = hasOption("source.fixedgains");
 
-        for(Channel channel : this) {
+        parallelStream().forEach(channel -> {
             G[channel.index] = channel.coupling;
 
             Pixel pixel = channel.getPixel();
@@ -1203,7 +1193,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
             if(!fixedGains) G[channel.index] *= channel.gain;
             if(filterCorrected) G[channel.index] *= channel.sourceFiltering;
-        }
+        });
 
         return G;
     }
@@ -1258,7 +1248,6 @@ implements TableFormatter.Entries, BasicMessaging {
         final int excludeFlags = Channel.HARDWARE_FLAGS | Channel.FLAG_GAIN;
 
         for(Channel channel : channels)  {
-
             if(channel.dof > 0.0) channel.unflag(Channel.FLAG_DOF);
             else {
                 channel.flag(Channel.FLAG_DOF);
@@ -1307,14 +1296,8 @@ implements TableFormatter.Entries, BasicMessaging {
     public double getSourceNEFD(double gain) {
         final double G[] = getSourceGains(true);
 
-        double sumpw = 0.0;
-
-        for(Channel channel : this) {
-            if(channel.isFlagged()) continue;
-            if(G[channel.index] == 0.0) continue;
-
-            sumpw += G[channel.index] * G[channel.index] / channel.variance; 
-        }
+        double sumpw = parallelStream().filter(c -> c.isUnflagged()).filter(c -> G[c.index] != 0.0)
+        .mapToDouble(c -> G[c.index] * G[c.index] / c.variance).sum();
 
         return Math.sqrt(integrationTime * mappingChannels / sumpw) / Math.abs(gain);
     }
@@ -1469,7 +1452,6 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public String getFocusString(InstantFocus focus) {
-
         if(focus == null) return " No instant focus.";
 
         String info = "";

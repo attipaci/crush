@@ -97,7 +97,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
         subarrayPixelOffset[Hirmes.HIRES_SUBARRAY] = hasOption("offset.hires") ? option("offset.hires").getVector2D() : new Vector2D();
 
         hiresFocalPlaneOffset = subarrayPixelOffset[Hirmes.HIRES_SUBARRAY].copy();
-        hiresFocalPlaneOffset.multiplyByComponents(loresPixelSpacing);
+        hiresFocalPlaneOffset.multiplyByComponentsOf(loresPixelSpacing);
 
         super.validate();
         
@@ -181,7 +181,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
         Vector2D v = (sub == Hirmes.HIRES_SUBARRAY) ? new Vector2D(0.0, row-7.5) : new Vector2D(-col, row-7.5); // xp, yp
         v.rotate(subarrayOrientation[sub]);
         v.add(subarrayPixelOffset[sub]);
-        v.multiplyByComponents(loresPixelSpacing); // Offsets are in lores pixels...
+        v.multiplyByComponentsOf(loresPixelSpacing); // Offsets are in lores pixels...
         return v;
     }
     
