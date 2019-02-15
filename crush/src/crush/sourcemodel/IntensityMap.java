@@ -98,7 +98,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     }
 
     @Override
-    public void mergeAccumulate(SourceModel2D other) {    
+    public void mergeAccumulate(AbstractSource2D other) {    
         map.mergeAccumulate(((IntensityMap) other).map);
     }
 

@@ -64,7 +64,7 @@ import jnum.projection.Projector2D;
 import nom.tam.fits.FitsException;
 
 
-public abstract class SourceModel2D extends SourceModel {	
+public abstract class AbstractSource2D extends SourceModel {	
     /**
      * 
      */
@@ -81,15 +81,15 @@ public abstract class SourceModel2D extends SourceModel {
     private Projector2D<?> projectorTemplate;
 
     
-    public SourceModel2D(Instrument<?> instrument) {
+    public AbstractSource2D(Instrument<?> instrument) {
         super(instrument);
         grid = instrument.getGridInstance();
         grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());  
     }
 
     @Override
-    public SourceModel2D copy(boolean withContents) {
-        SourceModel2D copy = (SourceModel2D) super.copy(withContents);
+    public AbstractSource2D copy(boolean withContents) {
+        AbstractSource2D copy = (AbstractSource2D) super.copy(withContents);
         if(grid != null) copy.grid = grid.copy();
         return copy;
     }
@@ -106,7 +106,7 @@ public abstract class SourceModel2D extends SourceModel {
     
     public abstract Map2D getMap2D();
     
-    public abstract void mergeAccumulate(SourceModel2D other);
+    public abstract void mergeAccumulate(AbstractSource2D other);
 
     public abstract void setSize(int sizeX, int sizeY);
 
@@ -600,7 +600,7 @@ public abstract class SourceModel2D extends SourceModel {
     protected int addForkFrames(final Integration<?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         
         class Mapper extends CRUSH.Fork<Integer> {
-            private SourceModel2D localSource;
+            private AbstractSource2D localSource;
             private Projector2D<?> projector;
             private Index2D index;
             private int mappingFrames = 0;
@@ -611,8 +611,8 @@ public abstract class SourceModel2D extends SourceModel {
             protected void init() {         
                 super.init();
     
-                if(isAddingToMaster()) localSource = SourceModel2D.this;
-                else localSource = (SourceModel2D) getRecycledCleanLocalCopy();
+                if(isAddingToMaster()) localSource = AbstractSource2D.this;
+                else localSource = (AbstractSource2D) getRecycledCleanLocalCopy();
                 
                 projector = localSource.getProjectorInstance();   
                 index = new Index2D();
@@ -650,7 +650,7 @@ public abstract class SourceModel2D extends SourceModel {
                     mappingFrames += task.getLocalResult();
 
                     if(!isAddingToMaster()) {
-                        SourceModel2D localMap = ((Mapper) task).localSource;
+                        AbstractSource2D localMap = ((Mapper) task).localSource;
                         mergeAccumulate(localMap);
                         localMap.recycle();
                     }
@@ -675,7 +675,7 @@ public abstract class SourceModel2D extends SourceModel {
         }
 
         class Mapper extends CRUSH.Fork<Void> {
-            private SourceModel2D localSource;
+            private AbstractSource2D localSource;
             private Projector2D<?> projector;
             private Index2D index;
 
@@ -685,8 +685,8 @@ public abstract class SourceModel2D extends SourceModel {
             protected void init() {
                 super.init();
 
-                if(isAddingToMaster()) localSource = SourceModel2D.this;
-                else localSource = (SourceModel2D) getRecycledCleanLocalCopy();
+                if(isAddingToMaster()) localSource = AbstractSource2D.this;
+                else localSource = (AbstractSource2D) getRecycledCleanLocalCopy();
 
                 projector = localSource.getProjectorInstance();
                 index = new Index2D();
@@ -707,7 +707,7 @@ public abstract class SourceModel2D extends SourceModel {
             @Override
             public Void getResult() {				
                 for(ParallelTask<Void> task : getWorkers()) if(!isAddingToMaster()) {
-                    SourceModel2D localMap = ((Mapper) task).localSource;
+                    AbstractSource2D localMap = ((Mapper) task).localSource;
                     mergeAccumulate(localMap);
                     localMap.recycle();
                 }
@@ -790,7 +790,7 @@ public abstract class SourceModel2D extends SourceModel {
 
                 // Remove source from all but the blind channels...
                 for(final Pixel pixel : pixels)  {
-                    SourceModel2D.this.getIndex(exposure, pixel, projector, index);	
+                    AbstractSource2D.this.getIndex(exposure, pixel, projector, index);	
                     sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain);
                 }
             }

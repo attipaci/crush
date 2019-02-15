@@ -1967,10 +1967,6 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     }
 
     public final Signal getPositionSignal(final int type, final Motion direction) {
-        return getPositionSignal(null, type, direction);
-    }
-        
-    public Signal getPositionSignal(final Mode mode, final int type, final Motion direction) {
         final float[] data = new float[size()];	
         
         validParallelStream().forEach(f -> {
@@ -1978,7 +1974,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             data[f.index] = (pos == null) ? Float.NaN : (float) direction.getValue(pos);
         });
 
-        Signal signal = new Signal(mode, this, data, true);
+        Signal signal = new Signal(null, this, data, true);
         
         double fwhm = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
         signal.smooth(fwhm);
@@ -2000,7 +1996,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
   
     public Signal getMotionSignal(int nth, final int type, final Motion direction) { 
         Signal s = null;
-        
+         
         switch(direction) {
         case X:
         case Y:
@@ -2036,15 +2032,15 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public DataPoint getTypicalScanningSpeed() {
         Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
         
-        double avev = v.length() > 10 ? Statistics.Inplace.robustMean(v.value, 0, v.length(), 0.1) : Statistics.Inplace.median(v.value, 0, v.length());
+        double avev = v.length() > 10 ? Statistics.Inplace.robustMean(v.value, 0.1) : Statistics.Inplace.median(v.value);
         
         // Now calculate the scatter...
         IntStream.range(0,  v.length()).parallel().forEach(t -> v.value[t] -= avev);
         v.square();
         
         double w = v.length() > 10 ? 
-                1.0 / Statistics.Inplace.robustMean(v.value, 0, v.length(), 0.1) 
-                : Statistics.medianNormalizedVariance / Statistics.Inplace.median(v.value, 0, v.length());
+                1.0 / Statistics.Inplace.robustMean(v.value, 0.1) 
+                : Statistics.medianNormalizedVariance / Statistics.Inplace.median(v.value);
 
        return new DataPoint(new WeightedPoint(avev, w));    
     }
@@ -2722,8 +2718,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public void detectChopper() {
         if(!(this instanceof Chopping)) return;
 
-        Signal x = getPositionSignal(null, Motion.CHOPPER, Motion.X);
-        Signal y = getPositionSignal(null, Motion.CHOPPER, Motion.Y);
+        Signal x = getPositionSignal(Motion.CHOPPER, Motion.X);
+        Signal y = getPositionSignal(Motion.CHOPPER, Motion.Y);
 
         x.level(false);
         y.level(false);

@@ -213,16 +213,15 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
     }
 
     public void square() {
-        IntStream.range(0,  value.length).parallel().forEach(t -> value[t] *= value[t]);
+        IntStream.range(0, value.length).parallel().forEach(t -> value[t] *= value[t]);
     }
 
-
     public void sqrt() {
-        IntStream.range(0,  value.length).parallel().forEach(t -> value[t] = (float) Math.sqrt(value[t]));
+        IntStream.range(0, value.length).parallel().forEach(t -> value[t] = (float) Math.sqrt(value[t]));
     }
 
     public void abs() {
-        IntStream.range(0,  value.length).parallel().filter(t -> value[t] < 0.0).forEach(t -> value[t] *= -1);
+        IntStream.range(0, value.length).parallel().filter(t -> value[t] < 0.0).forEach(t -> value[t] *= -1.0F);
     }
 
     // Use a quadratic fit...
@@ -242,18 +241,18 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
     // f[1] = f[0] + h f'[0]
     // f[n] = f[n-1] + h f'[n]
     public void differentiate() {
-        final float dt = (float) (resolution * integration.getInstrument().samplingInterval);
-        final int n = value.length;
+        final float idt = 1.0F / (float) (resolution * integration.getInstrument().samplingInterval);
+        final int nm1 = value.length - 1;
+            
+        // v[n] -> f'[n+0.5]
+        for(int t=0; t < nm1; t++) value[t] = (value[t+1] - value[t]) * idt;
 
-        // v[n] = f'[n+0.5]
-        IntStream.range(0, n-1).parallel().forEach(t -> value[t] = (value[t+1] - value[t]) / dt);
-
-        // the last value is based on the last difference...
-        value[n-1] = value[n-2];
+        // Extrapolate the last value
+        value[nm1] = value[nm1-1];
 
         // otherwise, it's:
-        // v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
-        for(int t=n-1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
+        // v[n] -> (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
+        for(int t=nm1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
 
         isFloating = false;
     }
@@ -281,12 +280,12 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
     }
 
     public void differentiate(int nTimes) {
-        if(nTimes < 0) throw new IllegalArgumentException("Negative nTimes: " + nTimes);
+        if(nTimes < 0) throw new IllegalArgumentException("Negative multiplicity: " + nTimes);
         for(int i=0; i<nTimes; i++) differentiate();
     }
 
     public void integrate(int nTimes) {
-        if(nTimes < 0) throw new IllegalArgumentException("Negative nTimes: " + nTimes);
+        if(nTimes < 0) throw new IllegalArgumentException("Negative multiplicity: " + nTimes);
         for(int i=0; i<nTimes; i++) integrate();
     }
 

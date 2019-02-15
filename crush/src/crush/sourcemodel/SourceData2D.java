@@ -43,7 +43,7 @@ import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
-public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType extends Data<IndexType> & Observations<? extends Data<IndexType>>> extends SourceModel2D {
+public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType extends Data<IndexType> & Observations<? extends Data<IndexType>>> extends AbstractSource2D {
 
     /**
      * 

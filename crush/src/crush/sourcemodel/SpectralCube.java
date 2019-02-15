@@ -205,12 +205,15 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         
         super.createFrom(collection);  
         
+        
         for(Observation2D plane : cube.getPlanes()) {
             plane.getFitsProperties().setObjectName(getFirstScan().getSourceName());
             plane.setUnderlyingBeam(getAverageResolution());
         }
     
          
+        
+        
         CRUSH.info(this, "\n" + cube.getPlaneTemplate().getInfo());
         
         Grid1D g = cube.getGrid1D();
@@ -291,7 +294,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
 
     @Override
-    public void mergeAccumulate(SourceModel2D other) {
+    public void mergeAccumulate(AbstractSource2D other) {
         cube.mergeAccumulate(((SpectralCube) other).cube);      
     }
 
@@ -514,8 +517,8 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         Map2D image = getMap2D();
         
         try(Fits fits = image.createFits(Float.class)) { 
-            int nHDU = fits.getNumberOfHDUs();
-            for(int i=0; i<nHDU; i++) {
+            
+            for(int i=fits.getNumberOfHDUs(); --i >= 0; ) {
                 Header header = fits.getHDU(i).getHeader();
                 image.editHeader(header);
             }   

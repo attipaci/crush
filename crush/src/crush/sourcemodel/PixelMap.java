@@ -38,7 +38,7 @@ import jnum.data.image.region.GaussianSource;
 import jnum.projection.Projection2D;
 import nom.tam.fits.FitsException;
 
-public class PixelMap extends SourceModel2D {
+public class PixelMap extends AbstractSource2D {
 	/**
 	 * 
 	 */
@@ -316,7 +316,7 @@ public class PixelMap extends SourceModel2D {
 	}
 
 	@Override
-	public void mergeAccumulate(SourceModel2D other) {
+	public void mergeAccumulate(AbstractSource2D other) {
 		if(!(other instanceof PixelMap)) 
 			throw new IllegalStateException("Cannot add " + other.getClass().getSimpleName() + " to " + getClass().getSimpleName() + ".");
 		
