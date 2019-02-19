@@ -224,22 +224,15 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
         IntStream.range(0, value.length).parallel().filter(t -> value[t] < 0.0).forEach(t -> value[t] *= -1.0F);
     }
 
-    // Use a quadratic fit...
-    // 
-    // f[n] = c
-    // f[n-1] = a-b+c
-    // f[n+1] = a+b+c
-    //
-    //  c=f[n]
-    //  a=(f[n-1] + f[n+1])/2 - f[n]
-    //  b=(f[n+1] - f[n-1])/2
-    //
-    //  f'=2ax+b --> f'[n]=b --> this is simply the chord!
-    //
-    // f[n+1] = f[n-1] + 2h f'[n]
-    //
-    // f[1] = f[0] + h f'[0]
-    // f[n] = f[n-1] + h f'[n]
+
+    /**
+     * Calculates the numerical derivative as a chord (f'[n] -> {f[n+1] + f[n-1}/2). It is a sequential algorithm
+     * that is in-place. As such it is efficient for sinlge-threaded processing of moderate sized data. For large
+     * number of points it may be more efficient to create temporary storage for parallel processing, if the overheads
+     * of the necessary storage and thread creations are worth it.
+     * 
+     * 
+     */
     public void differentiate() {
         final float idt = 1.0F / (float) (resolution * integration.getInstrument().samplingInterval);
         final int nm1 = value.length - 1;
@@ -251,13 +244,17 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
         value[nm1] = value[nm1-1];
 
         // otherwise, it's:
-        // v[n] -> (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
+        // v[n] -> (f'[n+0.5] + f'[n-0.5])/2 = v[n] + v[n-1]
         for(int t=nm1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
 
         isFloating = false;
     }
 
-    // Intergate using trapesiod rule...
+    /** 
+     * Intergates using trapesiod rule.
+     * 
+     * 
+     */
     public void integrate() {
         double dt = (float) (resolution * integration.getInstrument().samplingInterval);		
         double I = 0.0;

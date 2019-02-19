@@ -1968,24 +1968,24 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public final Signal getPositionSignal(final int type, final Motion direction) {
         final float[] data = new float[size()];	
-        
+
         validParallelStream().forEach(f -> {
             Vector2D pos = f.getPosition(type);
             data[f.index] = (pos == null) ? Float.NaN : (float) direction.getValue(pos);
         });
 
         Signal signal = new Signal(null, this, data, true);
-        
+
         double fwhm = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
         signal.smooth(fwhm);
-        
+
         return signal;
     }
-    
+
     public Signal getScanningVelocitySignal(final Motion direction) {
         return getVelocitySignal(Motion.SCANNING | Motion.CHOPPER, direction);
     }
-    
+
     public final Signal getVelocitySignal(final int type, final Motion direction) {
         return getMotionSignal(1, type, direction);
     }
@@ -1993,10 +1993,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public final Signal getAccelerationSignal(final int type, final Motion direction) {
         return getMotionSignal(2, type, direction);
     }
-  
+
     public Signal getMotionSignal(int nth, final int type, final Motion direction) { 
         Signal s = null;
-         
+
         switch(direction) {
         case X:
         case Y:
@@ -2025,29 +2025,29 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         default: 
             throw new IllegalArgumentException("No motion in direction: " + direction);
         } 
-        
+
         return s;
     }
 
     public DataPoint getTypicalScanningSpeed() {
-        Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
-        
-        double avev = v.length() > 10 ? Statistics.Inplace.robustMean(v.value, 0.1) : Statistics.Inplace.median(v.value);
-        
-        // Now calculate the scatter...
-        IntStream.range(0,  v.length()).parallel().forEach(t -> v.value[t] -= avev);
-        v.square();
-        
-        double w = v.length() > 10 ? 
-                1.0 / Statistics.Inplace.robustMean(v.value, 0.1) 
-                : Statistics.medianNormalizedVariance / Statistics.Inplace.median(v.value);
+        final Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
 
-       return new DataPoint(new WeightedPoint(avev, w));    
+        final double avev = Statistics.Inplace.robustMean(v.value, 0.15);
+
+        // Now calculate the scatter...
+        IntStream.range(0,  v.length()).parallel().forEach(t -> {
+            v.value[t] -= avev;
+            v.value[t] *= v.value[t];
+        });
+
+        double w = 1.0 / Statistics.Inplace.robustMean(v.value, 0.15); 
+
+        return new DataPoint(new WeightedPoint(avev, w));    
     }
 
     public int velocityClip(final Range range) { 
         Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
-        
+
         boolean isStrict = hasOption("vclip.strict");
 
         int flagged = 0, cut = 0;
@@ -2088,7 +2088,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     public int accelerationCut(final double maxA) {
         Signal a = getAccelerationSignal(Motion.TELESCOPE, Motion.MAGNITUDE);
-        
+
         int cut = 0;
 
         for(Frame frame : this) if(frame != null) {
@@ -2107,7 +2107,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         return cut;	
     }
 
-  
+
 
 
     // TODO parallelize...
@@ -3066,7 +3066,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         Mode mode = signal.getMode();
         ChannelGroup<? extends Channel> channels = mode.getChannels();
-        
+
         for(int k=mode.size(); --k >= 0; ) {
             Channel channel = channels.get(k);
             C[channel.index] = spectrum[k];
@@ -3332,8 +3332,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     @Override
     public String toString() { return "Integration " + getFullID("|"); }
 
-    
-    
+
+
 
 
     public void speedTest() {
@@ -3431,8 +3431,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
     }
 
-    
-    
+
+
 
 
     public <ReturnType> ReturnType loop(final PointOp<FrameType, ReturnType> op) {

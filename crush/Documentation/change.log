@@ -1,7 +1,6 @@
 >> DataND: pixelSmooth(fwhm[, angles]), pixelFastSmooth(fwhm[, angles])
 >> Migrate funtionality from Signal to Data1D... (differentiate/integrate)
->> HIRMES flattened images have null OBJECT
->> Scanning velocities low by ~sqrt(2)?
+>> Median scanning velocity estimate low?
 >> port essential fixes back to 2.43...
 	- Instrument.standardWeights() / sampleWeights() w/o sqrt()
 	- build.xml fix (</copy> -> </move>
@@ -52,6 +51,8 @@
 
 	[DEPRECATE] Removed support for 'neighbours.radius' option that 
 	was at some point used in APEX chop-nod photometry.
+
+	[TWEAK] Always use robust mean to calculate scanning speed stats.
 
 	[TWEAK] {ChannelLookup} Explicitly separated lookup functions by
 	String ID and integer fixed index.
