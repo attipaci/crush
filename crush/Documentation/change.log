@@ -20,6 +20,9 @@
 
 2.50-a1
 
+	[NEW] {HIRMES} Correction for wavelength dependent slit efficiencies
+	via a lookup table, using the 'slitcorrect' option.
+
 	[FIX] {HIRMES} Fix MUX mapping.
 
 	[FIX] {HIRMES} 'pins' modality was not decorrelated due to a typo in

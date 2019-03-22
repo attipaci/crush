@@ -24,6 +24,9 @@
 package crush.instrument.hirmes;
 
 
+import java.io.IOException;
+
+import crush.CRUSH;
 import crush.Channel;
 import crush.telescope.sofia.SofiaChannel;
 import jnum.Unit;
@@ -38,7 +41,7 @@ public class HirmesPixel extends SofiaChannel {
     private static final long serialVersionUID = 293691569452930105L;
     
     public int detArray = -1, sub = -1, subrow = -1, subcol = -1, row = -1, col = -1, mux = -1, pin = -1, seriesArray = -1, biasLine = -1;
-    public double opticalCoupling = 1.0, subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
+    public double absorberEfficiency = 1.0, subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
     
     int fitsRow = -1, fitsCol = -1;
     
@@ -171,13 +174,14 @@ public class HirmesPixel extends SofiaChannel {
             Vector2D d = physicalSize.copy();
             d.scale(0.5);
             
+            // TODO use absorber size, not spacing.
             double dfx = hirmes.getObservingFrequency(new Vector2D(p.x() + d.x(), p.y())) - hirmes.getRestFrequency(new Vector2D(p.x() - d.x(), p.y()));
             double dfy = hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() + d.y())) - hirmes.getRestFrequency(new Vector2D(p.x(), p.y() - d.y()));
             
             double obsFrequency = hirmes.getObservingFrequency(focalPlanePosition);
             
             // Calculate the total sky coupling
-            coupling = opticalCoupling;
+            coupling = absorberEfficiency;
             
             obsBandwidth = (Math.abs(dfx) + Math.abs(dfy));
             
@@ -188,7 +192,11 @@ public class HirmesPixel extends SofiaChannel {
             // Detector bandwidth
             coupling *= obsBandwidth / HirmesPixel.gainNormBandwidth;
             
-            coupling *= hirmes.getSlitEfficiency(obsFrequency);
+            try { coupling *= Math.pow(hirmes.getSlitEfficiency(obsFrequency), 2.0); }
+            catch(IOException e) {
+                CRUSH.warning(hirmes, "Could not apply slit efficiency correction.");
+                CRUSH.trace(e);
+            }
         }   
     }
 
@@ -234,8 +242,8 @@ public class HirmesPixel extends SofiaChannel {
     public void parseValues(SmartTokenizer tokens, int criticalFlags) { 
         super.parseValues(tokens, criticalFlags);
         
-        if(tokens.hasMoreTokens()) opticalCoupling = tokens.nextDouble();
-        if(isFlagged(Channel.FLAG_DEAD)) opticalCoupling = 0.0;
+        if(tokens.hasMoreTokens()) absorberEfficiency = tokens.nextDouble();
+        if(isFlagged(Channel.FLAG_DEAD)) absorberEfficiency = 0.0;
         
         if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
         if(tokens.hasMoreTokens()) pinGain = tokens.nextDouble();      

@@ -23,6 +23,7 @@
 
 package crush.instrument.hirmes;
 
+import java.io.IOException;
 import java.util.*;
 
 import crush.*;
@@ -36,6 +37,7 @@ import jnum.Constant;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
+import jnum.data.SimpleInterpolator;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -408,11 +410,13 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return spectral.observingFrequency;
     }
     
-    public double getSlitEfficiency(double frequency) {
+    public double getSlitEfficiency(double frequency) throws IOException {
         if(mode == IMAGING_MODE) return 1.0;
+        if(!hasOption("slitcorrect")) return 1.0;
         
-        // TODO use a lookup table, and interpolate...
-        return Math.pow(frequency / (10.0 * Unit.THz), 0.5);
+        SimpleInterpolator interpolator = new SimpleInterpolator(option("slitCorrect").getPath());
+        return interpolator.getValue(Constant.c / frequency / Unit.um);
+        // * Math.pow(frequency / (10.0 * Unit.THz), 0.045); // An empirical residual correction to match simulations...
     }
     
     @Override

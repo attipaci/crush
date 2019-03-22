@@ -2940,6 +2940,17 @@
                         accordingly. Therefore, it is possile for CRUSH to
                         ignore the reconstructed data if the user wishes to do
 
+:: slitcorrect=<path>	@Instrument: HIRMES
+			@Expert
+			@Since: 2.50
+			Provide a lookup table to interpolate point source
+			slit efficiencies from. (Since the fraction of a
+			point source's flux passing through the slit will
+			depend on the wavelength when the slit size is
+			comparable to, or smaller than, the PSF. The table
+			should be a simple space/tab-separated 2-column ASCII
+			table, with wavelength (um) and a relative efficiency.
+
 :: smooth=X		@Advanced
 			Smooth the map by X arcsec FWHM beam. Smoothing
 			helps improve visual appearance, but is also useful
