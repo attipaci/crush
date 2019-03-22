@@ -2032,7 +2032,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public DataPoint getTypicalScanningSpeed() {
         final Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
 
-        final double avev = Statistics.Inplace.robustMean(v.value, 0.15);
+        // Robust mean with exluding 20% tails
+        final double avev = Statistics.Inplace.robustMean(v.value, 0.2);
 
         // Now calculate the scatter...
         IntStream.range(0,  v.length()).parallel().forEach(t -> {
@@ -2040,7 +2041,8 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             v.value[t] *= v.value[t];
         });
 
-        double w = 1.0 / Statistics.Inplace.robustMean(v.value, 0.15); 
+        // Robust mean with exluding 20% tails
+        double w = 1.0 / Statistics.Inplace.robustMean(v.value, 0.2);
 
         return new DataPoint(new WeightedPoint(avev, w));    
     }
@@ -2050,12 +2052,12 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         boolean isStrict = hasOption("vclip.strict");
 
-        int flagged = 0, cut = 0;
+        int flagged = 0, clipped = 0;
 
         for(Frame frame : this) if(frame != null) {
             if(!v.isValidAt(frame)) {
                 set(frame.index, null);
-                cut++;
+                clipped++;
             }
             else {	
                 final double speed = v.valueAt(frame);
@@ -2063,7 +2065,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 if(speed < range.min()) {
                     if(isStrict) {
                         set(frame.index, null);
-                        cut++;
+                        clipped++;
                     }
                     else {
                         frame.flag(Frame.SKIP_SOURCE_MODELING);
@@ -2072,16 +2074,16 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 }			
                 else if(speed > range.max()) {
                     set(frame.index, null);
-                    cut++;
+                    clipped++;
                 }
             }
         }
 
         info("Discarding unsuitable mapping speeds. " +
                 "[" + (int)Math.round(100.0 * flagged / size()) + "% flagged, " +
-                (int) Math.round(100.0 * cut / size()) + "% clipped]");
+                (int) Math.round(100.0 * clipped / size()) + "% clipped]");
 
-        return cut;
+        return clipped;
 
     }
 

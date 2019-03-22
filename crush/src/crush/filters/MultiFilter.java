@@ -72,8 +72,6 @@ public class MultiFilter extends VariedFilter {
 			filter.setTempData(getTempData());
 			filter.setIntegration(integration);
 		}
-			
-		updateSourceProfile();
 	}
 	
 	

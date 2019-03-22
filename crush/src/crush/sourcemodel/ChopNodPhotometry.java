@@ -92,7 +92,7 @@ public class ChopNodPhotometry extends PointPhotometry {
         if(integration.getScan() instanceof TelescopeScan)
             T = 0.5 * (((TelescopeFrame) integration.getFirstFrame()).getTransmission() + ((TelescopeFrame) integration.getLastFrame()).getTransmission());
 
-        final double[] sourceGain = instrument.getSourceGains(false);
+        final double[] sourceGain = instrument.getSourceGains(getPointSize(), false);
         final ChopperPhases phases = (ChopperPhases) modulated.getPhases();
         final double transmission = T;
         

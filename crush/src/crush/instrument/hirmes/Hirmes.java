@@ -53,7 +53,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     
     int hiresColUsed = -1;                  // [0-7] Hires strip index used.   
     
-    double gratingAngle;
+    double gratingAngle;                    // -10 to -20 degrees
     double fpiConstant = Double.NaN;        // FPI dispersion contant
     int gratingIndex;                       // [0-2]
         
@@ -62,7 +62,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     //int[][] detectorBias;                 // array [2], line [rows]
 
-    private double z = 0.0;                 // Doppler shift. 
+    private double z = 0.0;                 // Doppler shift.
 
     public Hirmes() {
         super("hirmes", pixels);
@@ -190,7 +190,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         catch(NoSuchFieldException e) { error(e); } 
 
         try {
-            CorrelatedModality pinMode = new CorrelatedModality("pin", "p", divisions.get("pins"), HirmesPixel.class.getField("pinGain"));     
+            CorrelatedModality pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), HirmesPixel.class.getField("pinGain"));     
             //muxMode.solveGains = false;
             pinMode.setGainFlag(HirmesPixel.FLAG_PIN);
             addModality(pinMode);
@@ -229,12 +229,12 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
  
         if(array.detectorName.equalsIgnoreCase("HIRMES-LOW")) detArray = LORES_ARRAY;
         else if(array.detectorName.equalsIgnoreCase("HIRMES-HI")) detArray = HIRES_ARRAY;
-        String config = instrumentData.instrumentMode;
+        String instrumentMode = instrumentData.instrumentMode;
 
-        if(config.equalsIgnoreCase("SPECTRAL_IMAGING")) mode = IMAGING_MODE;
-        else if(config.equalsIgnoreCase("LOW-RES")) mode = LORES_MODE;
-        else if(config.equalsIgnoreCase("MED-RES")) mode = MIDRES_MODE;
-        else if(config.equalsIgnoreCase("HI-RES")) mode = HIRES_MODE;
+        if(instrumentMode.equalsIgnoreCase("SPECTRAL_IMAGING")) mode = IMAGING_MODE;
+        else if(instrumentMode.equalsIgnoreCase("LOW-RES")) mode = LORES_MODE;
+        else if(instrumentMode.equalsIgnoreCase("MED-RES")) mode = MIDRES_MODE;
+        else if(instrumentMode.equalsIgnoreCase("HI-RES")) mode = HIRES_MODE;
        
         hiresColUsed = header.getInt("HIRESSUB", -1);
            
@@ -268,17 +268,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
     
 
-    @Override
-    public double[] getSourceGains(final boolean filterCorrected) {
-        double[] G = super.getSourceGains(filterCorrected);
-
-        final double rest2Obs = 1.0 / (1.0 + z);
-        for(HirmesPixel pixel : this) G[pixel.getIndex()] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
-        
-        return G;        
-    }
-
-    private double getRelativeTransmission(double fobs) {
+    double getRelativeTransmission(double fobs) {
         // TODO spectral telluric corrections go here...
         return 1.0;
     }
@@ -301,7 +291,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     @Override
     public String getChannelDataHeader() {
-        return super.getChannelDataHeader() + "\teff\tGmux\tidx\tsub\trow\tcol";
+        return super.getChannelDataHeader() + "\teff\tGmux\tGpin\tidx\tsub\tmux\tpin\tBW";
     }
 
     @Override
@@ -390,26 +380,47 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return (1.0 + z) * getObservingFrequency(focalPlanePosition);
     }
     
-    private double getObservingFrequency(Vector2D focalPlanePosition) {
+    double getRestFrequency() {
+        return (1.0 + z) * getFrequency();
+    }
+    
+    @Override
+    public double getFrequency() {
+        return getObservingFrequency(getLayout().focalPlaneReference);
+    }
+    
+    double getObservingFrequency(Vector2D focalPlanePosition) {
+        return getObservingFrequency(focalPlanePosition, gratingIndex, gratingAngle, fpiConstant);
+    }
+    
+    private double getObservingFrequency(Vector2D focalPlanePosition, int gIdx, double gAngle, double fpiK) {
         final double[] n = { 0.0220311,0.0129907,0.0076615 };
-        
-        
+         
         if(mode == LORES_MODE || mode == MIDRES_MODE) {
-            final double beta = 12.0 * Unit.deg - getM6Angle(focalPlanePosition.x()) - gratingAngle;
-            final double lambdaMicrons = -(Math.sin(gratingAngle) - Math.sin(beta)) / n[gratingIndex];  
+            final double beta = 12.0 * Unit.deg - getM6Angle(focalPlanePosition.x()) - gAngle;
+            final double lambdaMicrons = -(Math.sin(gAngle) - Math.sin(beta)) / n[gIdx];  
             return Constant.c / (lambdaMicrons * Unit.um);
         }
-        else if(!Double.isNaN(fpiConstant)) {
+        else if(!Double.isNaN(fpiK)) {
             HirmesLayout layout = getLayout(); 
-            return spectral.observingFrequency / Math.cos(fpiConstant * layout.plateScale * focalPlanePosition.distanceTo(layout.focalPlaneReference));
+            return spectral.observingFrequency / Math.cos(fpiK * layout.plateScale * focalPlanePosition.distanceTo(layout.focalPlaneReference));
         }
         return spectral.observingFrequency;
     }
     
+    public double getSlitEfficiency(double frequency) {
+        if(mode == IMAGING_MODE) return 1.0;
+        
+        // TODO use a lookup table, and interpolate...
+        return Math.pow(frequency / (10.0 * Unit.THz), 0.5);
+    }
+    
     @Override
     protected boolean isWavelengthConsistent(double wavelength) {
-        if(instrumentData == null) return false;
-        return Math.abs(wavelength - instrumentData.wavelength) < 0.1 * instrumentData.wavelength;
+        if(instrumentData == null) return false;      
+        // TODO introduce sanity checks later if needed
+        //if Math.abs(wavelength - instrumentData.wavelength) < 0.1 * instrumentData.wavelength;
+        return true;
     }
    
     @Override
@@ -422,7 +433,6 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         if(hasOption("pointing.suggest")) return new IntensityMap(this);
         return new SpectralCube(this);
     }  
-
 
     @Override
     public Object getTableEntry(String name) {
@@ -448,6 +458,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return super.getReductionModesHelp() +
                 "     -spectral      Produce spectral cubes (default).\n";
     }
+    
     
     
     final static int readoutRows = 36;

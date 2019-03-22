@@ -41,6 +41,8 @@ import jnum.Configurator;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
+import jnum.data.DataPoint;
+import jnum.data.SplineSet;
 import jnum.data.Validating;
 import jnum.data.cube.Index3D;
 import jnum.data.cube.overlay.RangeRestricted3D;
@@ -49,19 +51,23 @@ import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
 import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
+import jnum.data.image.Gaussian2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.RangeRestricted2D;
+import jnum.data.image.overlay.Referenced2D;
 import jnum.data.samples.Data1D;
 import jnum.data.samples.Grid1D;
+import jnum.data.samples.Samples1D;
 import jnum.data.samples.overlay.Overlay1D;
 import jnum.fits.FitsProperties;
 import jnum.fits.FitsToolkit;
 import jnum.math.CoordinateAxis;
 import jnum.math.Range;
+import jnum.math.Vector2D;
 import jnum.parallel.ParallelPointOp;
 import jnum.text.GreekLetter;
 import nom.tam.fits.Fits;
@@ -188,8 +194,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
         properties.setCopyright(CRUSH.getCopyrightString());     
-
-            
+     
         if(hasOption("unit")) {
             String unitName = option("unit").getValue();
             cube.setUnit(unitName);
@@ -205,15 +210,11 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         
         super.createFrom(collection);  
         
-        
         for(Observation2D plane : cube.getPlanes()) {
             plane.getFitsProperties().setObjectName(getFirstScan().getSourceName());
             plane.setUnderlyingBeam(getAverageResolution());
         }
-    
          
-        
-        
         CRUSH.info(this, "\n" + cube.getPlaneTemplate().getInfo());
         
         Grid1D g = cube.getGrid1D();
@@ -470,16 +471,39 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         }
     }
     
+    /**
+     * Plots the peak spectrum at the observed source position. 
+     * 
+     * 
+     * @param coreName
+     * @throws IOException
+     */
     public void plotSpectrum(String coreName) throws IOException {
         String gnuplot = "gnuplot";
         if(hasOption("gnuplot")) {
             String cmd = option("gnuplot").getValue();
             if(cmd.length() > 0) gnuplot = Util.getSystemPath(cmd);
         }
+
+        final Data1D mean = Samples1D.createType(Double.class, cube.sizeZ());
+        final Data1D rms = Samples1D.createType(Double.class, cube.sizeZ());
         
-        final Data1D[] mean = cube.getZMeanSamples();
+        final Vector2D refIndex = cube.getGrid2D().getReferenceIndex();
+
+        DataPoint smoothedValue = new DataPoint();
+        SplineSet<Vector2D> splines = new SplineSet<>(2);
         
-        Data1D spectrum = new Overlay1D(mean[0]) {
+        for(int i=cube.sizeZ(); --i >= 0; ) {
+            Observation2D plane = cube.getPlane(i);
+            Referenced2D beam = plane.getUnderlyingBeam().getBeam(plane.getGrid());
+            plane.getSmoothedValueAtIndex(refIndex, beam, beam.getReferenceIndex(), plane.getWeights(), splines, smoothedValue);
+            mean.set(i, smoothedValue.value());
+            rms.set(i, smoothedValue.rms());
+        }
+        
+        System.err.println();
+        
+        Data1D spectrum = new Overlay1D(mean) {
             @Override
             protected String getASCIITableHeader(Grid1D grid, String yName) {
                 return super.getASCIITableHeader(grid, yName) + "\trms";
@@ -487,8 +511,8 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
                 
             @Override
             protected String getASCIITableEntry(int index, Grid1D grid, String nanValue) {
-                double rms = 1.0 / Math.sqrt(mean[1].get(index).doubleValue()) / getUnit().value();
-                String sRMS = Double.isNaN(rms) ? nanValue : Util.s3.format(rms);
+                double rmsValue = 1.0 / Math.sqrt(rms.get(index).doubleValue()) / getUnit().value();
+                String sRMS = Double.isNaN(rmsValue) ? nanValue : Util.s3.format(rmsValue);
                 return super.getASCIITableEntry(index, grid, nanValue) + "\t" + sRMS;
             }         
 

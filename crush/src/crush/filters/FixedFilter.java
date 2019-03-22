@@ -22,6 +22,7 @@
  ******************************************************************************/
 package crush.filters;
 
+
 import crush.Channel;
 import crush.Frame;
 import crush.Integration;
@@ -32,8 +33,9 @@ public abstract class FixedFilter extends Filter {
 	 */
 	private static final long serialVersionUID = 8317718290223682350L;
 	
-	private double pointResponse = 1.0;
+
 	private double rejected = 0.0;
+	
 	
 	public FixedFilter(Integration<?> integration) {
 		super(integration);
@@ -43,16 +45,6 @@ public abstract class FixedFilter extends Filter {
 		super(integration, data);
 	}
 
-	protected double getPointResponse() {
-		return pointResponse;
-	}
-	
-	@Override
-	protected double getMeanPointResponse() {
-		return pointResponse;
-	}
-	
-	
 	@Override 
 	protected void preFilter() {
 		super.preFilter();
@@ -67,17 +59,19 @@ public abstract class FixedFilter extends Filter {
 	@Override
 	protected void preFilter(Channel channel) {
 		super.preFilter(channel);
-		channel.directFiltering /= pointResponse;
-		channel.sourceFiltering /= pointResponse;
+		double response = getPointResponse(channel);
+		channel.directFiltering /= response;
+		channel.sourceFiltering /= response;
 	}
 	
 	@Override
 	protected void postFilter(Channel channel) {
 		super.postFilter(channel);
 		
-		pointResponse = calcPointResponse();
-		channel.directFiltering *= pointResponse;
-		channel.sourceFiltering *= pointResponse;
+		double response = calcPointResponse(channel);
+		setPointResponse(channel, response);
+		channel.directFiltering *= response;
+		channel.sourceFiltering *= response;
 		
 		parms.addAsync(channel, rejected);		
 		

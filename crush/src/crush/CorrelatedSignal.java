@@ -395,7 +395,7 @@ public class CorrelatedSignal extends Signal {
                 // Cast the incremental value into float for speed...	
                 final float dC = (float) increment.value();
 
-                // sync to data and calculate dependences...float filterFactor = (float) (1.0 - integration.filterTimeScale / integration.getDuration());
+                // sync to data and calculate dependences...
                 for(int t=to; --t >= from; ) {
                     final Frame exposure = integration.get(t);
                     if(exposure == null) continue;

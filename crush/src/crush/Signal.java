@@ -249,6 +249,31 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
         isFloating = false;
     }
+    
+    /**
+     * Calculates the numerical 2nd derivative, using an in-place sequential algorithm
+     * As such it is efficient for sinlge-threaded processing of moderate sized data. For large
+     * number of points it may be more efficient to create temporary storage for parallel processing, if the overheads
+     * of the necessary storage and thread creations are worth it.
+     * 
+     * 
+     */
+    public void secondDerivative() {
+        final float idt = 1.0F / (float) (resolution * integration.getInstrument().samplingInterval);
+        final float idt2 = idt*idt;
+        final int nm2 = value.length - 2;
+            
+        // v[n] -> f''[n+1]
+        for(int t=0; t < nm2; t++) value[t] = (value[t+2] + value[t] - 2.0F*value[t+1]) * idt2;
+
+        // shift donw n -> n-1
+        for(int t=nm2+1; --t > 0; ) value[t] = value[t-1];
+
+        // last value same as one before...
+        value[nm2+1] = value[nm2];
+        
+        isFloating = false;
+    }
 
     /** 
      * Intergates using trapesiod rule.
@@ -278,7 +303,13 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
     public void differentiate(int nTimes) {
         if(nTimes < 0) throw new IllegalArgumentException("Negative multiplicity: " + nTimes);
-        for(int i=0; i<nTimes; i++) differentiate();
+        
+        while(nTimes > 1) {
+            secondDerivative();
+            nTimes -= 2;
+        }
+        
+        if(nTimes == 1) differentiate();
     }
 
     public void integrate(int nTimes) {

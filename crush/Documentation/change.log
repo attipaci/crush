@@ -1,3 +1,9 @@
+>> SpectralCube: each plane with its own underlying beam size
+>> HIRMES: QCL: two sources...
+>> HIRMES: QCL thresholds and on-off data
+>> HIRMES: QCL pixel fitting...
+>> TODO: wavelength-dependence of point source flux correction. 
+>> check accel (NullPointerException)
 >> DataND: pixelSmooth(fwhm[, angles]), pixelFastSmooth(fwhm[, angles])
 >> Migrate funtionality from Signal to Data1D... (differentiate/integrate)
 >> Median scanning velocity estimate low?
@@ -13,6 +19,11 @@
 
 
 2.50-a1
+
+	[FIX] {HIRMES} Fix MUX mapping.
+
+	[FIX] {HIRMES} 'pins' modality was not decorrelated due to a typo in
+	the modality definition.
 
 	[FIX] {HIRMES} Source name (and other FITS properties) weren't 
 	propagated into flattened image. Fixed.
@@ -46,11 +57,22 @@
 
 	[FIX] {SOFIA} Default coordinate epoch of J2000.0 is assumed when
 	coordinate epoch is unknown (-9999.0, or "UNKNOWN" in FITS).
-
+	
 	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
 
 	[DEPRECATE] Removed support for 'neighbours.radius' option that 
 	was at some point used in APEX chop-nod photometry.
+
+	[CHANGE] {HIRMES} 'gains' 1.0 -> -1.0, for SimV8.
+
+	[TWEAK] Filters now calculate response on a per-channel basis, 
+	accounting for different pixel beam sizes...
+
+	[TWEAK] {HIRMES} Remove wavelength consistency checking for now. We
+	can reintroduce it later if we want to...
+
+	[TWEAK] {HIRMES} Update write.pixeldata format to include coupling
+	efficiencies, MUX and pin (address line) gains.
 
 	[TWEAK] Always use robust mean to calculate scanning speed stats.
 
@@ -74,6 +96,8 @@
 	[PRUNE] {GISMO} Remove support for processing SAE data. It was 
 	introduced as an experiment, but it did not prove of much use. There
 	is little point of keeping support for it down the line.
+
+	[CONFIG] {HIRMES} Enable gain solutions.
 
 	[CONFIG] Disable acceleration clipping by default (It seems to be 
 	better off without it. Also old limits were off due to an 

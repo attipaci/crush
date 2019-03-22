@@ -273,7 +273,7 @@ public class PixelMap extends AbstractSource2D {
 	
 	public void writePixelData(String path) throws IOException {
 		
-		double[] sourceGain = getFirstScan().getInstrument().getSourceGains(false);
+		double[] sourceGain = getFirstScan().getInstrument().getSourceGains(getPointSize(), false);
 		
 		String fileName = path + File.separator + getDefaultCoreName() + ".rcp";
 		try(PrintStream out = new PrintStream(new FileOutputStream(fileName))) {

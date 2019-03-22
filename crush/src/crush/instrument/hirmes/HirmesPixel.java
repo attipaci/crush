@@ -38,25 +38,26 @@ public class HirmesPixel extends SofiaChannel {
     private static final long serialVersionUID = 293691569452930105L;
     
     public int detArray = -1, sub = -1, subrow = -1, subcol = -1, row = -1, col = -1, mux = -1, pin = -1, seriesArray = -1, biasLine = -1;
-    public double subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
-
-    int readrow = -1, readcol = -1;
+    public double opticalCoupling = 1.0, subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
+    
+    int fitsRow = -1, fitsCol = -1;
     
     boolean hasJumps = false;
     
     Vector2D focalPlanePosition;
     
     double restFrequency;
+    double obsBandwidth;
     
     HirmesPixel(Hirmes hirmes, int zeroIndex) {
         super(hirmes, zeroIndex);
         
         
-        readrow = zeroIndex / Hirmes.readoutCols;
-        readcol = zeroIndex % Hirmes.readoutCols;
-        int virtcol = (Hirmes.subCols-1) - readcol;
+        fitsRow = zeroIndex / Hirmes.readoutCols;
+        fitsCol = zeroIndex % Hirmes.readoutCols;
+        int virtcol = (Hirmes.subCols-1) - fitsCol;
         
-        sub = readrow / Hirmes.rows;
+        sub = fitsRow / Hirmes.rows;
         
         detArray = zeroIndex < Hirmes.lowresPixels ? Hirmes.LORES_ARRAY : Hirmes.HIRES_ARRAY;
         
@@ -64,66 +65,50 @@ public class HirmesPixel extends SofiaChannel {
             // Blind SQUIDs...
             flag(FLAG_BLIND);
             subcol = col = -(sub+1);
-            subrow = mux = readrow;
+            subrow = mux = fitsRow;
             pin = -1;
         }
-        
-        else if(detArray == Hirmes.LORES_ARRAY) {
-            // LORES array...
+        else {
+            // MUXes span 4 readout columns...
+            mux = fitsCol / 4;
+
+            // Blue subarray have MUX indices +8
+            if(sub == Hirmes.LORES_BLUE_SUBARRAY) mux += 8;
+
+            int virtrow = fitsRow % Hirmes.rows;
             
-            row = readrow;
-            subcol = virtcol;
-            
-            subrow = row % Hirmes.rows;  
-            col = subcol + sub * Hirmes.subCols; 
-            
-            // It's easiest to index MUXes from reverse indexed physical columns...
-            final int mcol = (Hirmes.lowresCols-1) - col; 
-            mux = mcol / 4;
+            // Upper rows have MUX indices +16
+            if(virtrow >= 8) mux += 16;
             
             // MUX numbers are pairwise swapped...
             mux ^= 1;
+
+            // Address line indices...
+            pin = 8 * (fitsCol % 4);
+            int subaddr = (fitsRow % 8);
+                        
+            if(sub == Hirmes.LORES_RED_SUBARRAY && virtrow < 8) pin += 7 - subaddr; 
+            else if (sub == Hirmes.LORES_BLUE_SUBARRAY && virtrow >= 8) pin += 7 - subaddr;
+            else if (sub == Hirmes.HIRES_ARRAY) pin += 7 - subaddr;
+            else  pin += subaddr;
             
-            // Address lines increase by 8 along the reversed columns
-            pin = 8 * (mcol % 4);
-            
-            // Address lines are increasing away from center row.
-            if(row > 7) {
-                mux += 16;
-                pin += (row % 8); 
-            }
-            else {
-                pin += ((7-row) % 8);
-            }   
-           
-        }
         
-        else {
-            // HIRES array...
+            if(detArray == Hirmes.LORES_ARRAY) {
+                // LORES array...    
+                row = fitsRow;
+                subcol = virtcol;
             
-            subrow = virtcol % Hirmes.rows;
-            subcol = (readcol == Hirmes.subCols) ? -1 : 2 * (readrow - sub * Hirmes.rows) + virtcol / Hirmes.rows;
-           
-            row = sub * Hirmes.rows + subrow;
-            col = sub * Hirmes.subCols + subcol;
-            
-            // MUX numbers in quartiles.
-            mux = 32;
-            if(col > 3) mux++;      // If we are on the right side, the MUX is 1 higher
-            if(row > 7) mux += 2;   // If we are on top half, then MUX is higher by 2...
-            
-            // Address lines increase by 8 with columns...
-            pin = 8 * (subcol % 4);
-            
-            // Address lines are increasing away from center row
-            if(row > 7) {
-                mux += 16;
-                pin += (row % 8);
+                subrow = fitsRow % Hirmes.rows;  
+                col = subcol + sub * Hirmes.subCols; 
             }
             else {
-                pin += ((7-row) % 8);
+                // HIRES array...  
+                subrow = virtcol % Hirmes.rows;
+                subcol = (fitsCol == Hirmes.subCols) ? -1 : 2 * (fitsRow - sub * Hirmes.rows) + virtcol / Hirmes.rows;
+           
+                row = sub * Hirmes.rows + subrow;
+                col = sub * Hirmes.subCols + subcol;
             }
-                
         }
           
         seriesArray = mux >>> 1;   // series array on pair-wise MUX, TODO ckeck!
@@ -143,6 +128,8 @@ public class HirmesPixel extends SofiaChannel {
     @Override
     public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
     
+    
+    
     @Override
     public double overlap(final Channel channel, double pointSize) {
        if(!(channel instanceof HirmesPixel)) return 0.0;
@@ -157,6 +144,11 @@ public class HirmesPixel extends SofiaChannel {
     @Override
     public double getFrequency() { return restFrequency; }
 
+    @Override
+    public double getResolution() { 
+        Hirmes instrument = getInstrument();
+        return instrument.getResolution() * instrument.getRestFrequency() / restFrequency;
+    }
 
     void calcSIBSPosition3D() {
         Hirmes hirmes = getInstrument(); 
@@ -165,6 +157,7 @@ public class HirmesPixel extends SofiaChannel {
         if(isFlagged(FLAG_BLIND)) {
             getPixel().setPosition(focalPlanePosition = null);
             restFrequency = Double.NaN;
+            obsBandwidth = 0.0;
         }
         else {
             focalPlanePosition = (sub == Hirmes.HIRES_SUBARRAY) ? 
@@ -173,7 +166,30 @@ public class HirmesPixel extends SofiaChannel {
                     
             getPixel().setPosition(layout.getSIBSPosition(focalPlanePosition));
             restFrequency = hirmes.getRestFrequency(focalPlanePosition);
-        }
+            
+            Vector2D p = focalPlanePosition;
+            Vector2D d = physicalSize.copy();
+            d.scale(0.5);
+            
+            double dfx = hirmes.getObservingFrequency(new Vector2D(p.x() + d.x(), p.y())) - hirmes.getRestFrequency(new Vector2D(p.x() - d.x(), p.y()));
+            double dfy = hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() + d.y())) - hirmes.getRestFrequency(new Vector2D(p.x(), p.y() - d.y()));
+            
+            double obsFrequency = hirmes.getObservingFrequency(focalPlanePosition);
+            
+            // Calculate the total sky coupling
+            coupling = opticalCoupling;
+            
+            obsBandwidth = (Math.abs(dfx) + Math.abs(dfy));
+            
+            // TODO is there a better place for this?
+            // Atmopsheric transmission variation
+            coupling *= hirmes.getRelativeTransmission(obsFrequency);
+            
+            // Detector bandwidth
+            coupling *= obsBandwidth / HirmesPixel.gainNormBandwidth;
+            
+            coupling *= hirmes.getSlitEfficiency(obsFrequency);
+        }   
     }
 
     boolean isDarkSQUID() {
@@ -204,21 +220,30 @@ public class HirmesPixel extends SofiaChannel {
     @Override
     public String toString() {
         return super.toString() 
-                + "\t" + Util.f3.format(muxGain) 
+                + "\t" + Util.f3.format(coupling) 
+                + "\t" + Util.f3.format(muxGain)
+                + "\t" + Util.f3.format(pinGain) 
                 + "\t" + getFixedIndex() 
                 + "\t" + sub 
-                + "\t" + subrow 
-                + "\t" + subcol;
+                + "\t" + mux 
+                + "\t" + pin
+                + "\t" + Util.e3.format(obsBandwidth);
     }
     
     @Override
     public void parseValues(SmartTokenizer tokens, int criticalFlags) { 
         super.parseValues(tokens, criticalFlags);
-        if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();            
-        if(isFlagged(Channel.FLAG_DEAD)) coupling = 0.0;
+        
+        if(tokens.hasMoreTokens()) opticalCoupling = tokens.nextDouble();
+        if(isFlagged(Channel.FLAG_DEAD)) opticalCoupling = 0.0;
+        
+        if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
+        if(tokens.hasMoreTokens()) pinGain = tokens.nextDouble();      
     }
     
     public final static Vector2D physicalSize = new Vector2D(1.18 * Unit.mm, 1.01 * Unit.mm);
+    public final static double gainNormBandwidth = Unit.GHz;
+    
     
     public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
     public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();

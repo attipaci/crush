@@ -67,6 +67,9 @@ class HirmesFrame extends SofiaFrame {
         
         return copy;
     }
+    
+    @Override
+    public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
 
     void parseData(int frameIndex, int[] DAC, short[] jump) {   
         parseData(DAC, jump, frameIndex * FITS_CHANNELS);
@@ -90,8 +93,8 @@ class HirmesFrame extends SofiaFrame {
         if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
-            data[pixel.getIndex()] = DAC[pixel.readrow][pixel.readcol];
-            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[pixel.readrow][pixel.readcol];
+            data[pixel.getIndex()] = DAC[pixel.fitsRow][pixel.fitsCol];
+            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[pixel.fitsRow][pixel.fitsCol];
         }
     }
 

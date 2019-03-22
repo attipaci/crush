@@ -1181,7 +1181,7 @@ implements TableFormatter.Entries, BasicMessaging {
         parallelStream().forEach(x -> x.temp = (float) x.getReadoutGain());
     }
 
-    public double[] getSourceGains(final boolean filterCorrected) {
+    public double[] getSourceGains(double beamSize, final boolean filterCorrected) {
         final double[] G = new double[size()];
         final boolean fixedGains = hasOption("source.fixedgains");
 
@@ -1193,6 +1193,9 @@ implements TableFormatter.Entries, BasicMessaging {
 
             if(!fixedGains) G[channel.index] *= channel.gain;
             if(filterCorrected) G[channel.index] *= channel.sourceFiltering;
+            
+            //double relBeamSize = channel.getResolution() / beamSize;
+            //G[channel.index] *= relBeamSize * relBeamSize;
         });
 
         return G;
@@ -1211,7 +1214,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public double getAverageFiltering() {
-        final double[] sourceGain = getSourceGains(false);		
+        final double[] sourceGain = getSourceGains(getResolution(), false);		
         double sumwG = 0.0, sumwG2 = 0.0;
 
         for(Channel channel : this) if(channel.isUnflagged()) {
@@ -1294,7 +1297,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     public double getSourceNEFD(double gain) {
-        final double G[] = getSourceGains(true);
+        final double G[] = getSourceGains(getResolution(), true);
 
         double sumpw = parallelStream().filter(c -> c.isUnflagged()).filter(c -> G[c.index] != 0.0)
         .mapToDouble(c -> G[c.index] * G[c.index] / c.variance).sum();

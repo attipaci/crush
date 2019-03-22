@@ -751,7 +751,7 @@ public abstract class AbstractSource2D extends SourceModel {
         final int mappingFrames = add(
                 integration, 
                 integration.getInstrument().getMappingPixels(0), 
-                instrument.getSourceGains(signalCorrection), 
+                instrument.getSourceGains(getPointSize(), signalCorrection), 
                 signalMode
         );
 
@@ -806,14 +806,14 @@ public abstract class AbstractSource2D extends SourceModel {
     public void sync(final Integration<?> integration, final int signalMode) {
         Instrument<?> instrument = integration.getInstrument(); 
 
-        double[] sourceGain = instrument.getSourceGains(false);	
+        double[] sourceGain = instrument.getSourceGains(getPointSize(), false);	
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
 
         final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.getSourcelessChannelFlags());
 
         if(hasSourceOption("coupling")) {
             calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
-            sourceGain = instrument.getSourceGains(false);
+            sourceGain = instrument.getSourceGains(getPointSize(), false);
         }
         sync(integration, pixels, sourceGain, signalMode);
 

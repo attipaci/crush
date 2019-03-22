@@ -26,9 +26,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import crush.Channel;
-import crush.Frame;
 import crush.Integration;
-import jnum.Constant;
 import jnum.data.Statistics;
 
 public abstract class AdaptiveFilter extends VariedFilter {
@@ -71,9 +69,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		else if(profile.length != nF) profile = new float[nF];
 		
 		dF = 0.5 / (nF * getInstrument().samplingInterval);	
-		
-		updateSourceProfile();
-		
+
 		for(int i=channelProfiles.length; --i >= 0; ) {
 			final float[] oldProfile = channelProfiles[i];
 			if(oldProfile == null) continue;
@@ -116,7 +112,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	@Override
 	protected double responseAt(int fch) {
 		if(profile == null) return 1.0;	
-		return profile[fch * profile.length / (nf+1)];
+		return profile[(fch * profile.length) / (nf+1)];
 	}
 	
 	public float[] getValidProfile(Channel channel) {
@@ -140,47 +136,4 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		return IntStream.range(minF, profile.length).parallel().mapToDouble(F ->  1.0 - profile[F] * profile[F]).sum();
 	}
 	
-
-	@Override
-	protected void updateSourceProfile() {
-		if(profile == null) return;
-		if(sourceProfile != null) if(sourceProfile.length == profile.length) return;
-		
-		sourceProfile = new float[profile.length];
-		
-		// Assume Gaussian source profile under crossing time
-		// sigmaT sigmaw = 1
-		// T/2.35 * 2pi * sigmaf = 1
-		// sigmaf = 2.35/2pi * 1/T;
-		// df = 1 / (n dt)
-		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
-		
-		final double T = integration.getPointCrossingTime();
-		final double F0 = integration.getModulationFrequency(Frame.TOTAL_POWER) / dF;
-		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * dF);
-		final double a = -0.5 / (sigma * sigma);
-		
-		sourceNorm = 0.0;
-		
-		// just calculate x=0 component -- O(N)
-		sourceNorm = IntStream.range(0, sourceProfile.length).parallel()
-		        .mapToDouble(F -> sourceProfile[F] = 0.5F * (float) (Math.exp(a*(F-F0)*(F-F0)) + Math.exp(a*(F+F0)*(F+F0))))
-		        .sum();
-	}
-	
-
-	@Override
-	protected double calcPointResponse() {
-		int minF = (int) Math.ceil(getHipassIndex() * df / dF);
-		
-		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		double sum = IntStream.range(0, minF).parallel().mapToDouble(F -> sourceProfile[F]).sum();
-			
-		// Calculate the true source filtering above the hipass timescale...
-		sum += IntStream.range(minF, profile.length).parallel().mapToDouble(F -> sourceProfile[F] * profile[F]).sum();
-
-		return sum / sourceNorm;
-	}
-	
-
 }
