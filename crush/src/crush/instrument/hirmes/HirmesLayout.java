@@ -153,7 +153,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
         // Update the SOFIA standard pixel size...
         if(hirmes.detArray == Hirmes.LORES_ARRAY) hirmes.array.pixelSize = Math.sqrt(loresPixelSize.x() * loresPixelSize.y());
         else hirmes.array.pixelSize = Math.sqrt(hiresPixelSize[hirmes.hiresColUsed].x() * hiresPixelSize[hirmes.hiresColUsed].y());
-
+        
         Vector2D center = getSIBSPosition(focalPlaneReference);  
         for(HirmesPixel pixel : hirmes) pixel.calcSIBSPosition3D();
 

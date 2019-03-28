@@ -414,9 +414,10 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         if(mode == IMAGING_MODE) return 1.0;
         if(!hasOption("slitcorrect")) return 1.0;
         
-        SimpleInterpolator interpolator = new SimpleInterpolator(option("slitCorrect").getPath());
+        SimpleInterpolator interpolator = new SimpleInterpolator(option("slitcorrect").getPath());
+        
         return interpolator.getValue(Constant.c / frequency / Unit.um);
-        // * Math.pow(frequency / (10.0 * Unit.THz), 0.045); // An empirical residual correction to match simulations...
+        // * Math.pow(frequency / (10.0 * Unit.THz), 0.045);    // Empirical residual correction for low-res...
     }
     
     @Override

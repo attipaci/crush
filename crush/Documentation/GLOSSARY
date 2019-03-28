@@ -3315,7 +3315,16 @@
                         X, in the units set by 'spectral.unit'. When present
                         this option supercedes the 'spectral.R', which
                         is an elternative way to set the spectral bin size.
-                        @See: 'spectral.unit'
+			If 'spectral.logscale' is also set the bin size is
+			understood as fractional octave (i.e. inverse R). S.t.
+			a bin size of 0.001 corresponds to R~1000.
+                        @See: 'spectral.unit', 'spectral.logscale'
+
+:: spectral.logscale	@Since: 2.50
+			If present the spectral binning will be logarithmically
+			spaced. The spectral axis will have ordinates that
+			are log10 of the nominal frequency/wavelength values.
+			@See: 'spectral.grid', 'spectral.unit'
 
 :: spectral.obs         @Instrument: HIRMES
                         @Since: 2.42

@@ -51,7 +51,6 @@ import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
 import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
-import jnum.data.image.Gaussian2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
@@ -73,25 +72,29 @@ import jnum.text.GreekLetter;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 
 public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
-   
+
     /**
      * 
      */
     private static final long serialVersionUID = -4295840283454069570L;
-   
+
     Observation2D1 cube;
     Data2D1<Image2D> base;
-    
+
     Unit spectralUnit;
     boolean useWavelength = true;
-    
+    boolean isLogarithmic;
+
     public SpectralCube(Instrument<?> instrument) {
         super(instrument);
     }
-    
+
     @Override
     public SpectralCube copy(boolean withContents) throws OutOfMemoryError {
         SpectralCube copy = (SpectralCube) super.copy(withContents);
@@ -103,10 +106,10 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         }
 
         copy.spectralUnit = spectralUnit.copy();
-        
+
         return copy;
     }
-    
+
     public void standalone() {
         base = Image2D1.create(Double.class, cube.sizeX(), cube.sizeY(), cube.sizeZ());
     }
@@ -119,7 +122,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         if(name.endsWith("hz")) useWavelength = false;
         else useWavelength = true;  
     }
-    
+
 
     public Unit getJanskyUnit() {
         return new Unit("Jy", Double.NaN) {
@@ -130,7 +133,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         };
     }
 
-   
+
     public Range getFrequencyRange(Collection<? extends Scan<?>> scans) {
         Range r = new Range();
         for(Scan<?> scan : scans) for(Integration<?> integration : scan) {
@@ -138,44 +141,56 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         }
         return r;
     }
-    
+
     public int findSizeZ() {  
         Range zRange = getFrequencyRange(getScans());
-        
+
         spectralUnit = Unit.get("GHz");
         if(hasOption("spectral.unit")) setSpectralUnit(option("spectral.unit").getValue());
-             
+
         if(useWavelength) zRange.setRange(Constant.c / zRange.max(), Constant.c / zRange.min());
 
+        isLogarithmic = hasOption("spectral.logscale");
+        if(isLogarithmic) {
+            zRange.scale(1.0 / spectralUnit.value());
+            zRange.setRange(Math.log10(zRange.min()), Math.log10(zRange.max()));
+        }
+
         double zReference = zRange.midPoint();
-        
+
         // TODO based on instrument.frequency & frequencyResolution 
-        double delta = zRange.midPoint() / 1000.0; // Default to R ~ 1000 at the center frequency
+        double delta = isLogarithmic ? 1e-3 * log10Octave : zRange.midPoint() / 1000.0; // Default to R ~ 1000 at the center frequency 
+
         if(hasOption("spectral.grid")) {
             delta = option("spectral.grid").getDouble() * spectralUnit.value();  
         }
         else if(hasOption("spectral.r")) {
-            delta = 0.5 * zRange.midPoint() / option("spectral.r").getDouble();
+            // In log scale R is the number of bins per octave...
+            if(isLogarithmic) delta = 0.5 / option("spectral.r").getDouble() * log10Octave;
+            else delta = 0.5 * zRange.midPoint() / option("spectral.r").getDouble();
         }
-           
+
         Grid1D grid = cube.getGrid1D();
         grid.setResolution(delta);
         grid.setReference(zReference);
         grid.setReferenceIndex(0.5 + Math.rint((zReference - zRange.min()) / delta));
-        
+
         CoordinateAxis zAxis = grid.getAxis();   
-        zAxis.setUnit(spectralUnit);
+
+        if(isLogarithmic) zAxis.setUnit(new Unit(spectralUnit.name(), 1.0));
+        else zAxis.setUnit(spectralUnit);
+
         zAxis.setLabel(useWavelength ? "Wavelength" : "Frequency");
-        zAxis.setFancyLabel(useWavelength ? GreekLetter.lambda + "" : "Frequency");
-     
+        zAxis.setFancyLabel(useWavelength ? GreekLetter.lambda + "" : GreekLetter.nu + "");
+
         int sizeZ = 1 + (int) Math.ceil(zRange.span() / delta);
-        
+
         if(CRUSH.debug) debug("spectral bins: " + sizeZ);
 
         return sizeZ;
     }
-    
-    
+
+
     private void createCube() {        
         cube = new Observation2D1(Double.class, Double.class, Flag2D.TYPE_INT);
 
@@ -183,46 +198,46 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         cube.setGrid2D(getGrid());
         cube.setGrid1D(new Grid1D(3));
         cube.setCriticalFlags(~FLAG_MASK);  
-        
+
         cube.addLocalUnit(getNativeUnit());
         cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
         cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");  
-        
+
         cube.getPlaneTemplate().setDisplayGridUnit(getInstrument().getSizeUnit());
-        
+
         FitsProperties properties = cube.getPlaneTemplate().getFitsProperties();
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
         properties.setCopyright(CRUSH.getCopyrightString());     
-     
+
         if(hasOption("unit")) {
             String unitName = option("unit").getValue();
             cube.setUnit(unitName);
         }
     }
- 
-    
-    
+
+
+
     @Override
     public void createFrom(Collection<? extends Scan<?>> collection) throws Exception {
-        
+
         createCube();
-        
+
         super.createFrom(collection);  
-        
+
         for(Observation2D plane : cube.getPlanes()) {
             plane.getFitsProperties().setObjectName(getFirstScan().getSourceName());
             plane.setUnderlyingBeam(getAverageResolution());
         }
-         
+
         CRUSH.info(this, "\n" + cube.getPlaneTemplate().getInfo());
-        
+
         Grid1D g = cube.getGrid1D();
         Unit zUnit = g.getAxis().getUnit();
-        
+
         CRUSH.info(this, "Spectral Reference: " + Util.s4.format(g.getReferenceValue(0) / zUnit.value()) + " " + zUnit.name());
         CRUSH.info(this, "Spectral Bins: " + sizeZ());
-        
+
         base = Image2D1.create(Double.class, sizeX(), sizeY(), sizeZ());
 
         // TODO
@@ -234,9 +249,22 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
                 if(CRUSH.debug) CRUSH.trace(e);
             }
         }
-        */
+         */
     } 
-    
+
+    @Override
+    public void editHeader(Header header) throws HeaderCardException {
+        super.editHeader(header);
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("LOGSPEC", isLogarithmic, "Whether the spectral binning is logarithmic."));
+    }
+
+    @Override
+    public void parseHeader(Header header) throws Exception {
+        super.parseHeader(header);
+        isLogarithmic = header.getBooleanValue("LOGSPEC");
+    }
+
 
     @Override
     public int getPixelFootprint() {
@@ -251,6 +279,16 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     @Override
     public void setSize(int sizeX, int sizeY) {
         cube.setSize(sizeX, sizeY, findSizeZ());
+
+        // Set the underlying beam size for each plane separately...
+        Grid1D g = cube.getGrid1D();
+        double rf0 = getInstrument().getResolution() * getInstrument().getFrequency();
+
+        for(int i=sizeZ(); --i >= 0; ) {
+            double f = g.coordAt(i);
+            if(isLogarithmic) f = Math.pow(10.0, f);
+            cube.getPlane(i).setUnderlyingBeam(rf0 / f);
+        }
     }
 
     @Override
@@ -262,21 +300,22 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     public final int sizeY() {
         return cube.sizeY();
     }
-    
+
     public final int sizeZ() {
         return cube.sizeZ();
     }
-    
+
     public final int getFrequencyBin(Frame exposure, Channel channel) {
         return getFrequencyBin(exposure.getChannelFrequency(channel));
     }
 
     public int getFrequencyBin(double frequency) {
         if(useWavelength) frequency = Constant.c / frequency;
+        if(isLogarithmic) frequency = Math.log10(frequency / spectralUnit.value());
         return (int) Math.round(cube.getGrid1D().indexOf(frequency));
     }
-    
-  
+
+
     @Override
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {    
         Observation2D plane = cube.getPlane(getFrequencyBin(exposure, channel));
@@ -286,7 +325,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     public boolean isMasked(int i, int j, int k) {
         return cube.getPlane(k).isFlagged(i, j, FLAG_MASK);
     }
-    
+
 
     @Override
     public void addModelData(SourceModel model, double weight) {
@@ -303,7 +342,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
         for(final Channel channel : pixel) sync(exposure, channel, index, fG, sourceGain, syncGain);
     }
- 
+
     protected void sync(Frame exposure, Channel channel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
         final int c = channel.getIndex();
         final int k = getFrequencyBin(exposure, channel);
@@ -334,7 +373,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         // TODO Auto-generated method stub  
     }
 
-  
+
     @Override
     public void setBase() {
         base.paste(cube, false);
@@ -346,7 +385,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         cube.resetProcessing();
     }
 
-  
+
     @Override
     public String getSourceName() {
         return cube.getPlane(0).getFitsProperties().getObjectName();
@@ -356,7 +395,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     public Unit getUnit() {
         return cube.getUnit();
     }
-    
+
 
     @Override
     public Object getTableEntry(String name) {  
@@ -364,35 +403,35 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         return super.getTableEntry(name);
     }
 
-    
+
     @Override
     public void processFinal() {
         // TODO Auto-generated method stub   
     }
-    
+
     @Override
     public void level(boolean isRobust) {
         for(Data2D plane : cube.getPlanes()) plane.level(isRobust);
     }
-    
+
     @Override
     public Map2D getMap2D() {     
         return hasOption("write.png.median") ? cube.getMedianZ() : cube.getAverageZ();
     }
-    
-  
+
+
     @Override
     public void filter(double filterScale, double filterBlanking, boolean useFFT) {
         for(Observation2D plane : cube.getPlanes()) {
             Validating2D filterBlank = new RangeRestricted2D(plane.getSignificance(), new Range(-filterBlanking, filterBlanking));
-        
+
             if(useFFT) plane.fftFilterAbove(filterScale, filterBlank);
             else plane.filterAbove(filterScale, filterBlank);
-        
+
             plane.setFilterBlanking(filterBlanking);
         }
     }
-    
+
     @Override
     public void setFiltering(double FWHM) {
         for(Observation2D plane : cube.getPlanes()) plane.updateFiltering(FWHM);
@@ -403,14 +442,14 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     public void resetFiltering() {
         cube.resetFiltering();
     }
-  
+
 
     @Override
     public Observation2D1 getData() {
         return cube;
     }
 
- 
+
     @Override
     public void addBase() {
         cube.add(base);
@@ -420,7 +459,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     public void smoothTo(double FWHM) {
         cube.smoothXYTo(FWHM);
     }
-    
+
     @Override
     public void filterBeamCorrect() {
         cube.filterBeamCorrect();
@@ -434,18 +473,18 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
     @Override
     public void updateMask(double blankingLevel, int minNeighbors) {
         if(Double.isNaN(blankingLevel)) blankingLevel = Double.POSITIVE_INFINITY;
-        
+
         Range s2nRange = new Range(-blankingLevel, blankingLevel);
-        
+
         if(hasSourceOption("sign")) {
             int sign = sourceOption("sign").getSign();
             if(sign < 0) s2nRange.setMax(Double.POSITIVE_INFINITY);
             else if(sign > 0) s2nRange.setMin(Double.NEGATIVE_INFINITY);
         }
-        
+
         final Validating<Index3D> neighbors = cube.getNeighborValidator(minNeighbors);
         final Validating<Index3D> s2n = new RangeRestricted3D(cube.getSignificance(), s2nRange);
-            
+
         cube.loop(new ParallelPointOp.Simple<Index3D>() {
             @Override
             public void process(Index3D index) {
@@ -453,24 +492,24 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
                 else cube.flag(index, FLAG_MASK);
             }       
         });
-       
+
     }
 
     @Override
     public void write() throws Exception {    
         super.write();
-        
+
         String path = getOutputPath();
-        
+
         if(hasOption("write.flattened")) {
             writeFlattenedFits(path + File.separator + getCoreName() + ".flattened.fits");
         }
-        
+
         if(hasOption("write.fieldspec")) {
             plotSpectrum(path + File.separator + getCoreName() + ".fieldspec");
         }
     }
-    
+
     /**
      * Plots the peak spectrum at the observed source position. 
      * 
@@ -487,12 +526,12 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
         final Data1D mean = Samples1D.createType(Double.class, cube.sizeZ());
         final Data1D rms = Samples1D.createType(Double.class, cube.sizeZ());
-        
+
         final Vector2D refIndex = cube.getGrid2D().getReferenceIndex();
 
         DataPoint smoothedValue = new DataPoint();
         SplineSet<Vector2D> splines = new SplineSet<>(2);
-        
+
         for(int i=cube.sizeZ(); --i >= 0; ) {
             Observation2D plane = cube.getPlane(i);
             Referenced2D beam = plane.getUnderlyingBeam().getBeam(plane.getGrid());
@@ -500,15 +539,15 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
             mean.set(i, smoothedValue.value());
             rms.set(i, smoothedValue.rms());
         }
-        
+
         System.err.println();
-        
+
         Data1D spectrum = new Overlay1D(mean) {
             @Override
             protected String getASCIITableHeader(Grid1D grid, String yName) {
                 return super.getASCIITableHeader(grid, yName) + "\trms";
             }
-                
+
             @Override
             protected String getASCIITableEntry(int index, Grid1D grid, String nanValue) {
                 double rmsValue = 1.0 / Math.sqrt(rms.get(index).doubleValue()) / getUnit().value();
@@ -521,27 +560,56 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
                 super.configGnuplot(plot, coreName, grid, yName, options);
                 plot.println("set yra [0:*]");
                 plot.println("set style fill transparent solid 0.3");
+                if(isLogarithmic) {
+                    plot.println("set log x");
+                    plot.println("set xra [" + Math.pow(10.0, grid.coordAt(-0.5)) + ":" + Math.pow(10.0, grid.coordAt(sizeZ()-0.5)) + "]");
+
+                    // Add minor tick labels explicitly
+                    int from = (int) Math.floor(grid.coordAt(-0.5));
+                    int to = (int) Math.ceil(grid.coordAt(sizeZ()-0.5));
+
+                    if(to - from < 3) {
+                        StringBuffer buf = new StringBuffer();
+                        double step = Math.pow(10.0, from);
+                        double last = Math.pow(10.0, to);
+
+                        for(double f = 2*step; f<last; f+= step) {
+                            if(Math.abs(f - 10.0 * step) < 1e-6*step) step *= 10; 
+                            else {
+                                if(f != 2*step) buf.append(", ");
+                                buf.append(Util.f1.format(f));
+                            }
+                        }
+
+                        plot.println("set xtics add (" + new String(buf) + ")");
+                    }
+                }
             }
-           
+
             @Override
-            protected String getPlotCommand(String coreName) {          
+            public String getPlotXValues() {
+                return isLogarithmic ? "(10**($1))" : "1";
+            }
+
+            @Override
+            protected String getPlotCommand(String coreName) {    
                 return super.getPlotCommand(coreName) + 
-                        ",\\\n '' using 1:2:(0.5 * delta):4 notitle with boxxyerr lt 1" + 
+                        ",\\\n '' using " + getPlotXValues() + ":" + getPlotYValues() + ":(0.5 * delta):4 notitle with boxxyerr lt 1" + 
                         ",\\\n0 notitle lt -1";
             }
         };
-        
+
         String nanValue = hasOption("write.fieldspec.nodata") ? option("write.fieldspec.nodata").getValue() : "---";
-        
+
         spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux", nanValue);
         spectrum.gnuplot(coreName, cube.getGrid1D(), "Mean Flux", gnuplot, option("write.fieldspec"));
     }
-    
+
     public void writeFlattenedFits(String fileName) throws FitsException, IOException {  
         Map2D image = getMap2D();
-        
+
         try(Fits fits = image.createFits(Float.class)) { 
-            
+
             for(int i=fits.getNumberOfHDUs(); --i >= 0; ) {
                 Header header = fits.getHDU(i).getHeader();
                 image.editHeader(header);
@@ -556,5 +624,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
         }
     }
 
-   
+
+    private static double log10Octave = Constant.log2 / Constant.log2;
+
 }

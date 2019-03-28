@@ -1,8 +1,7 @@
->> SpectralCube: each plane with its own underlying beam size
+>> FITS: LOGSPEC
 >> HIRMES: QCL: two sources...
 >> HIRMES: QCL thresholds and on-off data
 >> HIRMES: QCL pixel fitting...
->> TODO: wavelength-dependence of point source flux correction. 
 >> check accel (NullPointerException)
 >> DataND: pixelSmooth(fwhm[, angles]), pixelFastSmooth(fwhm[, angles])
 >> Migrate funtionality from Signal to Data1D... (differentiate/integrate)
@@ -18,7 +17,11 @@
 >> check ChannelGroup.slim()...
 
 
-2.50-a1
+2.50-a2
+
+	[NEW] Option 'spectral.logscale' can be used to make spectral binning
+	logarithmically spaced, which provides a better representation of 
+	broad spectra at a constant R value.
 
 	[NEW] {HIRMES} Correction for wavelength dependent slit efficiencies
 	via a lookup table, using the 'slitcorrect' option.
@@ -67,6 +70,13 @@
 	was at some point used in APEX chop-nod photometry.
 
 	[CHANGE] {HIRMES} 'gains' 1.0 -> -1.0, for SimV8.
+
+	[TWEAK] {SpectralCube} Flattened spectra are now extracted for nominal
+	source position only as 'fitted' point-source flux.
+
+	[TWEAK] {SpectralCube} Each image plane in the spectral cube has it's
+	own diffraction-limited underlying beam size, scaled from the 
+	instrument's representative resolution & corresponding frequency.
 
 	[TWEAK] Filters now calculate response on a per-channel basis, 
 	accounting for different pixel beam sizes...

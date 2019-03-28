@@ -249,7 +249,6 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         
         checksum = header.getString("DATASUM");             // not in 3.0
         checksumVersion = header.getString("CHECKVER");     // not in 3.0
-       
         
         calcPrecessions(CoordinateEpoch.J2000);
 
