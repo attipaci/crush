@@ -40,8 +40,8 @@ public class HirmesPixel extends SofiaChannel {
      */
     private static final long serialVersionUID = 293691569452930105L;
     
-    public int detArray = -1, sub = -1, subrow = -1, subcol = -1, row = -1, col = -1, mux = -1, pin = -1, seriesArray = -1, biasLine = -1;
-    public double absorberEfficiency = 1.0, subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
+    public int detArray = -1, sub = -1, subrow = -1, subcol = -1, row = -1, col = -1, mux = -1, pin = -1, elevensy = -1, seriesArray = -1, biasLine = -1;
+    public double absorberEfficiency = 1.0, subGain = 1.0, rowGain = 1.0, colGain = 1.0, muxGain = 1.0, pinGain = 1.0, elevensyGain = 1.0, seriesGain = 1.0, biasGain = 1.0;
     
     int fitsRow = -1, fitsCol = -1;
     
@@ -58,6 +58,9 @@ public class HirmesPixel extends SofiaChannel {
         
         fitsRow = zeroIndex / Hirmes.readoutCols;
         fitsCol = zeroIndex % Hirmes.readoutCols;
+        
+        elevensy = 3 * fitsRow + fitsCol / 3;
+        
         int virtcol = (Hirmes.subCols-1) - fitsCol;
         
         sub = fitsRow / Hirmes.rows;
@@ -262,6 +265,7 @@ public class HirmesPixel extends SofiaChannel {
     public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
     public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
     public final static int FLAG_PIN = softwareFlags.next('p', "Bad MUX pin gain").value();
+    public final static int FLAG_ELEVENSY = softwareFlags.next('e', "Bad SQUID elevensy gain").value();
     public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
     public final static int FLAG_COL = softwareFlags.next('c', "Bad detector col gain").value();
     public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();

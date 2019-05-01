@@ -1,23 +1,21 @@
->> FITS: LOGSPEC
->> HIRMES: QCL: two sources...
->> HIRMES: QCL thresholds and on-off data
->> HIRMES: QCL pixel fitting...
->> check accel (NullPointerException)
->> DataND: pixelSmooth(fwhm[, angles]), pixelFastSmooth(fwhm[, angles])
->> Migrate funtionality from Signal to Data1D... (differentiate/integrate)
->> Median scanning velocity estimate low?
->> port essential fixes back to 2.43...
-	- Instrument.standardWeights() / sampleWeights() w/o sqrt()
-	- build.xml fix (</copy> -> </move>
-	- ChannelLookup fix.
-	- AstroTime
-	- Sofia scan set validation
-	- jnum -> 0.24 fixes (AstroTime, ArrayUtil)
->> check Sharc2...
->> check ChannelGroup.slim()...
+
+2.50-b1 (1 May 2019)
 
 
-2.50-a2
+	Overview
+	======================================================================
+	This is a pretty major new release, hence the version bump. The source
+	code has been upgraded to Java 8, and makes use of the streams and
+	try-with-resources for better code.
+	The has been a complete overhaul of how pixel layouts are handled, 
+	and the way telescope position (e.g. scanning velocities) are handled.
+	Due to the many fundamental changes, support has been dropped for
+	some instruments.
+	======================================================================
+
+
+	[NEW] {HIRMES} Added 'elevensies' division and modality, allowing to 
+	decorrelate on SQUID elevensies if needed.
 
 	[NEW] Option 'spectral.logscale' can be used to make spectral binning
 	logarithmically spaced, which provides a better representation of 

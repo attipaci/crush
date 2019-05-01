@@ -82,7 +82,7 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
         private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
         private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
         private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
-        private int iChopR=-1, iChopS=-1, iStat=-1;
+        private int iChopR=-1, iChopS=-1, iStat=-1, iCal = -1;
         private int iLOS=-1, iRoll=-1;
 
         private boolean isLab;
@@ -113,7 +113,8 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             }
 
             iStat = findColumn("Flag");
-
+            iCal = findColumn("calibratorChopState");
+            
             iAZ = findColumn("AZ");
             iEL = findColumn("EL");
 
@@ -223,7 +224,8 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                     // Add the astrometry...
                     // ======================================================================================
 
-                    frame.status = iStat < 0 ? 0 : ((int[]) row[iStat])[0];       
+                    frame.status = iStat < 0 ? 0 : ((int[]) row[iStat])[0];
+                    frame.qclState = iCal < 0 ? false : ((byte[]) row[iCal])[0] > 0;
 
                     if(!isConfigured) configure(row);
 

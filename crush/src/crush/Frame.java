@@ -203,7 +203,6 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 	@Override
     public final long getFlags() { return flag; }
 	
-	
 	public final synchronized void addDependents(double dp) {
 		dependents += dp;
 	}

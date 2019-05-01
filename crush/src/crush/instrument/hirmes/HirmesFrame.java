@@ -40,6 +40,7 @@ class HirmesFrame extends SofiaFrame {
     
     float LOS, roll;
     
+    boolean qclState;
     long mceSerial;
     byte[] jumpCounter;
     
