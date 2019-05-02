@@ -128,23 +128,22 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         int muxSkipFlag = hasOption("darkcorrect") ? Channel.FLAG_DEAD | Channel.FLAG_BLIND : Channel.FLAG_DEAD;
 
         try { 
-            addDivision(getDivision("mux", HirmesPixel.class.getField("mux"), muxSkipFlag)); 
-            ChannelDivision<HirmesPixel> muxDivision = divisions.get("mux");
+            ChannelDivision<HirmesPixel> muxDivision = getDivision("mux", HirmesPixel.class.getField("mux"), muxSkipFlag); 
+            addDivision(muxDivision);
 
-            // TODO
+            Comparator<HirmesPixel> pinSorter = new Comparator<HirmesPixel>() {
+                @Override
+                public int compare(HirmesPixel p1, HirmesPixel p2) {
+                    if(p1.pin == p2.pin) return 0;
+                    return p1.pin > p2.pin ? 1 : -1;
+                }   
+            };
+
             // Order mux channels in pin order...
-            for(ChannelGroup<HirmesPixel> mux : muxDivision) {
-                Collections.sort(mux, new Comparator<HirmesPixel>() {
-                    @Override
-                    public int compare(HirmesPixel o1, HirmesPixel o2) {
-                        if(o1.row == o2.row) return 0;
-                        return o1.row > o2.row ? 1 : -1;
-                    }   
-                });
-            }
+            for(ChannelGroup<HirmesPixel> mux : muxDivision) Collections.sort(mux, pinSorter); 
         }
         catch(Exception e) { error(e); }
-        
+
         try { addDivision(getDivision("elevensies", HirmesPixel.class.getField("elevensy"), muxSkipFlag)); }
         catch(Exception e) { error(e); }
 
@@ -210,7 +209,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
             addModality(elevensiesMode);
         }
         catch(NoSuchFieldException e) { error(e); } 
-        
+
         try { 
             Modality<?> rowMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HirmesPixel.class.getField("pinGain")); 
             rowMode.setGainFlag(HirmesPixel.FLAG_ROW);

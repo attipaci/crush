@@ -40,7 +40,7 @@
 
 	[FIX] build.xml had bad closing tag </copy> instead of </move>.
 
-	[FIX] {HIRMES} Dark QUIDS on the blue subarray had duplicate IDs with
+	[FIX] {HIRMES} Dark SQUIDS on the blue subarray had duplicate IDs with
 	some detecting channels. Fixed.
 
 	[FIX] {ChannelLookup} contains(String) did not do what it was supposed
