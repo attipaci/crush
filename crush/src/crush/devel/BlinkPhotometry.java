@@ -1,4 +1,4 @@
-package crush.sourcemodel;
+package crush.devel;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -12,6 +12,7 @@ import crush.PhaseModulated;
 import crush.Scan;
 import crush.ChannelGroup.Fork;
 import crush.instrument.RCPFile.Entry;
+import crush.sourcemodel.Photometry;
 import crush.Frame;
 import crush.telescope.TelescopeFrame;
 import crush.telescope.TelescopeScan;
