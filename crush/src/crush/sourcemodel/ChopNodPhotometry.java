@@ -79,7 +79,7 @@ public class ChopNodPhotometry extends PointPhotometry {
         // Proceed only if there are enough pixels to do the job...
         if(!checkPixelCount(integration)) return;		
         if(!(integration instanceof PhaseModulated)) 
-            throw new IllegalArgumentException("Integration " + integration.getDisplayID() + " is not phase-monulated.");
+            throw new IllegalArgumentException("Integration " + integration.getDisplayID() + " is not phase-modulated.");
 
         Instrument<?> instrument = integration.getInstrument();
         PhaseModulated modulated = (PhaseModulated) integration;

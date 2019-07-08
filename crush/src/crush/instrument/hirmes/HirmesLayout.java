@@ -241,7 +241,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
 
     final static double hiresWidthMicrons[] = { 480, 574, 686, 821, 982, 1175, 1405, 1680 };
     final static double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
-
+    
     final static double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
     final static Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -62,11 +62,10 @@ public class HirmesPixel extends SofiaChannel {
         elevensy = 3 * fitsRow + fitsCol / 3;
         
         int virtcol = (Hirmes.subCols-1) - fitsCol;
-        
-        sub = fitsRow / Hirmes.rows;
-        
+
         detArray = zeroIndex < Hirmes.lowresPixels ? Hirmes.LORES_ARRAY : Hirmes.HIRES_ARRAY;
-        
+        sub = fitsRow / Hirmes.rows;   
+
         if(virtcol < 0) {
             // Blind SQUIDs...
             flag(FLAG_BLIND);
@@ -95,7 +94,7 @@ public class HirmesPixel extends SofiaChannel {
                         
             if(sub == Hirmes.LORES_RED_SUBARRAY && virtrow < 8) pin += 7 - subaddr; 
             else if (sub == Hirmes.LORES_BLUE_SUBARRAY && virtrow >= 8) pin += 7 - subaddr;
-            else if (sub == Hirmes.HIRES_ARRAY) pin += 7 - subaddr;
+            else if (sub == Hirmes.HIRES_SUBARRAY) pin += 7 - subaddr;
             else  pin += subaddr;
             
         
@@ -172,7 +171,6 @@ public class HirmesPixel extends SofiaChannel {
                     
             getPixel().setPosition(layout.getSIBSPosition(focalPlanePosition));
             restFrequency = hirmes.getRestFrequency(focalPlanePosition);
-  
             calcCoupling();
         }   
     }
@@ -180,27 +178,28 @@ public class HirmesPixel extends SofiaChannel {
     void calcCoupling() {
         Hirmes hirmes = getInstrument(); 
         Vector2D p = focalPlanePosition;
-        Vector2D d = physicalSize.copy();
-        d.scale(0.5);
-        
-        // TODO use absorber size, not spacing.
-        double dfx = hirmes.getObservingFrequency(new Vector2D(p.x() + d.x(), p.y())) - hirmes.getRestFrequency(new Vector2D(p.x() - d.x(), p.y()));
-        double dfy = hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() + d.y())) - hirmes.getRestFrequency(new Vector2D(p.x(), p.y() - d.y()));
-        
+               
         double obsFrequency = hirmes.getObservingFrequency(focalPlanePosition);
         
         // Calculate the total sky coupling
         coupling = absorberEfficiency;
         
-        obsBandwidth = (Math.abs(dfx) + Math.abs(dfy));
-        
-        // TODO is there a better place for this?
         // Atmopsheric transmission variation
+        // TODO is there a better place for this?
         coupling *= hirmes.getRelativeTransmission(obsFrequency);
         
         // Detector bandwidth
-        coupling *= obsBandwidth / HirmesPixel.gainNormBandwidth;
+        // TODO use absorber size, not spacing...
+        Vector2D d = physicalSize.copy();
+        d.scale(0.5);
+
+        double dfx = hirmes.getObservingFrequency(new Vector2D(p.x() + d.x(), p.y())) - hirmes.getObservingFrequency(new Vector2D(p.x() - d.x(), p.y()));
+        double dfy = hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() + d.y())) - hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() - d.y()));
         
+        obsBandwidth = (Math.abs(dfx) + Math.abs(dfy));
+        if(hirmes.bandwidthCorrection) coupling *= obsBandwidth / HirmesPixel.gainNormBandwidth;
+        
+        // Slit efficiency correction.
         try { coupling *= Math.pow(hirmes.getSlitEfficiency(obsFrequency), 2.0); }
         catch(IOException e) {
             CRUSH.warning(hirmes, "Could not apply slit efficiency correction.");

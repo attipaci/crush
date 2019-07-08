@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -61,6 +61,10 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     boolean darkSquidCorrection = false;
     int[] darkSquidLookup;                  // col
+    
+    boolean bandwidthCorrection = true;     // Whether to account for pixel bandwidths when converting
+                                            // between flux density and incident power.
+                                            // TODO only diagnostic. Remove later...
 
     //int[][] detectorBias;                 // array [2], line [rows]
 
@@ -266,7 +270,9 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
         if(mode == LORES_MODE || mode == MIDRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);  
 
-        getLayout().parseHeader(header);
+        bandwidthCorrection = !hasOption("flatbw");
+        
+        getLayout().parseHeader(header);        
     }
 
     @Override
