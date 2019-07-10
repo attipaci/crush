@@ -1,5 +1,5 @@
 
-2.50-1 (11 Jul 2019)
+2.50-1 (10 Jul 2019)
 
 
 	Overview
@@ -107,6 +107,9 @@
 	[PRUNE] {GISMO} Remove support for processing SAE data. It was 
 	introduced as an experiment, but it did not prove of much use. There
 	is little point of keeping support for it down the line.
+
+	[CONFIG] {LABOCA} Opacities and calibration table now up to and
+	including 2018-08-26.
 
 	[CONFIG] {HIRMES} Enable gain solutions.
 
