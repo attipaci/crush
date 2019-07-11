@@ -420,7 +420,7 @@ public class DetectionTool {
 		System.out.println("detect -- Source Detection Utility for CRUSH maps and more.");
 		System.out.println("          Version: " + version);
 		System.out.println("          part of crush " + CRUSH.getFullVersion());
-		System.out.println("          http://www.submm.caltech.edu/~sharc/crush");
+		System.out.println("          http://www.sigmyne.com/crush");
 		System.out.println("          Copyright (C)2011 Attila Kovacs <attila[AT]sigmyne.com>");
 		System.out.println();
 	}

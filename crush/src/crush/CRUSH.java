@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private final static String version = "2.50-1";
-    private final static String revision = "";
+    private final static String version = "2.50-2";
+    private final static String revision = "devel.1";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -931,7 +931,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 "A NEW CRUSH-2 RELEASE IS NOW AVAILABLE FOR DOWNLOAD!!!\n" +
                         "\n" + 
                         "Version: " + releaseVersion + "\n" +
-                        "Available at: www.submm.caltech.edu/~sharc/crush\n\n" +
+                        "Available at: www.sigmyne.com/crush\n\n" +
                         "You should always update to the latest release to take advantage of critical " +
                 "bug fixes, improvements, and new features.");
 
@@ -962,7 +962,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                             "Java Runtime Environment (JRE).\n" +
                             "\n" +
                             "Please check for available Java packages for your system or see " +
-                            "http://www.submm.caltech.edu/~sharc/crush/download.html " +
+                            "http://www.sigmyne.com/crush/download.html " +
                             "for possible Java downloads.\n" +
                             "\n" +
                             "If you already have another Java installations on your system " +
