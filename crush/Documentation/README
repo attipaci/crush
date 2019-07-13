@@ -1,7 +1,7 @@
 # CRUSH
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>  
-Last updated: 5 January 2018
+Last updated: 12 July 2019
 
 
 ----------------------------------------------------------------------------
@@ -2418,7 +2418,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
     LABOCA       (870um) Large APEX Bolometer Camera
                  www.apex-telescope.org/bolometer/laboca
 
-    PolKA        (polarimetry) Polarimeter for LABOCA
+    PolKa        (polarimetry) Polarimeter for LABOCA
                  www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
                  _polarimeter.html
 
@@ -2441,7 +2441,7 @@ The following instruments have legacy support only (supported by CRUSH 2.4x
 and earlier releases):
 
 
-    ASZCA        (2mm) APEX SZ Camera, from Berkeley, CA
+    ASZCa        (2mm) APEX SZ Camera, from Berkeley, CA
                  bolo.berkeley.edu/apexsz/instrument.html
 
     MAKO         (350um) KID technology demonstration camera for the CSO.
@@ -2575,5 +2575,5 @@ I hope you'll find this helpful and may you end up with beautiful images!!!
 
 -----------------------------------------------------------------------------
 
-Copyright (C)2014 -- Attila Kovacs 
+Copyright (C)2019 -- Attila Kovacs 
 
