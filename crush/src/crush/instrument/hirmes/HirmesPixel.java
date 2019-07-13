@@ -174,11 +174,10 @@ public class HirmesPixel extends SofiaChannel {
             calcCoupling();
         }   
     }
-
+    
     void calcCoupling() {
         Hirmes hirmes = getInstrument(); 
-        Vector2D p = focalPlanePosition;
-               
+
         double obsFrequency = hirmes.getObservingFrequency(focalPlanePosition);
         
         // Calculate the total sky coupling
@@ -187,17 +186,10 @@ public class HirmesPixel extends SofiaChannel {
         // Atmopsheric transmission variation
         // TODO is there a better place for this?
         coupling *= hirmes.getRelativeTransmission(obsFrequency);
-        
-        // Detector bandwidth
-        // TODO use absorber size, not spacing...
-        Vector2D d = physicalSize.copy();
-        d.scale(0.5);
 
-        double dfx = hirmes.getObservingFrequency(new Vector2D(p.x() + d.x(), p.y())) - hirmes.getObservingFrequency(new Vector2D(p.x() - d.x(), p.y()));
-        double dfy = hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() + d.y())) - hirmes.getObservingFrequency(new Vector2D(p.x(), p.y() - d.y()));
-        
-        obsBandwidth = (Math.abs(dfx) + Math.abs(dfy));
-        if(hirmes.bandwidthCorrection) coupling *= obsBandwidth / HirmesPixel.gainNormBandwidth;
+        // Correct couplings for varied pixel bandwidths with focal place position
+        // assuming constant R value.
+        if(hirmes.applyBandwidthCorrection) coupling *= (obsFrequency / hirmes.getSpectralResolution()) / gainNormBandwidth;
         
         // Slit efficiency correction.
         try { coupling *= Math.pow(hirmes.getSlitEfficiency(obsFrequency), 2.0); }

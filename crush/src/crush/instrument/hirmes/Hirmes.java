@@ -62,7 +62,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     boolean darkSquidCorrection = false;
     int[] darkSquidLookup;                  // col
     
-    boolean bandwidthCorrection = true;     // Whether to account for pixel bandwidths when converting
+    boolean applyBandwidthCorrection = true;     // Whether to account for pixel bandwidths when converting
                                             // between flux density and incident power.
                                             // TODO only diagnostic. Remove later...
 
@@ -261,7 +261,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         // Set the spectral grid to a default value...
         if(!hasOption("spectral.grid") && !hasOption("spectral.r")) {
             try { 
-                double R = spectral.observingFrequency / spectral.frequencyResolution;
+                double R = getSpectralResolution();
                 getOptions().process("spectral.r", R + ""); 
                 info("Set spectral resolution to R ~ " + Util.f1.format(R));
             }
@@ -270,7 +270,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
         if(mode == LORES_MODE || mode == MIDRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);  
 
-        bandwidthCorrection = !hasOption("flatbw");
+        applyBandwidthCorrection = !hasOption("flatbw");
         
         getLayout().parseHeader(header);        
     }
@@ -390,11 +390,15 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return 0;
     }
 
-    public double getM6Angle(double fpx) {
+    private double getM6Angle(double fpx) {
         fpx /= Unit.mm; 
         return Math.atan(fpx / 546.48) + (3.17e-9 * fpx - 2.30e-7) * fpx*fpx;
     }
 
+    double getSpectralResolution() {
+        return spectral.observingFrequency / spectral.frequencyResolution;
+    }
+    
     double getRestFrequency(Vector2D focalPlanePosition) {
         return (1.0 + z) * getObservingFrequency(focalPlanePosition);
     }
