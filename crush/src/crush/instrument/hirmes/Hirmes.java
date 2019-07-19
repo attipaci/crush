@@ -282,7 +282,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         c.add(new HeaderCard("COMMENT", "<------ HIRMES Header Keys ------>", false));
         c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
         c.add(SofiaData.makeCard("GRATANGL", gratingAngle / Unit.deg, "Grating angle"));
-        c.add(SofiaData.makeCard("FPIK", fpiConstant, "FPI dispecrison constant"));
+        c.add(SofiaData.makeCard("FPIK", fpiConstant, "FPI dispersison constant"));
         c.add(new HeaderCard("HIRESSUB", hiresColUsed, "[0-7] Hires col used."));
     }
 

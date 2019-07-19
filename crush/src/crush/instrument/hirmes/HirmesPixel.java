@@ -59,7 +59,7 @@ public class HirmesPixel extends SofiaChannel {
         fitsRow = zeroIndex / Hirmes.readoutCols;
         fitsCol = zeroIndex % Hirmes.readoutCols;
         
-        elevensy = 3 * fitsRow + fitsCol / 3;
+        elevensy = 3 * fitsRow + fitsCol / 11;
         
         int virtcol = (Hirmes.subCols-1) - fitsCol;
 

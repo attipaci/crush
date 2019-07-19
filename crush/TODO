@@ -6,13 +6,6 @@
 >> DataND: pixelSmooth(fwhm[, angles]), pixelFastSmooth(fwhm[, angles])
 >> Migrate funtionality from Signal to Data1D... (differentiate/integrate)
 >> Median scanning velocity estimate low?
->> port essential fixes back to 2.43...
-        - Instrument.standardWeights() / sampleWeights() w/o sqrt()
-        - build.xml fix (</copy> -> </move>
-        - ChannelLookup fix.
-        - AstroTime
-        - Sofia scan set validation
-        - jnum -> 0.24 fixes (AstroTime, ArrayUtil)
 >> check Sharc2...
 >> check ChannelGroup.slim()...
 
