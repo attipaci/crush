@@ -40,12 +40,12 @@ fi
 SCRIPTNAME=$(readlink -f $0)
 SCRIPTDIR=$(dirname $SCRIPTNAME)
 
-
 INSTALL_FROM=$SCRIPTDIR
 
-
 # Determine the CRUSH distribution directory for this script...
-CRUSHDIR=$(readlink -f $0 | sed "s:crush.*:crush:")
+# It's after the last occurrence of "crush/" in the script path...
+CRUSHDIR="${SCRIPTDIR%crush/*}crush"
+echo "CRUSHDIR = $CRUSHDIR" 
 
 # Move to main CRUSH folder (2 levels up...)
 cd $CRUSHDIR
