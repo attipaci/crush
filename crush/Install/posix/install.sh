@@ -2,9 +2,8 @@
 #
 # Usage: install.sh [install-root]
 #
-# This script installs links to the CRUSH binaries and the man pages, into 
-# the bin/ and share/man/ directories under <install-root> (if specified), or 
-# under /usr, if no argument is given.
+# This script installs links to the CRUSH binaries and copies the man pages, 
+# into the bin/ and share/man/ directories under <install-root> (if specified), # or under /usr, if no argument is given.
 #
 # You may also edit the BINDIR, MANDIR, SHAREDIR variables for more customized
 # installation paths.
@@ -44,8 +43,7 @@ INSTALL_FROM=$SCRIPTDIR
 
 # Determine the CRUSH distribution directory for this script...
 # It's after the last occurrence of "crush/" in the script path...
-CRUSHDIR="${SCRIPTDIR%crush/*}crush"
-echo "CRUSHDIR = $CRUSHDIR" 
+CRUSHDIR="${SCRIPTDIR%Install/*}"
 
 # Move to main CRUSH folder (2 levels up...)
 cd $CRUSHDIR
