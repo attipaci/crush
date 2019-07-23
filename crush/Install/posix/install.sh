@@ -75,18 +75,16 @@ fi
 # Now install the symbolic links to the binaries. 
 echo Installing CRUSH binaries to $BINDIR...
 mkdir -p $BINDIR
-cd $BINDIR
-ln -sf $CRUSHDIR/crush .
-ln -sf $CRUSHDIR/coadd .
-ln -sf $CRUSHDIR/detect .
-ln -sf $CRUSHDIR/difference .
-ln -sf $CRUSHDIR/esorename .
-ln -sf $CRUSHDIR/histogram .
-ln -sf $CRUSHDIR/imagetool .
-ln -sf $CRUSHDIR/show .
+ln -srf $CRUSHDIR/crush $BINDIR
+ln -srf $CRUSHDIR/coadd $BINDIR
+ln -srf $CRUSHDIR/detect $BINDIR
+ln -srf $CRUSHDIR/difference $BINDIR
+ln -srf $CRUSHDIR/esorename $BINDIR
+ln -srf $CRUSHDIR/histogram $BINDIR
+ln -srf $CRUSHDIR/imagetool $BINDIR
+ln -srf $CRUSHDIR/show $BINDIR
 
 cd $CURRENT_DIR
-
 
 echo Done!
 

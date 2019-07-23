@@ -56,16 +56,14 @@ esac
 # Now, try locate the default Java, and set the JAVA variable to it.
 # If no default java is set, check if there is an Oracle/OpenJDK java installed
 # in the default location
-JAVA=`which java`
-if [ -z ${JAVA+x} ] ; then 
+JAVA=`command -v java`
+if [ "$?" != "0" ] ; then 
   if [ -f /usr/java/latest/bin/java ] ; then 
     JAVA="/usr/java/latest/bin/java"
+  else
+    echo "Java does not appear to be installed, or is not found."
+    exit 1
   fi
-fi
-
-if [ -z ${JAVA+x} ] ; then
-  unset JAVA
-  exit 0
 fi
 
 # Use 'java -version' to set VM defaults
