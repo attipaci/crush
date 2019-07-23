@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component>
+<!-- Copyright 2019 Attila Kovacs <attila_AT_sigmyne.com> -->
+<component type="desktop-application">
 
 <id>com.sigmyne.crush</id>
 <metadata_license>GPL-3.0-or-later</metadata_license>
