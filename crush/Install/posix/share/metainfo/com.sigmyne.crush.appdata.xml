@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <component>
 
 <id>com.sigmyne.crush</id>
@@ -7,17 +8,19 @@
 <icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
 <description>
-CRUSH is an astronomical data reduction/imaging tool for certain astronomical
-cameras. Currently, it supports SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
-SOFIA/HAWC+, and SOFIA/HIRMES.<p>
-
-CRUSH is written entirely in Java, allowing it to run on virtually any
-platform. It is normally run from the command-line with several arguments.<p>
-
-Further documentation and additional distribution formats are available from the 
-<a href="https://www.sigmyne.com">CRUSH website</a>.<p>
-
-Please report bugs to <tt>attila[AT]sigmyne.com</tt>.
+	<p>
+		CRUSH is an astronomical data reduction/imaging tool for certain astronomical
+		cameras. Currently, it supports SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
+		SOFIA/HAWC+, and SOFIA/HIRMES.
+	</p>
+	<p>
+		CRUSH is written entirely in Java, allowing it to run on virtually any
+		platform. It is normally run from the command-line with several arguments.
+	</p>
+	<p>
+		Further documentation and additional distribution formats are available from the 
+		CRUSH website.
+	</p>
 </description>
 
 <categories>
@@ -47,14 +50,6 @@ Please report bugs to <tt>attila[AT]sigmyne.com</tt>.
 			</ul>
 		</description>
 		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
-		<artifact type="source">
-			<location>https://github.com/attipaci/crush/releases/download/2.50-1/crush-src-2.50-1.tar.gz</location>
-			<checksum type="SHA256">99a62b035cbf8a4a61abbf60588ed6e2c6f9f997d97e332c88cf042661dcf33f</checksum>
-		</artifact>
-		<artifact type="binary">
-			<location>https://github.com/attipaci/crush/releases/download/2.50-1/crush-2.50-1.tar.gz</location>
-			<checksum type="SHA256">e5c95d0dd2fa99a865ae04d6fe8260070cd8507f1cdcce6ad14aef35fba7963f</checksum>
-		</artifact>
 	</release>
 </releases>
 
@@ -81,12 +76,7 @@ Please report bugs to <tt>attila[AT]sigmyne.com</tt>.
 
 <developer_name>Attila Kovacs</developer_name>
 
-<screenshots>
-</screenshorts>
-
 <update_contact>attila_AT_sigmyne.com</update_contact>
 
-<suggests>
-</suggests>
 
 </component>
