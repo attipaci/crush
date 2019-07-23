@@ -3,12 +3,12 @@
 <component type="desktop-application">
 
 <id>com.sigmyne.crush</id>
-<metadata_license>GPL-3.0-or-later</metadata_license>
-<name>CRUSH Astronomical Data Reduction and Imaging</name>
+<metadata_license>GFDL-1.3-or-later</metadata_license>
+<name>CRUSH</name>
 <summary>CRUSH is a data reduction and imaging pipeline for select astronomical cameras</summary>
 <icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
-<description>
+<description xml:lang="en">
 	<p>
 		CRUSH is an astronomical data reduction/imaging tool for certain astronomical
 		cameras. Currently, it supports SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
@@ -34,20 +34,23 @@
 <launchable type="desktop-id">com.sigmyne.show.desktop</launchable>
 
 <releases>
-	<release version="2.50-1<" type="stable" date="2019-07-10" urgency="medium">
+	<release version="2.50-1" type="stable" date="2019-07-10" urgency="medium">
 		<description>
+			<p>
+				The main highlights of the CRUSH 2.50-1:
+			</p>
 			<ul>
-				<li>Source code upgraded for Java 8.</li>
-				<li>Dropped support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2, SHARC, and MUSTANG-2.</li>
-				<li>New API for running CRUSH from inside a Java application.</li>
-				<li>Complete overhaul of pixel layout handling and simplified class hierarchy.</li>
-				<li>Improved Fourier filtering with support for varied channel beam sizes.</li>
-				<li>Fixes to channel lookup duplicate IDs with off-by-one indexing.</li>
-				<li>Improved/fixed telescope motion processing, stats, and flagging.</li>
-				<li>Continued developmet for SOFIA/HIRMES, with v.9 simulation support.</li>
-				<li>Code scpoping and visibility reduction.</li>
-				<li>Eliminated excessive generic typing.</li>
-				<li>Many under the hood architecture improvements.</li>
+				<li>Source code upgraded for Java 8</li>
+				<li>Dropped support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2, SHARC, and MUSTANG-2</li>
+				<li>New API for running CRUSH from inside a Java application</li>
+				<li>Complete overhaul of pixel layout handling and simplified class hierarchy</li>
+				<li>Improved Fourier filtering with support for varied channel beam sizes</li>
+				<li>Fixes to channel lookup duplicate IDs with off-by-one indexing</li>
+				<li>Improved/fixed telescope motion processing, stats, and flagging</li>
+				<li>Continued developmet for SOFIA/HIRMES, with v.9 simulation support</li>
+				<li>Code scoping and visibility reduction</li>
+				<li>Eliminated excessive generic typing</li>
+				<li>Many under the hood architecture improvements</li>
 			</ul>
 		</description>
 		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
@@ -58,20 +61,16 @@
 	<binary>crush</binary>
 	<binary>coadd</binary>
 	<binary>detect</binary>
-	<binary>difference</binary>
+	<binary>difftool</binary>
 	<binary>esorename</binary>
 	<binary>histogram</binary>
 	<binary>imagetool</binary>
 	<binary>show</binary>
 </provides>
 
-<requires>
-	<id version="1.8" compare="ge">com.oracle.JRE</id>
-</requires>
-
-<recommends>
+<suggests>
 	<id version="4.0" compare="ge">info.gnuplot.Gnuplot</id>
-</recommends>
+</suggests>
 
 <project_license>GPL-3.0-or-later</project_license>
 
@@ -79,5 +78,16 @@
 
 <update_contact>attila_AT_sigmyne.com</update_contact>
 
+<content_rating>none</content_rating>
+
+<screenshots>
+	<screenshot type="default">
+		<image type="source" width="1600" height="900">
+			https://www.sigmyne.com/crush/screenshots/crush-screenshot-OMC1.png
+		</image>
+	</screenshot>
+</screenshots>
+
+<translation/>
 
 </component>
