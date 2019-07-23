@@ -1,0 +1,88 @@
+<component>
+
+<id>com.sigmyne.crush</id>
+<metadata_license>GPL-3.0-or-later</metadata_license>
+<name>CRUSH Astronomical Data Reduction and Imaging</name>
+<summary>CRUSH is a data reduction and imaging pipeline for select astronomical cameras</summary>
+<icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
+
+<description>
+CRUSH is an astronomical data reduction/imaging tool for certain astronomical
+cameras. Currently, it supports SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
+SOFIA/HAWC+, and SOFIA/HIRMES.<p>
+
+CRUSH is written entirely in Java, allowing it to run on virtually any
+platform. It is normally run from the command-line with several arguments.<p>
+
+Further documentation and additional distribution formats are available from the 
+<a href="https://www.sigmyne.com">CRUSH website</a>.<p>
+
+Please report bugs to <tt>attila[AT]sigmyne.com</tt>.
+</description>
+
+<categories>
+	<category>Science</category>
+	<category>Astronomy</category>
+</categories>
+
+<url type="homepage">https://www.sigmyne.com/crush</url>
+
+<launchable type="desktop-id">crush-show.desktop</launchable>
+
+<releases>
+	<release version="2.50-1<" type="stable" date="2019-07-10" urgency="medium">
+		<description>
+			<ul>
+				<li>Source code upgraded for Java 8.</li>
+				<li>Dropped support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2, SHARC, and MUSTANG-2.</li>
+				<li>New API for running CRUSH from inside a Java application.</li>
+				<li>Complete overhaul of pixel layout handling and simplified class hierarchy.</li>
+				<li>Improved Fourier filtering with support for varied channel beam sizes.</li>
+				<li>Fixes to channel lookup duplicate IDs with off-by-one indexing.</li>
+				<li>Improved/fixed telescope motion processing, stats, and flagging.</li>
+				<li>Continued developmet for SOFIA/HIRMES, with v.9 simulation support.</li>
+				<li>Code scpoping and visibility reduction.</li>
+				<li>Eliminated excessive generic typing.</li>
+				<li>Many under the hood architecture improvements.</li>
+			</ul>
+		</description>
+		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
+		<artifact type="binary">
+			<location>https://github.com/attipaci/crush/releases/download/2.50-1/crush-2.50-1.tar.gz</location>
+			<checksum type="SHA256">e5c95d0dd2fa99a865ae04d6fe8260070cd8507f1cdcce6ad14aef35fba7963f</checksum>
+		</artifact>
+	</release>
+</releases>
+
+<provides>
+	<binary>crush</binary>
+	<binary>coadd</binary>
+	<binary>detect</binary>
+	<binary>difference</binary>
+	<binary>esorename</binary>
+	<binary>histogram</binary>
+	<binary>imagetool</binary>
+	<binary>show</binary>
+</provides>
+
+<requires>
+	<id version="1.8" compare="ge">com.oracle.JRE</id>
+</requires>
+
+<recommends>
+	<id version="4.0" compare="ge">info.gnuplot.Gnuplot</id>
+</recommends>
+
+<project_license>GPL-3.0-or-later</project_license>
+
+<developer_name>Attila Kovacs</developer_name>
+
+<screenshots>
+</screenshorts>
+
+<update_contact>attila_AT_sigmyne.com</update_contact>
+
+<suggests>
+</suggests>
+
+</component>
