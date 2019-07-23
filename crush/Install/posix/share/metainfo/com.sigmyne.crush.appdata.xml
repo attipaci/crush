@@ -30,7 +30,7 @@
 
 <url type="homepage">https://www.sigmyne.com/crush</url>
 
-<launchable type="desktop-id">crush-show.desktop</launchable>
+<launchable type="desktop-id">com.sigmyne.show.desktop</launchable>
 
 <releases>
 	<release version="2.50-1<" type="stable" date="2019-07-10" urgency="medium">
