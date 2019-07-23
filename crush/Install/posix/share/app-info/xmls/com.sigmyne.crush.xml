@@ -47,6 +47,10 @@ Please report bugs to <tt>attila[AT]sigmyne.com</tt>.
 			</ul>
 		</description>
 		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
+		<artifact type="source">
+			<location>https://github.com/attipaci/crush/releases/download/2.50-1/crush-src-2.50-1.tar.gz</location>
+			<checksum type="SHA256">99a62b035cbf8a4a61abbf60588ed6e2c6f9f997d97e332c88cf042661dcf33f</checksum>
+		</artifact>
 		<artifact type="binary">
 			<location>https://github.com/attipaci/crush/releases/download/2.50-1/crush-2.50-1.tar.gz</location>
 			<checksum type="SHA256">e5c95d0dd2fa99a865ae04d6fe8260070cd8507f1cdcce6ad14aef35fba7963f</checksum>
