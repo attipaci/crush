@@ -1,3 +1,34 @@
+>> 'difftool' in flatpak and elsewhere...
+
+2.51...
+
+	[NEW] Added AppStream metadata in share/metainfo
+
+	[NEW] Installation through Flatpak should now be possible also. 
+
+	[NEW] CRUSH can now be installed using Homebrew (MacOS!). For now
+	from the third-party repo 'attipaci/pub'. (In the longer term, it may
+	become part of the core packages...)
+
+	[FIX] Fix broken install.sh when the name 'crush' appears multiple
+	times in the canonical path of the distribution directory. 
+
+	[FIX] {HIRMES} Fix elevensy group assignents.
+
+	[FIX] {HIRMES} Changed bandwidth calculation to be based on intrinsic
+	spectral resolution.
+
+	[TWEAK] Standardized naming for .desktop file.
+
+	[TWEAK] install.sh and autoconf.sh made more robust.
+
+	[TWEAK] A better way to identify the distro directory in install.sh.
+
+	[CONFIG] {HIRMES} Disable 'flatbw' option (used for sim v.9 only).
+
+	[PACKAGE] 'difference' tool renamed to 'image-diff' to disambiguate.
+
+
 
 2.50-1 (10 Jul 2019)
 

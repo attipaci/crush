@@ -35,7 +35,8 @@ echo Removing CRUSH binaries from $BINDIR...
 rm -f $BINDIR/crush
 rm -f $BINDIR/coadd
 rm -f $BINDIR/detect
-rm -f $BINDIR/difference
+rm -f $BINDIR/difference	# older naming of 'difftool'
+rm -f $BINDIR/difftool
 rm -f $BINDIR/histogram
 rm -f $BINDIR/imagetool
 rm -f $BINDIR/jiggle

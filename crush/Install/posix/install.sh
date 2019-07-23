@@ -78,7 +78,7 @@ mkdir -p $BINDIR
 ln -srf $CRUSHDIR/crush $BINDIR
 ln -srf $CRUSHDIR/coadd $BINDIR
 ln -srf $CRUSHDIR/detect $BINDIR
-ln -srf $CRUSHDIR/difference $BINDIR
+ln -srf $CRUSHDIR/difftool $BINDIR
 ln -srf $CRUSHDIR/esorename $BINDIR
 ln -srf $CRUSHDIR/histogram $BINDIR
 ln -srf $CRUSHDIR/imagetool $BINDIR

@@ -276,7 +276,8 @@ virtually any fast-sampling scanning camera.
     coadd       Add FITS images together. Use as a last resort tool as
                 it is always better to reduced scans together.
 
-    difference  Allows to look at the difference between two images.
+    difftool    Allows to look at the difference between two images.
+		(used to be named 'difference')
 
     histogram   Write a histogram of the pixel distribution of an 
                 image plane. (e.g. `flux`, `rms`, `s2n`, `weight`, or 
@@ -2563,7 +2564,7 @@ package can still be useful for manipulating images post reduction.
 
 Mainly, the crush-1.xx distribution provides tools for displaying (`show`), 
 minupulating (`imagetool`), and coadding (`coadd`) or differencing 
-(`difference`) images, and  producing histogram (`histogram`) from them.
+images (`difftool`), and  producing histogram (`histogram`) from them.
 
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
