@@ -26,7 +26,7 @@
 
 	[CONFIG] {HIRMES} Disable 'flatbw' option (used for sim v.9 only).
 
-	[PACKAGE] 'difference' tool renamed to 'image-diff' to disambiguate.
+	[PACKAGE] 'difference' tool renamed to 'difftool' to disambiguate.
 
 
 

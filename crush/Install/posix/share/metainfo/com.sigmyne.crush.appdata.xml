@@ -30,6 +30,9 @@
 </categories>
 
 <url type="homepage">https://www.sigmyne.com/crush</url>
+<url type="help">https://www.sigmyne.com/crush/document.html</url>
+<url type="bugtracker">https://github.com/attipaci/crush/issues</url>
+<url type="donation">https://paypal.me/attipaci</url>
 
 <launchable type="desktop-id">com.sigmyne.show.desktop</launchable>
 
