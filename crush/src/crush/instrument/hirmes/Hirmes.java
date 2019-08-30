@@ -61,14 +61,16 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
 
     boolean darkSquidCorrection = false;
     int[] darkSquidLookup;                  // col
-    
+
     boolean applyBandwidthCorrection = true;     // Whether to account for pixel bandwidths when converting
-                                            // between flux density and incident power.
-                                            // TODO only diagnostic. Remove later...
+    // between flux density and incident power.
+    // TODO only diagnostic. Remove later...
 
     //int[][] detectorBias;                 // array [2], line [rows]
 
     private double z = 0.0;                 // Doppler shift.
+
+    SimpleInterpolator transmissionTable;
 
     public Hirmes() {
         super("hirmes", pixels);
@@ -271,7 +273,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         if(mode == LORES_MODE || mode == MIDRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);  
 
         applyBandwidthCorrection = !hasOption("flatbw");
-        
+
         getLayout().parseHeader(header);        
     }
 
@@ -286,10 +288,21 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         c.add(new HeaderCard("HIRESSUB", hiresColUsed, "[0-7] Hires col used."));
     }
 
+    
+    boolean incompleteTransmission = false;
 
     double getRelativeTransmission(double fobs) {
-        // TODO spectral telluric corrections go here...
-        return 1.0;
+        if(transmissionTable == null) return 1.0;
+        
+        
+        try { return transmissionTable.getValue(Constant.c / fobs / Unit.um); }
+        catch(ArrayIndexOutOfBoundsException e) {
+            if(!incompleteTransmission) {
+                incompleteTransmission = true;
+                warning("Incomplete atmospheric transmission coverage.");
+            }
+        }
+        return Double.NaN;
     }
 
     final String getSubarrayID(int sub) {
@@ -398,7 +411,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     double getSpectralResolution() {
         return spectral.observingFrequency / spectral.frequencyResolution;
     }
-    
+
     double getRestFrequency(Vector2D focalPlanePosition) {
         return (1.0 + z) * getObservingFrequency(focalPlanePosition);
     }

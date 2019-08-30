@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -69,6 +69,7 @@ public class ManEdit {
 		edited.add("<meta name=\"description\" content=\"Online Manual for " + name + " - part of the CRUSH Suite of Tools for Astronomical Data Reduction and Imaging.\">");
 		edited.add("<meta name=\"google-site-verification\" content=\"aEd2DeoMQVvdlcp7KeNN6V3T-iqd1m1QMRbBGJ7EYrQ\" />");
 		edited.add("<meta name=\"y_key\" content=\"57760f7ff87efc45\">");
+		edited.add("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
 		edited.add("<link rel=\"shortcut icon\" href=\"../../crush-tiny.ico\">");				
 		edited.add("<link rel=\"stylesheet\" type=\"text/css\" href=\"../../crush.css\">");
 		edited.add("<link rel=\"stylesheet\" type=\"text/css\" href=\"man.css\">");
@@ -153,7 +154,8 @@ public class ManEdit {
 			// Change 'created by' to 'created with the help of'
 			line = line.replace("created by", "created with the help of");
 			// Change java reference to regular boldface
-			line = line.replace("<A HREF=\"http://localhost/cgi-bin/man/man2html\">man2html</A>", "<b>man2html</b>");			
+			line = line.replace("<A HREF=\"http://localhost/cgi-bin/man/man2html\">man2html</A>", "<b>man2html</b>");
+			line = line.replace("<A HREF=\"/man/man2html\">man2html</A>", "<b>man2html</b>");
 			// forget about compact dl...
 			line = line.replace("<DL COMPACT>", "<DL>");
 			// Remove empty lists... (These are created when changing identation parameters...);
@@ -162,7 +164,7 @@ public class ManEdit {
 			line = line.replace("<DT><DD>", "");
 			line = line.replace("<I>GLOSSARY</I>", "<a href=\"../../v2/GLOSSARY\">GLOSSARY</a>");
 			line = line.replace("<I>README</I>", "<a href=\"../../md/README.html\">README</a>");
-			line = line.replace("Attila Kovacs", "<a href=\"http://www.submm.caltech.edu/~attila\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
+			line = line.replace("Attila Kovacs", "<a href=\"https://www.sigmyne.com/attila\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
 			
 			//line = line.replace(" --", " &mdash;");
 			

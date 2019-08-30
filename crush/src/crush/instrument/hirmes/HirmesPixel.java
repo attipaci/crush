@@ -179,14 +179,16 @@ public class HirmesPixel extends SofiaChannel {
         Hirmes hirmes = getInstrument(); 
 
         double obsFrequency = hirmes.getObservingFrequency(focalPlanePosition);
+        double T = hirmes.getRelativeTransmission(obsFrequency);
         
         // Calculate the total sky coupling
         coupling = absorberEfficiency;
         
         // Atmopsheric transmission variation
         // TODO is there a better place for this?
-        coupling *= hirmes.getRelativeTransmission(obsFrequency);
-
+        if(Double.isNaN(T)) flag(Channel.FLAG_DEAD);
+        else coupling *= T;
+     
         // Correct couplings for varied pixel bandwidths with focal place position
         // assuming constant R value.
         if(hirmes.applyBandwidthCorrection) coupling *= (obsFrequency / hirmes.getSpectralResolution()) / gainNormBandwidth;

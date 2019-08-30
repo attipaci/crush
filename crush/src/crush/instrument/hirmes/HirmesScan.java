@@ -27,11 +27,14 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Header;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
+import crush.Integration;
 import crush.telescope.sofia.GyroDrifts;
 import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;
@@ -40,6 +43,7 @@ import crush.telescope.sofia.SofiaScanningData;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
+import jnum.data.SimpleInterpolator;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
@@ -48,7 +52,7 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
      * 
      */
     private static final long serialVersionUID = 730005029452978874L;
-      
+
     boolean useBetweenScans;    
 
     double transitTolerance = Double.NaN;
@@ -64,7 +68,7 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
 
     @Override
     public Hirmes getInstrument() { return (Hirmes) super.getInstrument(); }
-    
+
     @Override
     public HirmesIntegration getIntegrationInstance() {
         return new HirmesIntegration(this);
@@ -93,7 +97,7 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
     protected SofiaScanningData getScanningDataInstance(SofiaHeader header) {
         return new SofiaExtendedScanningData(header);
     }    
-    
+
     @Override
     public void parseHeader(SofiaHeader header) throws Exception {
 
@@ -103,14 +107,14 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 
         super.parseHeader(header);  
-      
+
         focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
         if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
 
         gyroDrifts = new GyroDrifts(this);
         gyroDrifts.parse(header);
     }
-    
+
 
     @Override
     protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {
@@ -135,7 +139,7 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
         integration.read(dataHDUs);
         add(integration);
     }
-    
+
 
     @Override
     public void validate() {
@@ -143,7 +147,7 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
         useBetweenScans = hasOption("betweenscans");
 
         super.validate();       
-        
+
         if(isNonSidereal) {
             EquatorialCoordinates first = getFirstIntegration().getFirstFrame().objectEq;
             EquatorialCoordinates last = getLastIntegration().getLastFrame().objectEq;
@@ -156,13 +160,42 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
     }
 
 
+    void readTransmissionTable(String scanDescriptor) throws IOException {
+        String tableName = hasOption("atran.table") ? option("atran.table").getPath() : null;
+
+        if(tableName == null) {
+            File file = getFile(scanDescriptor);
+            String fileName = file.getCanonicalPath();
+
+            int lastSepIndex = fileName.lastIndexOf(".");
+
+            if(lastSepIndex >= 0) tableName = fileName.substring(0, lastSepIndex) + "_atran.txt";
+        }
+
+        if(tableName == null) return;
+
+        try {
+            Hirmes hirmes = getInstrument();
+            hirmes.transmissionTable = new SimpleInterpolator(tableName);
+            info("Loaded ATRAN transmission data from " + tableName + " (" + hirmes.transmissionTable.size() + " points).");
+        }
+        catch(IOException e) {}
+    }
+
+    @Override
+    public void read(String scanDescriptor, boolean readFully) throws Exception {        
+        readTransmissionTable(scanDescriptor);
+        super.read(scanDescriptor, readFully);
+    }
+
+
     @Override
     public Vector2D getNominalPointingOffset(Offset2D nativePointing) {
         Vector2D offset = super.getNominalPointingOffset(nativePointing); 
         offset.subtract(getFirstIntegration().getMeanChopperPosition());
         return offset;
     }    
-    
+
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("hirmes.dfoc")) return focusTOffset / Unit.um;

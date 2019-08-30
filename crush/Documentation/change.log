@@ -18,6 +18,8 @@
 	[FIX] {HIRMES} Changed bandwidth calculation to be based on intrinsic
 	spectral resolution.
 
+	[TWEAK] 'show' tool using system look-and-feel.
+
 	[TWEAK] Standardized naming for .desktop file.
 
 	[TWEAK] install.sh and autoconf.sh made more robust.

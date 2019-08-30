@@ -5,18 +5,19 @@
 <id>com.sigmyne.crush</id>
 <metadata_license>GFDL-1.3-or-later</metadata_license>
 <name>CRUSH</name>
-<summary>CRUSH is a data reduction and imaging pipeline for select astronomical cameras</summary>
+<summary>Data reduction and imaging for select astronomical cameras</summary>
 <icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
 <description xml:lang="en">
 	<p>
-		CRUSH is an astronomical data reduction/imaging tool for certain astronomical
-		cameras. Currently, it supports SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
+		CRUSH is an astronomical data reduction and imaging tool for select astronomical
+		cameras, such as SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
 		SOFIA/HAWC+, and SOFIA/HIRMES.
 	</p>
 	<p>
 		CRUSH is written entirely in Java, allowing it to run on virtually any
-		platform. It is normally run from the command-line with several arguments.
+		platform. It provides the 'show' graphical tool for displaying FITS images, however
+	    reductions are normally run from the command-line.
 	</p>
 	<p>
 		Further documentation and additional distribution formats are available from the 
@@ -82,6 +83,10 @@
 <update_contact>attila_AT_sigmyne.com</update_contact>
 
 <content_rating>none</content_rating>
+
+<mimetypes>
+	<mimetype>image/fits</mimetype>
+</mimetypes>
 
 <screenshots>
 	<screenshot type="default">

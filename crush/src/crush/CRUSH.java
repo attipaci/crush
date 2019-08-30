@@ -31,6 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.UIManager;
+
 import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Unit;
@@ -61,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-2";
-    private final static String revision = "devel.2";
+    private final static String revision = "devel.3";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -880,7 +882,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         String version = null;
 
         try {
-            URLConnection connection = new URL("http://www.sigmyne.com/crush/v2/release.version").openConnection();
+            URLConnection connection = new URL("https://www.sigmyne.com/crush/v2/release.version").openConnection();
 
             try {
                 connection.setConnectTimeout(TCP_CONNECTION_TIMEOUT);
@@ -1227,6 +1229,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     static {
         home = System.getenv("CRUSH");
+        
+        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } 
+        catch (Exception e) {}
     }
 
     public static final int TCP_CONNECTION_TIMEOUT = 1000;
