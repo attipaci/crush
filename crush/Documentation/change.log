@@ -1,6 +1,10 @@
 >> 'difftool' in flatpak and elsewhere...
 
-2.51...
+
+2.51
+
+	[NEW] {crushtools} New imagetool option '-noise=guess' that 
+	guesstimates a noise plane based on the flux image alone.
 
 	[NEW] Added AppStream metadata in share/metainfo
 
@@ -9,6 +13,12 @@
 	[NEW] CRUSH can now be installed using Homebrew (MacOS!). For now
 	from the third-party repo 'attipaci/pub'. (In the longer term, it may
 	become part of the core packages...)
+
+	[FIX] {crushtools} Several fixes to CRUSH-1.xx tools handling of
+	single-plane FITS images and beam sizes.
+
+	[FIX] {install.sh} Fixes for non-Linux systems (eliminate readlink -f),
+	based on suggestion by Volker Tolls.
 
 	[FIX] Fix broken install.sh when the name 'crush' appears multiple
 	times in the canonical path of the distribution directory. 

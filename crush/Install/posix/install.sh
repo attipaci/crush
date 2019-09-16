@@ -35,9 +35,20 @@ if [ -z "$SHAREDIR" ] ; then
 	echo SHAREDIR set automatically to $SHAREDIR
 fi
 
-# Determine the directory of this script
-SCRIPTNAME=$(readlink -f $0)
-SCRIPTDIR=$(dirname $SCRIPTNAME)
+
+# Find the absolute path to this script (follow links manually, not using 
+# 'readlink -f' which does not work on MacOS X)
+CURRENT_DIR=`pwd`
+cd `dirname $0`
+SCRIPTNAME=`basename $0`
+while [ -L $SCRIPTNAME ] ; do
+  SCRIPTNAME=`readlink $(basename $SCRIPTNAME)`
+  cd `dirname $SCRIPTNAME`
+  SCRIPTNAME=`basename $SCRIPTNAME`
+done
+SCRIPTDIR=`pwd`
+cd $CURRENT_DIR
+
 
 INSTALL_FROM=$SCRIPTDIR
 
@@ -75,14 +86,16 @@ fi
 # Now install the symbolic links to the binaries. 
 echo Installing CRUSH binaries to $BINDIR...
 mkdir -p $BINDIR
-ln -srf $CRUSHDIR/crush $BINDIR
-ln -srf $CRUSHDIR/coadd $BINDIR
-ln -srf $CRUSHDIR/detect $BINDIR
-ln -srf $CRUSHDIR/difftool $BINDIR
-ln -srf $CRUSHDIR/esorename $BINDIR
-ln -srf $CRUSHDIR/histogram $BINDIR
-ln -srf $CRUSHDIR/imagetool $BINDIR
-ln -srf $CRUSHDIR/show $BINDIR
+cd $BINDIR
+
+ln -sf $CRUSHDIR/crush .
+ln -sf $CRUSHDIR/coadd .
+ln -sf $CRUSHDIR/detect .
+ln -sf $CRUSHDIR/difftool .
+ln -sf $CRUSHDIR/esorename .
+ln -sf $CRUSHDIR/histogram .
+ln -sf $CRUSHDIR/imagetool .
+ln -sf $CRUSHDIR/show .
 
 cd $CURRENT_DIR
 
