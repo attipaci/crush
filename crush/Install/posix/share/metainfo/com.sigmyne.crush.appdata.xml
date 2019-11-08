@@ -8,7 +8,7 @@
 <summary>Data reduction and imaging for select astronomical cameras</summary>
 <icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
-<description xml:lang="en">
+<description>
 	<p>
 		CRUSH is an astronomical data reduction and imaging tool for select astronomical
 		cameras, such as SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
@@ -39,10 +39,10 @@
 
 <releases>
 	<release version="2.50-2" type="stable" date="2019-11-08" urgency="medium">
-	<description>
+		<description>
 			<p>
 				The main highlights of the CRUSH 2.50-2:
-			</p>
+
 			<ul>
 				<li>Homebrew and flatpak installer support</li>
 				<li>Now includes AppStream metainfo</li>
@@ -51,15 +51,16 @@
 				<li>Compatible with HIRMES v.10 simulations</li>
 				<li>Fixed several jnum library bugs</li>
 			</ul>
+			</p>
 		</description>
 		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
 	</release>
 
 	<release version="2.50-1" type="stable" date="2019-07-10" urgency="medium">
-		<description>
+		<description xml:lang="en">
 			<p>
 				The main highlights of the CRUSH 2.50-1:
-			</p>
+
 			<ul>
 				<li>Source code upgraded for Java 8</li>
 				<li>Dropped support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2, SHARC, and MUSTANG-2</li>
@@ -73,6 +74,7 @@
 				<li>Eliminated excessive generic typing</li>
 				<li>Many under the hood architecture improvements</li>
 			</ul>
+			</p>
 		</description>
 		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
 	</release>
