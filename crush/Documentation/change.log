@@ -1,7 +1,5 @@
->> 'difftool' in flatpak and elsewhere...
 
-
-2.51
+2.50-2
 
 	[NEW] {crushtools} New imagetool option '-noise=guess' that 
 	guesstimates a noise plane based on the flux image alone.

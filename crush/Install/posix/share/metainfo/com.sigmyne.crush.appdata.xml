@@ -38,6 +38,23 @@
 <launchable type="desktop-id">com.sigmyne.show.desktop</launchable>
 
 <releases>
+	<release version="2.50-2" type="stable" date="2019-11-08" urgency="medium">
+	<description>
+			<p>
+				The main highlights of the CRUSH 2.50-2:
+			</p>
+			<ul>
+				<li>Homebrew and flatpak installer support</li>
+				<li>Now includes AppStream metainfo</li>
+				<li>Tweaked install.sh to work on MacOS X</li>
+				<li>Fixes to CRUSH-1 tools for handling non-CRUSH FITS images</li>
+				<li>Compatible with HIRMES v.10 simulations</li>
+				<li>Fixed several jnum library bugs</li>
+			</ul>
+		</description>
+		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
+	</release>
+
 	<release version="2.50-1" type="stable" date="2019-07-10" urgency="medium">
 		<description>
 			<p>

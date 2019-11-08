@@ -94,7 +94,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
     @Override
     public void addModelData(SourceModel model, double weight) {  
-        map.accumulate(((IntensityMap) model).map, weight);
+        map.accumulate(((IntensityMap) model).map, 1.0, weight);
     }
 
     @Override

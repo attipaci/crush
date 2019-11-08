@@ -329,7 +329,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
     @Override
     public void addModelData(SourceModel model, double weight) {
-        cube.accumulate(((SpectralCube) model).cube, weight);   
+        cube.accumulate(((SpectralCube) model).cube, 1.0, weight);   
     }
 
 

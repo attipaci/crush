@@ -52,12 +52,13 @@ cd $CURRENT_DIR
 
 INSTALL_FROM=$SCRIPTDIR
 
-# Determine the CRUSH distribution directory for this script...
-# It's after the last occurrence of "crush/" in the script path...
-CRUSHDIR="${SCRIPTDIR%Install/*}"
 
-# Move to main CRUSH folder (2 levels up...)
-cd $CRUSHDIR
+# Go into the CRUSH distribution directory for this script...
+# It's two levels up from the install script's location.
+cd ${INSTALL_FROM}/../..
+
+# Set the distribution directory
+CRUSHDIR=`pwd`
 
 echo Installing CRUSH manuals to $MANDIR...
 
