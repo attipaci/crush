@@ -9,7 +9,7 @@
 
 <icon type="remote" width="128" height="128">http://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
-<description xml:lang="en">
+<description>
 	<p>
 		CRUSH is an astronomical data reduction and imaging tool for select astronomical
 		cameras, such as SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
@@ -47,8 +47,8 @@
 			<ul>
 				<li>Tweaked install.sh to work on MacOS X</li>
 				<li>Fixes to CRUSH-1 tools for handling non-CRUSH FITS images</li>
-				<li>Compatible with HIRMES v.10 simulations</li>
 				<li>Fixed several jnum library bugs</li>
+				<li>Compatible with HIRMES v.10 simulations</li>
 				<li>Homebrew and Flatpak installer support</li>
 				<li>Now includes AppStream metainfo</li>
 			</ul>
