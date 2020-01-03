@@ -39,6 +39,22 @@
 <launchable type="desktop-id">com.sigmyne.crush.:show.desktop</launchable>
 
 <releases>
+	<release version="2.50-3" type="stable" date="2020-01-03" urgency="medium">
+	<description>
+			<p>
+				This is a minor bug-fix update for CRUSH 2.50:
+			</p>
+			<ul>
+				<li>Fix corrupted and clean up obsolete entries in GISMO config files.</li>
+				<li>No longer using Flatpak naming convention by default in share folder.</li>
+				<li>Small tweaks to jnum sub-package (0.30-3)</li>
+				<li>Bundles the latest snapshot of the nom.tam.fits libraries.</li>
+			</ul>
+		</description>
+		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
+	</release>
+
+
 	<release version="2.50-2" type="stable" date="2019-11-08" urgency="medium">
 	<description>
 			<p>
