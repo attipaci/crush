@@ -62,7 +62,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private final static String version = "2.50-2";
+    private final static String version = "2.50-3";
     private final static String revision = "";
 
     public static String home = ".";
@@ -112,7 +112,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
         Locale.setDefault(Locale.US);
         FitsFactory.setUseHierarch(true);
-        FitsFactory.setLongStringsEnabled(true);
 
         Util.setReporter(broadcaster);
 

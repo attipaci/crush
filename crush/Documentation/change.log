@@ -1,3 +1,28 @@
+2.50-3 (3 January 2020)
+
+	Overview
+	=======================================================================
+	This is a minor bug-fix update for CRUSH-2.50. It fixes corruped and
+	cleans up obsolete entries in GISMO configuration files. It comes with
+	the current snapshot of the nom.tam.fits package, and with a slightly
+	updated jnum package (0.30-3)
+	=======================================================================
+
+
+	[FIX] {GISMO} gismo/faint.cfg had a few corrupted lines. Beyond these
+	not performing the functions they were meant to, they made the FITS
+	unreadable when the configuration was added to the header. 
+
+	[CLEAN] {GISMO} Remove obsoleted SAE-specific keywords, since SAE data
+	is no longer processed by recent versions of CRUSH.
+
+	[PACKAGE] fits.jar updated to the current mainline git snapshot with
+	version designated as '1.15.3-AK1'
+
+	[PACKAGE] Simplified naming of files under share/ to not use flarpak 
+	convetion by default. Instead flatpak installer renames the relevant
+	files to follow it's own conventions.
+ 
 
 2.50-2
 

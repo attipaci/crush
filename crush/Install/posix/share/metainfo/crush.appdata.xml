@@ -11,18 +11,18 @@
 
 <description>
 	<p>
-		CRUSH is an astronomical data reduction and imaging tool for select astronomical
-		cameras, such as SHARC-2, LABOCA, SABOCA, PolKa, GISMO, SCUBA-2,
-		SOFIA/HAWC+, and SOFIA/HIRMES.
+		CRUSH is an astronomical data reduction and imaging tool for select
+		astronomical cameras, such as SHARC-2, LABOCA, SABOCA, PolKa, GISMO,
+		SCUBA-2, SOFIA/HAWC+, and SOFIA/HIRMES.
 	</p>
 	<p>
 		CRUSH is written entirely in Java, allowing it to run on virtually any
-		platform. It provides the 'show' graphical tool for displaying FITS images, however
-	    reductions are normally run from the command-line.
+		platform. It provides the 'show' graphical tool for displaying FITS
+		images, however reductions are normally run from the command-line.
 	</p>
 	<p>
-		Further documentation and additional distribution formats are available from the 
-		CRUSH website.
+		Further documentation and additional distribution formats are available 
+		from the CRUSH website.
 	</p>
 </description>
 
@@ -36,9 +36,25 @@
 <url type="bugtracker">https://github.com/attipaci/crush/issues</url>
 <url type="donation">https://paypal.me/attipaci</url>
 
-<launchable type="desktop-id">com.sigmyne.show.desktop</launchable>
+<launchable type="desktop-id">com.sigmyne.crush.:show.desktop</launchable>
 
 <releases>
+	<release version="2.50-3" type="stable" date="2020-01-03" urgency="medium">
+	<description>
+			<p>
+				This is a minor bug-fix update for CRUSH 2.50:
+			</p>
+			<ul>
+				<li>Fix corrupted and clean up obsolete entries in GISMO config files.</li>
+				<li>No longer using Flatpak naming convention by default in share folder.</li>
+				<li>Small tweaks to jnum sub-package (0.30-3)</li>
+				<li>Bundles the latest snapshot of the nom.tam.fits libraries.</li>
+			</ul>
+		</description>
+		<url type="details">https://www.sigmyne.com/crush/v2/change.log</url>
+	</release>
+
+
 	<release version="2.50-2" type="stable" date="2019-11-08" urgency="medium">
 	<description>
 			<p>
