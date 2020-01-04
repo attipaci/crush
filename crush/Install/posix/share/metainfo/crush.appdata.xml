@@ -7,7 +7,7 @@
 <name>CRUSH</name>
 <summary>Data reduction and imaging for select astronomical cameras</summary>
 
-<icon type="remote" width="128" height="128">http://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
+<icon type="remote" width="128" height="128">https://www.sigmyne.com/crush/images/crush-icon-128x128.png</icon>
 
 <description>
 	<p>
@@ -36,7 +36,7 @@
 <url type="bugtracker">https://github.com/attipaci/crush/issues</url>
 <url type="donation">https://paypal.me/attipaci</url>
 
-<launchable type="desktop-id">com.sigmyne.crush.:show.desktop</launchable>
+<launchable type="desktop-id">crush-show.desktop</launchable>
 
 <releases>
 	<release version="2.50-3" type="stable" date="2020-01-03" urgency="medium">
