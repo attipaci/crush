@@ -24,6 +24,7 @@
 package crush.instrument.hirmes;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import crush.CRUSH;
 import crush.Channel;
@@ -61,8 +62,10 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
     }
 
 
+    @SuppressWarnings("resource")
     void read(List<BinaryTableHDU> dataHDUs) throws Exception {   
         int records = 0;
+        
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
         getInstrument().info("Processing scan data:");
@@ -72,9 +75,9 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
 
         clear();
         ensureCapacity(records);
-        for(int t=records; --t>=0; ) add(null);
-
-        for(int i=0; i<dataHDUs.size(); i++) 
+        IntStream.range(0, records).forEach(t -> add(null));
+       
+        for(int i=0; i<dataHDUs.size(); i++)
             new HirmesRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1); 
     }
 
@@ -370,14 +373,14 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
         new Fork<Void>() {        
             @Override
             protected void process(HirmesFrame frame) {
-                for(int k=startCounter.length; --k >= 0; ) 
-                    if(frame.jumpCounter[k] != startCounter[k]) getInstrument().get(k).hasJumps = true;
+                IntStream.range(0, startCounter.length).parallel()
+                .filter(k -> frame.jumpCounter[k] != startCounter[k])
+                .forEach(k -> getInstrument().get(k).hasJumps = true);
             }
 
         }.process();
 
-        int jumpPixels = 0;
-        for(HirmesPixel pixel : getInstrument()) if(pixel.hasJumps) jumpPixels++;
+        int jumpPixels = (int) getInstrument().stream().filter(p -> p.hasJumps).count();
 
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
@@ -390,14 +393,13 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             @Override
             protected void process(final HirmesPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
-                for(final Frame exposure : HirmesIntegration.this) if(exposure != null) if(exposure.data[channel.getIndex()] != 0.0) {
-                    channel.unflag(Channel.FLAG_DISCARD);
-                    return;
-                }
+                Frame bad = stream().filter(f -> f != null).filter(f -> f.data[channel.getIndex()] != 0.0).findFirst().orElse(null);
+                if(bad == null) channel.unflag(Channel.FLAG_DISCARD);
+                
             }
         }.process();
         
-        for(Channel channel : getInstrument()) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
+        getInstrument().parallelStream().filter(c -> c.isFlagged(Channel.FLAG_DISCARD)).forEach(c -> c.flag(Channel.FLAG_DEAD));
     }
 
   

@@ -28,6 +28,7 @@ package crush.telescope;
 import crush.Channel;
 import crush.Instrument;
 import jnum.astro.AstroProjector;
+import jnum.data.image.SkyGrid;
 import jnum.data.image.SphericalGrid;
 import jnum.math.Coordinate2D;
 import jnum.math.SphericalCoordinates;
@@ -70,7 +71,7 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     }
     
     @Override
-    public SphericalGrid getGridInstance() { return new SphericalGrid(); }
+    public SphericalGrid getGridInstance() { return new SkyGrid(); }
     
    
     

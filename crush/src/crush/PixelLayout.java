@@ -282,7 +282,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
     
     public void setReferencePosition(Vector2D position) {
         final Vector2D referencePosition = position.copy();
-        pixels.parallelStream().map(p -> p.getPosition()).filter(pos -> pos != null).forEach(pos -> pos.subtract(referencePosition));
+        pixels.parallelStream().map(Pixel::getPosition).filter(pos -> pos != null).forEach(pos -> pos.subtract(referencePosition));
     }
     
 
@@ -401,17 +401,17 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         if(hasOption("rcp.center")) {
             Vector2D offset = option("rcp.center").getVector2D();
             offset.scale(Unit.arcsec);
-            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.subtract(offset));
+            pixels.parallelStream().map(Pixel::getPosition).forEach(pos -> pos.subtract(offset));
         }
 
         if(hasOption("rcp.rotate")) {
             double angle = option("rcp.rotate").getDouble() * Unit.deg;
-            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.rotate(angle));
+            pixels.parallelStream().map(Pixel::getPosition).forEach(pos -> pos.rotate(angle));
         }
 
         if(hasOption("rcp.zoom")) {
             double zoom = option("rcp.zoom").getDouble();
-            pixels.parallelStream().map(p -> p.getPosition()).forEach(pos -> pos.scale(zoom));
+            pixels.parallelStream().map(Pixel::getPosition).forEach(pos -> pos.scale(zoom));
         }
 
     }

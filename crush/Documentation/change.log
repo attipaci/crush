@@ -1,3 +1,23 @@
+2.51-a1
+
+	[BUG] Reductions in ecliptic, galactic, supergalactic coordinate
+	systems had the wrong coordinate transformations to/from equatorial.
+
+	[FIX] Reductions in supergalactic coordinates (system=supergalactic) 
+	inadvertently resulted in mapping in ecliptic coordinate system.
+
+	[FIX] Automatic velocity clipping was a little too stringent after the 
+	recent overhaul of the vclip/aclip options. Loosened a bit to avoid
+	over-zealous flagging.
+
+	[FIX] Several potential flaws fixed using FindBugs.
+
+	[FIX] Many fixes and improvements to jnum sub-package.
+
+	[TWEAK] {HIRMES} Replace loops with streams wherever appropriate.
+
+
+
 2.50-3 (3 January 2020)
 
 	Overview

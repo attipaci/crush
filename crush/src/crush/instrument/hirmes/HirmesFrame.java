@@ -24,6 +24,8 @@
 package crush.instrument.hirmes;
 
 
+import java.util.stream.IntStream;
+
 import crush.Channel;
 import crush.Frame;
 import crush.Instrument;
@@ -82,10 +84,10 @@ class HirmesFrame extends SofiaFrame {
         
         if(jump != null) jumpCounter = new byte[data.length];
         
-        for(final HirmesPixel pixel : hirmes) {
-            data[pixel.getIndex()] = DAC[from + pixel.getFixedIndex()];
-            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[from + pixel.getFixedIndex()];
-        }
+        hirmes.parallelStream().forEach(p -> {
+            data[p.getIndex()] = DAC[from + p.getFixedIndex()];
+            if(jump != null) jumpCounter[p.getIndex()] = (byte) jump[from + p.getFixedIndex()];            
+        });
     }
     
     void parseData(int[][] DAC, short[][] jump) {  
@@ -93,10 +95,10 @@ class HirmesFrame extends SofiaFrame {
         
         if(jump != null) jumpCounter = new byte[data.length];
         
-        for(final HirmesPixel pixel : hirmes) {
-            data[pixel.getIndex()] = DAC[pixel.fitsRow][pixel.fitsCol];
-            if(jump != null) jumpCounter[pixel.getIndex()] = (byte) jump[pixel.fitsRow][pixel.fitsCol];
-        }
+        hirmes.parallelStream().forEach(p -> {
+            data[p.getIndex()] = DAC[p.fitsRow][p.fitsCol];
+            if(jump != null) jumpCounter[p.getIndex()] = (byte) jump[p.fitsRow][p.fitsCol];
+        });
     }
 
 
@@ -119,7 +121,7 @@ class HirmesFrame extends SofiaFrame {
         if(jumpCounter == null) return;
 
         final byte[] newJumpCounter = new byte[instrument.size()];
-        for(int k=instrument.size(); --k >= 0; ) newJumpCounter[k] = jumpCounter[instrument.get(k).getIndex()];      
+        IntStream.range(0, instrument.size()).parallel().forEach(k -> newJumpCounter[k] = jumpCounter[instrument.get(k).getIndex()]);      
 
         jumpCounter = newJumpCounter;
     }
@@ -184,8 +186,8 @@ class HirmesFrame extends SofiaFrame {
     void darkCorrect() {
         Hirmes hirmes = getScan().getInstrument();
 
-        for(HirmesPixel pixel : hirmes) if(!pixel.isFlagged(Channel.FLAG_BLIND))
-            data[pixel.getIndex()] -= data[hirmes.darkSquidLookup[pixel.col]];
+        hirmes.stream().parallel().filter(p -> !p.isFlagged(Channel.FLAG_BLIND))
+            .forEach(p -> data[p.getIndex()] -= data[hirmes.darkSquidLookup[p.col]]);            
     }
   
     void instrumentToEquatorial(Vector2D offset) {

@@ -162,8 +162,8 @@ public class BlinkPhotometry extends Photometry {
         }
         
         DataPoint getValue() {
-            DataPoint p = new DataPoint();
-            getValue();
+            DataPoint p = on.copy();
+            p.subtract(off);
             return p;
         }
     }

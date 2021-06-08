@@ -572,11 +572,15 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
                         StringBuffer buf = new StringBuffer();
                         double step = Math.pow(10.0, from);
                         double last = Math.pow(10.0, to);
+                        
 
-                        for(double f = 2*step; f<last; f+= step) {
+                        for(int k=2; ; k++) {
+                            double f = k * step;
+                            if(f >= last) break;
+                            
                             if(Math.abs(f - 10.0 * step) < 1e-6*step) step *= 10; 
                             else {
-                                if(f != 2*step) buf.append(", ");
+                                if(k != 2) buf.append(", ");
                                 buf.append(Util.f1.format(f));
                             }
                         }

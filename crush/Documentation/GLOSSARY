@@ -4202,10 +4202,11 @@
 :: write.signals	@Expert
 			Write out all the correlated signals that were
 			calculated in the reduction as ASCII timestreams.
-			Each signal mode is written in its own file, named
-			after the mode's name, and carrying a '.tms' extension.
-			The files are simple ASCII timestreams with the 
-			sampling frequency appearing in the first row.
+			each signal mode is written in its own file, named
+			after the mode's name, and carrying a '.tms' 
+			extension.The files are simple ASCII timestreams 
+			with the sampling frequency appearing in the first 
+			row.
 
 :: write.scandata	@Advanced
 			Whether or not to add HDUs at the end of the output

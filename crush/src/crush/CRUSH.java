@@ -53,7 +53,7 @@ import nom.tam.util.Cursor;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.50
+ * @version 2.51
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -62,8 +62,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private final static String version = "2.50-3";
-    private final static String revision = "";
+    private final static String version = "2.51-a1";
+    private final static String revision = "devel.1";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -71,23 +71,21 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public static int maxThreads = 1;
     public static volatile ExecutorService executor;
     
+    private String[] commandLine;
+    private Instrument<?> instrument;
+    private Vector<Scan<?>> scans = new Vector<>();
+    private SourceModel source;
     
-    public Instrument<?> instrument;
-    public Vector<Scan<?>> scans = new Vector<>();
-    public SourceModel source;
-    public String[] commandLine;
-    
-
-    public volatile ExecutorService sourceExecutor;
-    
-    public int parallelScans = 1;
-    public int parallelTasks = 1;
+    private volatile ExecutorService sourceExecutor;
 
     private ArrayList<Pipeline> pipelines;
     private Vector<Integration<?>> queue = new Vector<>();
 
     private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
+    
+    public int parallelScans = 1;
+    public int parallelTasks = 1;
 
     public static void main(String[] args) {        
         CRUSH crush = new CRUSH();
@@ -120,7 +118,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     
     /**
      * Public constructor that may be used to create a CRUSH instance inside another Java program.
-     * One should create a fresh CRUSH instance at the beginning of each reduction run, as it is not guranteed that
+     * One should create a fresh CRUSH instance at the beginning of each reduction run, as it is not guaranteed that
      * CRUSH will return to a 'fresh' state at the end of a previous run.
      * 
      * 
@@ -133,6 +131,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
         this();
         setInstrument(instrumentName);
     }
+    
+    public SourceModel getSourceModel() { return source; }
     
     /**
      * Initializes CRUSH for the given instrument, and no extra options...
@@ -221,8 +221,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
-    public String getConfigPath() {
-        return CRUSH.home + File.separator + "config";
+    public static String getConfigPath() {
+        return home + File.separator + "config";
     }
     
     public void readConfigFile(String fileName) throws IOException {
@@ -360,7 +360,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
     }
     
-    public void parseAllScans(Vector<String> options) {
+    private void parseAllScans(Vector<String> options) {
         for(Scan<?> scan : scans) scan.getOptions().parseAll(options);
     }
 
@@ -451,7 +451,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
        
         final ExecutorService oldExecutor = executor;
-        final ExecutorService oldSourceExecutor = executor;
+        final ExecutorService oldSourceExecutor = sourceExecutor;
      
         // Replace the executors first...
         executor = Executors.newFixedThreadPool(maxThreads);
@@ -709,7 +709,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         notifyAll();
     }
 
-    public synchronized void summarize() throws Exception {
+    private synchronized void summarize() throws Exception {
         // Go in order.
         // If next one disappears from queue then print summary
         // else wait();
@@ -725,17 +725,17 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }	
     }
 
-    public void summarize(Integration<?> integration) {
+    private void summarize(Integration<?> integration) {
         info(" [" + integration.getDisplayID() + "] " + integration.comments);
         integration.comments = new StringBuffer();
     }	
 
-    public final void setIteration(int i, int rounds) {	
+    private final void setIteration(int i, int rounds) {	
         setIteration(this, i, rounds);
         for(Scan<?> scan : scans) scan.setIteration(i, rounds);   
     }
 
-    public void setObjectOptions(String sourceName) {
+    private void setObjectOptions(String sourceName) {
         //debug("Setting global options for " + sourceName);
         sourceName = sourceName.toLowerCase();
 
@@ -748,7 +748,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
-    public boolean solveSource() {
+    private boolean solveSource() {
         if(source == null) return false;
         return hasOption("source");
     }
@@ -786,7 +786,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         " -----------------------------------------------------------------------------\n");	
     }
 
-    public static void usage() {
+    private static void usage() {
         System.out.println(
                 " Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
                         "\n" +
@@ -912,7 +912,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
-    public void checkForUpdates() {	
+    private void checkForUpdates() {	
         
         if(System.getenv("CRUSH_NO_UPDATE_CHECK") != null) {
             CRUSH.detail(this, "Skipping update checking.");
@@ -943,7 +943,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     }
 
-    public void checkJavaVM(int countdown) {
+    private void checkJavaVM(int countdown) {
         if(System.getenv("CRUSH_NO_VM_CHECK") != null) {
             CRUSH.detail(this, "Skipping VM checking.");
             return;
@@ -1003,6 +1003,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         return version;
     }
 
+    @SuppressWarnings({ "unused", "null" })
     public static String getFullVersion() {
         if(revision == null) return version;
         if(revision.length() == 0) return version;
@@ -1073,6 +1074,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public void shutdown() {
         if(instrument != null) instrument.shutdown();
+        if(executor != null) executor.shutdown();
+        if(sourceExecutor != null) sourceExecutor.shutdown();
         Util.setDefaultReporter();
     }
 
@@ -1235,7 +1238,5 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public static final int TCP_CONNECTION_TIMEOUT = 1000;
     public static final int TCP_READ_TIMEOUT = 1000;
-
-
 }
 

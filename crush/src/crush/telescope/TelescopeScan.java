@@ -36,6 +36,7 @@ import jnum.astro.FocalPlaneCoordinates;
 import jnum.astro.GalacticCoordinates;
 import jnum.astro.JulianEpoch;
 import jnum.astro.Precession;
+import jnum.astro.SuperGalacticCoordinates;
 import jnum.data.image.region.GaussianSource;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
@@ -128,7 +129,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
             return galactic;
         }
         else if(system.equals("supergalactic")) {
-            EclipticCoordinates sg = new EclipticCoordinates();
+            SuperGalacticCoordinates sg = new SuperGalacticCoordinates();
             sg.fromEquatorial(equatorial);
             return sg;
         }

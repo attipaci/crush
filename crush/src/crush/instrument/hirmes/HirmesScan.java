@@ -34,7 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
-import crush.Integration;
 import crush.telescope.sofia.GyroDrifts;
 import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;

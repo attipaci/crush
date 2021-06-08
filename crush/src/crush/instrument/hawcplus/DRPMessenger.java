@@ -118,7 +118,7 @@ class DRPMessenger extends Thread {
 		    }
 
 		    String text = message.toString();
-		    out.write(text.getBytes());
+		    out.write(text.getBytes("UTF-8");
 
 		    if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text);
 

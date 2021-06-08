@@ -39,6 +39,7 @@ public class FieldResponse extends FrameResponse<Frame> {
     
     public FieldResponse(Field field, boolean isFloating) {
         super(isFloating);
+        this.field = field;
     }
     
     public Field getField() { return field; }

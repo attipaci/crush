@@ -54,7 +54,7 @@ public class Pipeline implements Runnable, Serializable {
 	
 	public void setSourceModel(SourceModel source) {	    
 	    if(source != null) { 
-	        scanSource = crush.source.copy(false);
+	        scanSource = crush.getSourceModel().copy(false);
 	        scanSource.setExecutor(null);  // TODO use executor?
 	        scanSource.setParallel(threadCount);
 	    }
@@ -112,7 +112,7 @@ public class Pipeline implements Runnable, Serializable {
 	
 	private void updateSource(Scan<?> scan) {	
 	      
-		if(crush.source == null) return;
+		if(crush.getSourceModel() == null) return;
 				
 		// Reset smoothing etc. for raw map.
 		scanSource.renew();		
@@ -129,7 +129,7 @@ public class Pipeline implements Runnable, Serializable {
        
 		scanSource.process(scan);	
 		
-		crush.source.add(scanSource, scan.weight);
+		crush.getSourceModel().add(scanSource, scan.weight);
 	
 		scanSource.postProcess(scan);
 	}

@@ -192,9 +192,9 @@ public class SimpleDeboosting {
 		}
 
 		double mean = suma / sumb;
-		double var = suma2 / sumb - mean*mean;	
+		double variance = suma2 / sumb - mean*mean;	
 			
-		WeightedPoint result = new WeightedPoint(mean, 1.0/var);
+		WeightedPoint result = new WeightedPoint(mean, 1.0/variance);
 			
 		double sumP = 0.0;
 		for(int i=1; i<P.length; i++) sumP += P[i];

@@ -454,9 +454,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         Configurator option = option("vclip");
 
         if(option.is("auto")) {	
-            // Move at least 5 fwhms over the stability timescale
+            // Move at least 2.5 fwhms over the stability timescale
             // But less that 1/2.5 beams per sample to avoid smearing
-            vRange = new Range(5.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * scan.getPointSize() / instrument.samplingInterval);
+            vRange = new Range(2.5 * instrument.getSourceSize() / instrument.getStability(), 0.4 * scan.getPointSize() / instrument.samplingInterval);
         }
         else {
             vRange = option.getRange(true);
@@ -1014,14 +1014,14 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final ChannelGroup<?> channels = instrument.getLiveChannels();
 
         Fork<DataPoint[]> variances = new Fork<DataPoint[]>() {
-            private DataPoint[] var;
+            private DataPoint[] variance;
 
             @Override
             protected void init() {
                 super.init();
 
-                var = instrument.getDataPoints();
-                Stream.of(var).parallel().forEach(x -> x.noData());
+                variance = instrument.getDataPoints();
+                Stream.of(variance).parallel().forEach(x -> x.noData());
             }
 
             @Override
@@ -1030,7 +1030,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
                 for(Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
                     final float value = exposure.data[channel.index];
-                    final DataPoint point = var[channel.index];
+                    final DataPoint point = variance[channel.index];
 
                     point.add(exposure.relativeWeight * value * value);
                     point.addWeight(exposure.relativeWeight);
@@ -1038,7 +1038,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             }
 
             @Override
-            public DataPoint[] getLocalResult() { return var; }
+            public DataPoint[] getLocalResult() { return variance; }
 
             @Override
             public DataPoint[] getResult() {
@@ -1046,10 +1046,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 for(ParallelTask<DataPoint[]> task : getWorkers()) {
                     final DataPoint[] localVar = task.getLocalResult();
 
-                    if(var == null) var = localVar;
+                    if(variance == null) variance = localVar;
                     else {
                         for(int i=instrument.size(); --i >= 0; ) {
-                            final DataPoint global = var[i];
+                            final DataPoint global = variance[i];
                             final DataPoint local = localVar[i];
 
                             global.add(local.value());
@@ -1059,9 +1059,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     }
                 }
 
-                Stream.of(var).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
+                Stream.of(variance).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
 
-                return var;
+                return variance;
             }	
         };
 
@@ -1076,13 +1076,13 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         comments.append("w");
 
         CRUSH.Fork<DataPoint[]> variances = new CRUSH.Fork<DataPoint[]>(size() - delta, getThreadCount()) {
-            private DataPoint[] var;
+            private DataPoint[] variance;
 
             @Override
             protected void init() {
                 super.init();
-                var = instrument.getDataPoints();
-                Stream.of(var).parallel().forEach(x -> x.noData());
+                variance = instrument.getDataPoints();
+                Stream.of(variance).parallel().forEach(x -> x.noData());
             }
 
             @Override
@@ -1098,7 +1098,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
                 for(Channel channel : channels) if((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) == 0) {
                     final float diff = exposure.data[channel.index] - prior.data[channel.index];
-                    final DataPoint point = var[channel.index];
+                    final DataPoint point = variance[channel.index];
 
                     point.add(exposure.relativeWeight * diff * diff);
                     point.addWeight(exposure.relativeWeight);
@@ -1106,7 +1106,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             }
 
             @Override
-            public DataPoint[] getLocalResult() { return var; }
+            public DataPoint[] getLocalResult() { return variance; }
 
             @Override
             public DataPoint[] getResult() {
@@ -1115,7 +1115,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 for(ParallelTask<DataPoint[]> task : getWorkers()) {
                     final DataPoint[] localVar = task.getLocalResult();
                     for(int i=instrument.size(); --i >= 0; ) {
-                        final DataPoint global = var[i];
+                        final DataPoint global = variance[i];
                         final DataPoint local = localVar[i];
 
                         global.add(local.value());
@@ -1124,9 +1124,9 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                     Instrument.recycle(localVar);
                 }
 
-                Stream.of(var).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
+                Stream.of(variance).parallel().filter(x -> x.weight() > 0.0).forEach(x -> x.scaleValue(1.0 / x.weight()));
 
-                return var;
+                return variance;
             }	
         };
 
@@ -2117,13 +2117,18 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         comments.append("?");
 
         to = Math.min(to, size());
+        
+        for(int i=from; i<to; i++) {
+            Frame exposure = get(i);
 
-        for(Frame exposure : this) if(exposure != null) for(final Channel channel : channels) {
-            if(Float.isNaN(exposure.data[channel.index]))
-                throw new IllegalStateException(comments + "> NaN: " + exposure.index + "," + channel.index);
+            if(exposure != null) for(final Channel channel : channels) {
 
-            if(Float.isInfinite(exposure.data[channel.index])) 
-                throw new IllegalStateException(comments + "> Inf: " + exposure.index + "," + channel.index);
+                if(Float.isNaN(exposure.data[channel.index]))
+                    throw new IllegalStateException(comments + "> NaN: " + exposure.index + "," + channel.index);
+
+                if(Float.isInfinite(exposure.data[channel.index])) 
+                    throw new IllegalStateException(comments + "> Inf: " + exposure.index + "," + channel.index);
+            }
         }
 
     }
@@ -2332,7 +2337,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         new Fork<Void>() {
             @Override
             protected void process(FrameType frame) {
-                instrument.stream().filter(x -> x.isUnflagged()).forEach(x -> frame.data[x.index] += value);
+                instrument.stream().filter(Channel::isUnflagged).forEach(x -> frame.data[x.index] += value);
             }
         }.process();
     }

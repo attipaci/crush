@@ -25,6 +25,7 @@ package crush.instrument.hirmes;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import crush.*;
 import crush.sourcemodel.IntensityMap;
@@ -294,7 +295,6 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     double getRelativeTransmission(double fobs) {
         if(transmissionTable == null) return 1.0;
         
-        
         try { return transmissionTable.getValue(Constant.c / fobs / Unit.um); }
         catch(ArrayIndexOutOfBoundsException e) {
             if(!incompleteTransmission) {
@@ -310,11 +310,8 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
     final int getSubarrayIndex(String id) {
-        for(int sub=0; sub < subarrays; sub++) if(subID[sub].equalsIgnoreCase(id)) return sub;
-        return -1;        
+        return IntStream.range(0, subarrays).filter(k -> subID[k].equalsIgnoreCase(id)).findFirst().orElse(-1);   
     }
-
-
 
     @Override
     public int maxPixels() {
@@ -385,7 +382,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     private void createDarkSquidLookup() {
         darkSquidLookup = new int[readoutRows];
         Arrays.fill(darkSquidLookup, -1);
-        for(HirmesPixel pixel : this) if(pixel.isDarkSQUID()) darkSquidLookup[pixel.mux] = pixel.getIndex();
+        stream().filter(HirmesPixel::isDarkSQUID).forEach(p -> darkSquidLookup[p.mux] = p.getIndex());
     }
 
 
@@ -498,7 +495,6 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
         return super.getReductionModesHelp() +
                 "     -spectral      Produce spectral cubes (default).\n";
     }
-
 
 
     final static int readoutRows = 36;

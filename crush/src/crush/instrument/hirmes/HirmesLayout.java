@@ -25,6 +25,7 @@ package crush.instrument.hirmes;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import crush.Channel;
 import crush.Instrument;
@@ -109,7 +110,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
 
         Hirmes hirmes = getInstrument();
 
-        for(HirmesPixel channel : hirmes) {   
+        hirmes.parallelStream().forEach(channel -> { 
             if(channel.detArray != hirmes.detArray) channel.flag(Channel.FLAG_DEAD);
             else if(channel.isDarkSQUID()) channel.flag(blindFlag);
             else if(channel.sub == Hirmes.HIRES_SUBARRAY) {
@@ -117,11 +118,11 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
             }
             else if(hirmes.mode == Hirmes.IMAGING_MODE) {
                 Pixel pixel = channel.getPixel();
-                if(pixel.getPosition() == null) continue;
+                if(pixel.getPosition() == null) return;
                 if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) channel.flag(blindFlag);
                 if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) channel.flag(blindFlag);
             }
-        }
+        });
 
     }
 
@@ -142,21 +143,21 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
             loresPixelSize.scale(plateScale);
         }
 
-        for(int i=0; i<Hirmes.hiresCols; i++) {
+        IntStream.range(0, Hirmes.hiresCols).forEach(i -> {
             if(hasOption("pixelsize.hires" + (i+1))) hiresPixelSize[i] = option("pixelsize.hires" + (i+1)).getVector2D(Unit.arcsec);
             else {
                 hiresPixelSize[i] = new Vector2D(hiresWidthMicrons[i], hiresHeightMicrons[i]);
                 hiresPixelSize[i].scale(Unit.um * plateScale);
             }
-        }
+        });
 
         // Update the SOFIA standard pixel size...
         if(hirmes.detArray == Hirmes.LORES_ARRAY) hirmes.array.pixelSize = Math.sqrt(loresPixelSize.x() * loresPixelSize.y());
         else hirmes.array.pixelSize = Math.sqrt(hiresPixelSize[hirmes.hiresColUsed].x() * hiresPixelSize[hirmes.hiresColUsed].y());
         
         Vector2D center = getSIBSPosition(focalPlaneReference);  
-        for(HirmesPixel pixel : hirmes) pixel.calcSIBSPosition3D();
-
+        hirmes.parallelStream().forEach(c -> c.calcSIBSPosition3D());
+        
         // Set the pointing center...
         setReferencePosition(center);
     }
@@ -190,14 +191,10 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
         v.rotate(subarrayOrientation[Hirmes.HIRES_SUBARRAY]);
         v.addX(hiresColOffsetMillis[strip] * Unit.mm);
         v.add(hiresFocalPlaneOffset);  
-        
         return v;
     }
 
-    
-
-
-
+   
    
     public Vector2D getImagingPosition(Vector2D focalPlanePosition) {
         Vector2D v = focalPlanePosition.copy();

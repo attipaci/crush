@@ -115,7 +115,6 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public Instrument(String name) {
         super(name);
-        initialOptions = options;
     }
 
     public Instrument(String name, int size) {
@@ -669,11 +668,11 @@ implements TableFormatter.Entries, BasicMessaging {
     public Unit getSizeUnit() { return arcsec; }
 
     public void census() {
-        mappingChannels = (int) getObservingChannels().parallelStream().filter(x -> x.isUnflagged()).filter(x -> x.weight > 0.0).count();
+        mappingChannels = (int) getObservingChannels().parallelStream().filter(Channel::isUnflagged).filter(x -> x.weight > 0.0).count();
     }
 
     public String getConfigPath() {
-        return CRUSH.home + File.separator + "config" + File.separator + getName() + File.separator;
+        return CRUSH.getConfigPath() + File.separator + getName() + File.separator;
     }
 
     public ChannelGroup<ChannelType> getLiveChannels() {
@@ -1202,15 +1201,15 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public double getMinBeamFWHM() {
-        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).min().orElse(Double.NaN);
+        return getPixels().parallelStream().mapToDouble(Pixel::getResolution).min().orElse(Double.NaN);
     }
 
     public double getMaxBeamFWHM() {
-        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).max().orElse(Double.NaN);
+        return getPixels().parallelStream().mapToDouble(Pixel::getResolution).max().orElse(Double.NaN);
     }
 
     public double getAverageBeamFWHM() { 
-        return getPixels().parallelStream().mapToDouble(p -> p.getResolution()).average().orElse(Double.NaN);
+        return getPixels().parallelStream().mapToDouble(Pixel::getResolution).average().orElse(Double.NaN);
     }
 
     public double getAverageFiltering() {
@@ -1299,7 +1298,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public double getSourceNEFD(double gain) {
         final double G[] = getSourceGains(getResolution(), true);
 
-        double sumpw = parallelStream().filter(c -> c.isUnflagged()).filter(c -> G[c.index] != 0.0)
+        double sumpw = parallelStream().filter(Channel::isUnflagged).filter(c -> G[c.index] != 0.0)
         .mapToDouble(c -> G[c.index] * G[c.index] / c.variance).sum();
 
         return Math.sqrt(integrationTime * mappingChannels / sumpw) / Math.abs(gain);
@@ -1424,7 +1423,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public static Instrument<?> forName(String name) throws Exception {
-        File file = new File(CRUSH.home + File.separator + "config" + File.separator + name.toLowerCase() + File.separator + "class");
+        File file = new File(CRUSH.getConfigPath() + File.separator + name.toLowerCase() + File.separator + "class");
 
         if(!file.exists()) throw new IllegalArgumentException("Unknown instrument: '" + name + "'");
 
