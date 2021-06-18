@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -29,13 +29,13 @@ import crush.Scan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CelestialCoordinates;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EclipticCoordinates;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
+import jnum.astro.EquatorialTransform;
 import jnum.astro.FocalPlaneCoordinates;
 import jnum.astro.GalacticCoordinates;
 import jnum.astro.JulianEpoch;
-import jnum.astro.Precession;
 import jnum.astro.SuperGalacticCoordinates;
 import jnum.data.image.region.GaussianSource;
 import jnum.fits.FitsToolkit;
@@ -57,7 +57,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
 
     
     public EquatorialCoordinates equatorial, apparent;
-    public Precession fromApparent, toApparent;
+    public EquatorialTransform fromApparent, toApparent;
     
     protected TelescopeScan(TelescopeInstrument<?> instrument) {
         super(instrument);
@@ -78,8 +78,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     @Override
     public void validate() {
         if(!hasOption("lab")) {
-            // Use J2000 coordinates
-            if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
+            // Use ICRS coordinates
+            if(!equatorial.getSystem().equals(EquatorialSystem.ICRS)) toSystem(EquatorialSystem.ICRS);
             info("  Equatorial: " + equatorial);
 
             // Calculate apparent and approximate horizontal coordinates.... 
@@ -90,26 +90,26 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     }
     
     
-    private void precess(CoordinateEpoch epoch) {
-        Precession toEpoch = new Precession(equatorial.epoch, epoch);
-        toEpoch.precess(equatorial);
+    private void toSystem(EquatorialSystem system) {
+        EquatorialTransform T = new EquatorialTransform(equatorial.getSystem(), system);
+        T.transform(equatorial);
         for(Integration<? extends TelescopeFrame> integration : this) for(TelescopeFrame frame : integration) 
-            if(frame != null) if(frame.equatorial != null) toEpoch.precess(frame.equatorial);   
-        calcPrecessions(epoch);
+            if(frame != null) if(frame.equatorial != null) T.transform(frame.equatorial);   
+        calcEquatorialTransforms(system);
     }
     
-    protected void calcPrecessions(CoordinateEpoch epoch) {
-        JulianEpoch apparentEpoch = JulianEpoch.forMJD(getMJD());
-        fromApparent = new Precession(apparentEpoch, epoch);
-        toApparent = new Precession(epoch, apparentEpoch);
+    protected void calcEquatorialTransforms(EquatorialSystem system) {  
+        EquatorialSystem dynamical = new EquatorialSystem.Dynamical(JulianEpoch.forMJD(getMJD()));
+        fromApparent = new EquatorialTransform(dynamical, system);
+        toApparent = new EquatorialTransform(system, dynamical);
     }
         
 
     
     protected void calcApparent() {
         apparent = equatorial.clone();
-        if(toApparent == null) calcPrecessions(equatorial.epoch);
-        toApparent.precess(apparent);
+        if(toApparent == null) calcEquatorialTransforms(equatorial.getSystem());
+        toApparent.transform(apparent);
     }
 
 
@@ -300,11 +300,10 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("RADESYS", (equatorial.epoch instanceof JulianEpoch ? "FK5" : "FK4"), "World coordinate system id"));
-        if(!Double.isNaN(equatorial.RA())) c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
+        equatorial.getSystem().editHeader(header);
+             if(!Double.isNaN(equatorial.RA())) c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
         if(!Double.isNaN(equatorial.DEC())) c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
-        c.add(new HeaderCard("EQUINOX", equatorial.epoch.getYear(), "Precession epoch"));   
-    
+       
         if(pointing != null) editPointingHeaderInfo(header);
     }
     
@@ -340,8 +339,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         if(name.equals("RAd")) return equatorial.RA() / Unit.deg;
         if(name.equals("RAh")) return ((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0;
         if(name.equals("DECd")) return equatorial.DEC() / Unit.deg;
-        if(name.equals("epoch")) return equatorial.epoch.toString();
-        if(name.equals("epochY")) return equatorial.epoch.getYear();
+        if(name.equals("epoch")) return equatorial.getSystem();
+        if(name.equals("epochY")) return equatorial.getSystem().getJulianYear();
         
         return super.getTableEntry(name);
     }

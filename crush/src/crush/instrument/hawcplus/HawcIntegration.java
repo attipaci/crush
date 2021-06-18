@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -165,7 +165,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
             info("FITS has " + storeRows + "x" + storeCols + " arrays.");
 
             if(getScan().equatorial == null) 
-                getScan().equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
+                getScan().equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, EquatorialSystem.FK5.J2000);
 
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
@@ -182,7 +182,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
             return new Reader() {   
                 private AstroTime timeStamp;
                 private EquatorialCoordinates apparent;
-                private CoordinateEpoch epoch;
+                private EquatorialSystem system;
 
                 @Override
                 public void init() {
@@ -190,7 +190,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
 
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = hawcScan.telescope.epoch;
+                    system = hawcScan.telescope.system;
                 }
 
                 @Override
@@ -236,21 +236,22 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     
                     frame.site = new GeodeticCoordinates(
                             iLON < 0 ? 0.0 : ((double[]) row[iLON])[0] * Unit.deg, 
-                            iLAT < 0 ? 0.0 :((double[]) row[iLAT])[0] * Unit.deg
+                            iLAT < 0 ? 0.0 :((double[]) row[iLAT])[0] * Unit.deg,
+                            0.0                                                     // TODO actual flight altitude...
                     );  
                     frame.LST = ((double[]) row[iLST])[0] * (float) Unit.hour;
 
                     frame.equatorial = new EquatorialCoordinates(
                             ((double[]) row[iRA])[0] * Unit.hourAngle, 
                             ((double[]) row[iDEC])[0] * Unit.deg, 
-                            epoch
+                            system
                             );                             
 
                     if(hawcScan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
                         frame.objectEq = new EquatorialCoordinates(
                                 ((double[]) row[iORA])[0] * Unit.hourAngle, 
                                 ((double[]) row[iODEC])[0] * Unit.deg, 
-                                epoch
+                                system
                                 );
                     }
 
@@ -310,7 +311,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     if(!Double.isNaN(frame.site.longitude())) {
                         // Calculate AZ/EL -- the values in the table are noisy aircraft values...  
                         apparent.copy(frame.equatorial);
-                        getScan().toApparent.precess(apparent);
+                        getScan().toApparent.transform(apparent);
                         frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
                     }
                     else if(iAZ >= 0 && iEL >= 0) {

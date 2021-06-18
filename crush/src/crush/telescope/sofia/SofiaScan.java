@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -250,7 +250,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         checksum = header.getString("DATASUM");             // not in 3.0
         checksumVersion = header.getString("CHECKVER");     // not in 3.0
         
-        calcPrecessions(CoordinateEpoch.J2000);
+        calcEquatorialTransforms(EquatorialSystem.ICRS);
 
         observation = new SofiaObservationData(header);
         setSourceName(observation.sourceName);
@@ -276,7 +276,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
 
         if(isRequestedValid(header)) {
             equatorial = telescope.requestedEquatorial.copy();  
-            calcPrecessions(equatorial.epoch);
+            calcEquatorialTransforms(equatorial.getSystem());
         }
         else {
             warning("No valid OBSRA/OBSDEC in header.");
@@ -408,7 +408,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
             objectCoords = new EquatorialCoordinates(
                     0.5 * (first.objectEq.RA() + last.objectEq.RA()),
                     0.5 * (first.objectEq.DEC() + last.objectEq.DEC()),
-                    first.objectEq.epoch
+                    first.objectEq.getSystem()
                     );  
             equatorial = objectCoords.copy();
         }
@@ -420,7 +420,8 @@ extends GroundBasedScan<IntegrationType> implements Weather {
 
         site = new GeodeticCoordinates(
                 0.5 * (first.site.x() + last.site.x()), 
-                0.5 * (first.site.y() + last.site.y())
+                0.5 * (first.site.y() + last.site.y()),
+                0.0                                                     // TODO Actual flight altitude
                 );
         info("Location: " + site.toString(2));
 

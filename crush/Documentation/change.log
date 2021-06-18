@@ -1,7 +1,26 @@
-2.51-a1
+2.60-a1 (devel.1)
+
+	Overview
+	----------------------------------------------------------------------
+	This CRUSH release brings high precision astrometric transformations
+	(e.g. between catalog and topocentric apparent frames), and maps
+	are now produced in ICRS coordinate frame by default.
+	----------------------------------------------------------------------
 
 	[BUG] Reductions in ecliptic, galactic, supergalactic coordinate
 	systems had the wrong coordinate transformations to/from equatorial.
+
+	[CHANGE] Updated for jnum 0.40, in which CoordinateEpochs are
+	replaced by EquatorialSystem for high-precision astrometry. As a result
+	crush now produces maps in ICRS, and has highly accurate conversions
+	from any other system, including topocentric reference systems. Due to 
+	the updated astrometry in jnum, CRUSH now has high precision 
+	astrometric transformations by default. (Accuracy can be further 
+	improved for select future instruments that may require it by 
+	incorporating polar wobble and dUT1 correction, and by relying on
+	the full-precision IAU2000A/R06 nutation model if desired. In 
+	principle, CRUSH is now capable of precision astrometry at the few 
+	micro-arcsecond level.
 
 	[FIX] Reductions in supergalactic coordinates (system=supergalactic) 
 	inadvertently resulted in mapping in ecliptic coordinate system.

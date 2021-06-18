@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -30,12 +30,11 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
 import jnum.astro.AstroTime;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
 import jnum.astro.GalacticCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
-import jnum.astro.JulianEpoch;
 import jnum.astro.Weather;
 import jnum.math.SphericalCoordinates;
 import nom.tam.fits.*;
@@ -291,7 +290,7 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 		setSerial(header.getIntValue("OBSNUM"));
 		if(getOptions().containsKey("serial")) getInstrument().setSerialOptions(getSerial());
 	
-		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
+		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg, 4092.0 * Unit.m);
 		creator = header.getStringValue("ORIGIN");
 		project = header.getStringValue("PROJECT");
 		
@@ -369,22 +368,23 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 			info("Horizontal: " + horizontal.toString(1));
 			isTracking = false;
 		}
-		else if(trackingSystem.equals("APP")) {
+		else if(trackingSystem.equals("APP") || trackingSystem.equals("GAPPT")) {
 			trackingClass = EquatorialCoordinates.class;
-			apparent = new EquatorialCoordinates(lon, lat, JulianEpoch.forMJD(getMJD()));
+			EquatorialSystem local = new EquatorialSystem.Topocentric("JCMT", site, getMJD());
+			apparent = new EquatorialCoordinates(lon, lat, local);
 			equatorial = apparent.clone();
-			equatorial.precess(CoordinateEpoch.J2000);
+			equatorial.toICRS();
 			info("Apparent: " + apparent.toString(1));
 			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("J2000")) {
 			trackingClass = EquatorialCoordinates.class;
-			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.J2000);
+			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK5.J2000);	
 			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("B1950")) {
 			trackingClass = EquatorialCoordinates.class;
-			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.B1950);
+			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK4.B1950);
 			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("GAL")) {

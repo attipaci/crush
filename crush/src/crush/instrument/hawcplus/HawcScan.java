@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -43,6 +43,7 @@ import crush.telescope.sofia.SofiaScanningData;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
@@ -135,7 +136,7 @@ class HawcScan extends SofiaScan<HawcIntegration> {
         isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
 
         if(hasOption("OBJRA") && hasOption("OBJDEC")) 
-            objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
+            objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.system);
 
         super.parseHeader(header);	
      

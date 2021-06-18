@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -70,7 +70,8 @@ public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends H
 		// from the CSO website
 		site = new GeodeticCoordinates(
 				-(155.0 * Unit.deg + 28.0 * Unit.arcmin + 42.124 * Unit.arcsec), 
-				19.0 * Unit.deg  + 49.0 * Unit.arcmin + 31.698 * Unit.arcsec);
+				19.0 * Unit.deg  + 49.0 * Unit.arcmin + 31.698 * Unit.arcsec,
+				4070.0 * Unit.m);
 	    
 	    
 		// Google

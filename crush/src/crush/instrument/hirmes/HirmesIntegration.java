@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -169,7 +169,7 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             info("FITS has " + storeRows + "x" + storeCols + " arrays.");
 
             if(getScan().equatorial == null) 
-                getScan().equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
+                getScan().equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, EquatorialSystem.FK5.J2000);
 
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
@@ -186,7 +186,7 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
             return new Reader() {   
                 private AstroTime timeStamp;
                 private EquatorialCoordinates apparent;
-                private CoordinateEpoch epoch;
+                private EquatorialSystem system;
 
                 @Override
                 public void init() {
@@ -194,7 +194,7 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
 
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = hirmesScan.telescope.epoch;
+                    system = hirmesScan.telescope.system;
                 }
 
                 @Override
@@ -237,7 +237,8 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                     
                     frame.site = new GeodeticCoordinates(
                             iLON < 0 ? 0.0 : ((double[]) row[iLON])[0] * Unit.deg, 
-                            iLAT < 0 ? 0.0 : ((double[]) row[iLAT])[0] * Unit.deg
+                            iLAT < 0 ? 0.0 : ((double[]) row[iLAT])[0] * Unit.deg,
+                            0.0                                                    // TODO actual altitude?
                     );
                             
                     frame.LST = ((double[]) row[iLST])[0] * (float) Unit.hour;
@@ -245,14 +246,14 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                     frame.equatorial = new EquatorialCoordinates(
                             ((double[]) row[iRA])[0] * Unit.hourAngle, 
                             ((double[]) row[iDEC])[0] * Unit.deg, 
-                            epoch
+                            system
                             );                             
 
                     if(hirmesScan.isNonSidereal && iORA >= 0 && iODEC >= 0) {
                         frame.objectEq = new EquatorialCoordinates(
                                 ((double[]) row[iORA])[0] * Unit.hourAngle, 
                                 ((double[]) row[iODEC])[0] * Unit.deg, 
-                                epoch
+                                system
                                 );
                     }
 
@@ -312,7 +313,7 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                     if(!Double.isNaN(frame.site.longitude())) {
                         // Calculate AZ/EL -- the values in the table are noisy aircraft values...  
                         apparent.copy(frame.equatorial);
-                        getScan().toApparent.precess(apparent);
+                        getScan().toApparent.transform(apparent);
                         frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
                     }
                     else if(iAZ >= 0 && iEL >= 0) {

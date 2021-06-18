@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -28,8 +28,9 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
+import jnum.astro.EquatorialTransform;
 import jnum.astro.HorizontalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -71,15 +72,18 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 			
 		// When the telescope is not tracking, the equatorial coordinates may be bogus...
 		// Use the horizontal coordinates to make sure the equatorial ones make sense...
-		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);		
-		eq2.epoch = apparent.epoch;		
-		eq2.precess(equatorial.epoch);
+		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);	
 		
+		eq2.setSystem(new EquatorialSystem.Topocentric("CSO", site, getMJD()));
+
+		EquatorialTransform T = new EquatorialTransform(eq2.getSystem(), equatorial.getSystem());
+		T.transform(eq2);
+	
 		if(eq2.distanceTo(equatorial) > 5.0 * Unit.deg) {
 			info(">>> Fix: invalid (stale) equatorial coordinates.");
 			equatorial = eq2;
 			apparent = horizontal.toEquatorial(site, LST);
-		}	
+		}
 	}
 	
 	
@@ -175,7 +179,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		float RA = ((float[]) data.getElement(0, data.findColumn("RA")))[0];
 		float DEC = ((float[]) data.getElement(0, data.findColumn("DEC")))[0];
 		
-		equatorial = new EquatorialCoordinates(RA * raUnit, DEC * decUnit, CoordinateEpoch.fromHeader(header));
+		equatorial = new EquatorialCoordinates(RA * raUnit, DEC * decUnit, EquatorialSystem.fromHeader(header));
 	}
 	
 	@Override

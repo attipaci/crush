@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -177,7 +177,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		// Otherwise do the proper conversion....
 		else {
 			equatorial = horizontal.toEquatorial(getScan().site, LST);
-			getScan().fromApparent.precess(equatorial);
+			getScan().fromApparent.transform(equatorial);
 		}
 	}
 	

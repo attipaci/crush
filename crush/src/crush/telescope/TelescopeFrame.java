@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -150,7 +150,7 @@ public abstract class TelescopeFrame extends Frame {
     
     public void getApparentEquatorial(EquatorialCoordinates apparent) {
         apparent.copy(equatorial);
-        getScan().toApparent.precess(apparent);
+        getScan().toApparent.transform(apparent);
     }
     
 

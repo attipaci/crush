@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -36,8 +36,7 @@ import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
-import jnum.astro.CoordinateEpoch;
-import jnum.astro.Precessing;
+import jnum.astro.PrecessingCoordinates;
 import jnum.data.Statistics;
 import jnum.data.image.Data2D;
 import jnum.data.image.Gaussian2D;
@@ -545,23 +544,19 @@ public abstract class AbstractSource2D extends SourceModel {
 
         for(int i=scans; --i >= 0; ) {
             Coordinate2D coords = getScan(i).getReferenceCoordinates().copy();
-            if(coords instanceof Precessing) ((Precessing) coords).precess(CoordinateEpoch.J2000);
+            if(coords instanceof PrecessingCoordinates) ((PrecessingCoordinates) coords).toICRS();
             
             x[i] = coords.x();
             y[i] = coords.y();
         }
         
         Coordinate2D median = getScan(0).getReferenceCoordinates().copy();
-        if(median instanceof Precessing) ((Precessing) median).setEpoch(CoordinateEpoch.J2000);
         median.set(Statistics.Inplace.median(x), Statistics.Inplace.median(y));
-
 
         for(Scan<?> scan : getScans()) {
             Coordinate2D coords = scan.getReferenceCoordinates().copy();
             if(!(coords instanceof Metric)) continue;
             if(!median.getClass().equals(coords.getClass())) continue;
-            
-            if(coords instanceof Precessing) ((Precessing) coords).precess(CoordinateEpoch.J2000);
             
             if(((Metric) coords).distanceTo(median) > maxDistance) outliers.add(scan);
         }

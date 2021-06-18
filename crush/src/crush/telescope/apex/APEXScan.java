@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs
 
 package crush.telescope.apex;
 
@@ -35,6 +34,7 @@ import jnum.astro.AstroSystem;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
@@ -351,7 +351,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		info("[" + getSourceName() + "] observed on " + dateString + " at " + timeString + " UT by " + observer);
 		
 		site = new GeodeticCoordinates(header.getDoubleValue("SITELONG") * Unit.deg, 
-					header.getDoubleValue("SITELAT") * Unit.deg);
+					header.getDoubleValue("SITELAT") * Unit.deg, 5064.0 * Unit.m);
 		
 		LST = header.getDoubleValue("LST") * Unit.sec;
 		setMJD(header.getDoubleValue("MJD"));
@@ -391,7 +391,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		double lat = header.getDoubleValue("BLATOBJ") * Unit.deg;
 		
 		if(basisSystem == EquatorialCoordinates.class) {
-			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.J2000);	
+			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK5.J2000);	
 			calcHorizontal();	
 		}
 		else if(basisSystem == HorizontalCoordinates.class) {

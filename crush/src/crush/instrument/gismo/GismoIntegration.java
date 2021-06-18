@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -211,7 +211,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 							frame.horizontal.addOffset(gismoScan.basisOffset);
 					}
 					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
-						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], getScan().equatorial.epoch);
+						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], getScan().equatorial.getSystem());
 						if(gismoScan.basisOffset != null) 
 							frame.equatorial.addOffset(gismoScan.basisOffset);
 						frame.calcHorizontal();	
@@ -223,7 +223,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 							if(gismoScan.basisOffset != null) 
 								celestial.addOffset(gismoScan.basisOffset);
 							
-							if(celestial instanceof Precessing) ((Precessing) celestial).setEpoch(gismoScan.epoch);
+							if(celestial instanceof PrecessingCoordinates) ((PrecessingCoordinates) celestial).setSystem(gismoScan.system);
 					
 							frame.equatorial = celestial.toEquatorial();
 							frame.calcHorizontal();
@@ -336,7 +336,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 			return new Reader() {
 				private HorizontalCoordinates trackingCenter;
 				private EquatorialCoordinates apparent;
-				private Precession catalogToApparent;
+				private EquatorialTransform catalogToApparent;
 
 				@Override
 				public void init() {
@@ -387,10 +387,10 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					apparent.setLatitude(DEC[i] * Unit.deg);
 
 					if(catalogToApparent == null) {
-						CoordinateEpoch apparentEpoch = JulianEpoch.forMJD(frame.MJD);
-						catalogToApparent = new Precession(getScan().equatorial.epoch, apparentEpoch);
+						EquatorialSystem local = new EquatorialSystem.Topocentric("IRAM-30m", getScan().site, getMJD());
+						catalogToApparent = new EquatorialTransform(getScan().equatorial.getSystem(), local);
 					}
-					catalogToApparent.precess(apparent);
+					catalogToApparent.transform(apparent);
 
 					// Read the chopped position data...
 					//frame.chopperPosition.x = chop[i] * Unit.arcsec;

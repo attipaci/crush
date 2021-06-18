@@ -356,7 +356,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         if(timeStamp != null) c.add(new HeaderCard("DATE-OBS", timeStamp, "Start of observation"));
 
         double MJD = getMJD();
-        if(!Double.isNaN(MJD)) c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
+        if(!Double.isNaN(MJD)) {
+            c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
+            c.add(new HeaderCard("MJD-OBS", MJD, "Modified Julian Day"));   // Added by newer FITS standard.
+        }
 
         // The Source Descriptors
         c.add(new HeaderCard("OBJECT", sourceName, "Object catalog name"));

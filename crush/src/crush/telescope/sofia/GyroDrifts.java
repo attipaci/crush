@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 
@@ -157,21 +157,18 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
             if(!header.containsKey("DARA" + index)) return false;
             if(!header.containsKey("DADEC" + index)) return false;
             
-            CoordinateEpoch epoch = CoordinateEpoch.J2000;
-            
-            String spec = header.getString("EQUINOX", null);
-            if(spec != null) if(SofiaHeader.isValid(spec)) epoch = CoordinateEpoch.forString(spec);
+            EquatorialSystem system = EquatorialSystem.fromHeader(header.getFitsHeader());
             
             EquatorialCoordinates before = new EquatorialCoordinates(
                     header.getHMSTime("DBRA" + index) * Unit.timeAngle,
                     header.getDMSAngle("DBDEC" + index) * Unit.deg,
-                    epoch
+                    system
             );
               
             EquatorialCoordinates after = new EquatorialCoordinates(
                     header.getHMSTime("DARA" + index) * Unit.timeAngle,
                     header.getDMSAngle("DADEC" + index) * Unit.deg,
-                    epoch
+                    system
             );
                     
             delta = after.getOffsetFrom(before);

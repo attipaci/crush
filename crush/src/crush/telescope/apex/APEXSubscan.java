@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -387,7 +387,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 						exposure.calcHorizontal();
 					}	
 					else if(getScan().basisSystem == EquatorialCoordinates.class) {
-						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.epoch);
+						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.getSystem());
 						exposure.calcHorizontal();
 					}
 					else {
@@ -406,7 +406,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
                         }
 					    else if(getScan().basisSystem == EquatorialCoordinates.class) { 
 					        exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(
-                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.epoch)
+                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.getSystem())
                             );
 					        exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
 					    }

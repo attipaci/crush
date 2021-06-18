@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -26,6 +26,7 @@ package crush.telescope.sofia;
 import jnum.Unit;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.EquatorialSystem;
 import jnum.fits.FitsToolkit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -35,9 +36,9 @@ import nom.tam.util.Cursor;
 public class SofiaTelescopeData extends SofiaData {
     public String telescope = "SOFIA 2.5m";
     public String telConfig;
-    public CoordinateEpoch epoch = CoordinateEpoch.J2000;
-    public EquatorialCoordinates boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-    public EquatorialCoordinates requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
+    public EquatorialSystem system;
+    public EquatorialCoordinates boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, EquatorialSystem.ICRS);
+    public EquatorialCoordinates requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, EquatorialSystem.ICRS);
     public double VPA = Double.NaN;
     public String lastRewind;
     public BracketedValues focusT = new BracketedValues();
@@ -64,13 +65,12 @@ public class SofiaTelescopeData extends SofiaData {
 
         telConfig = header.getString("TELCONF");
 
-        epoch = CoordinateEpoch.J2000;
-        if(header.containsKey("EQUINOX")) epoch = CoordinateEpoch.forString(header.getDouble("EQUINOX", 2000.0) + "");
-
-        requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-
-        boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-        if(header.containsKey("TELEQUI")) boresightEquatorial.epoch = CoordinateEpoch.forString(header.getString("TELEQUI", "J2000"));
+        system = EquatorialSystem.fromHeader(header.getFitsHeader());
+        
+        requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, system);
+        boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, system);
+        
+        if(header.containsKey("TELEQUI")) boresightEquatorial.setSystem(EquatorialSystem.forString(header.getString("TELEQUI", "J2000")));
 
 
         try { 
@@ -123,7 +123,7 @@ public class SofiaTelescopeData extends SofiaData {
 
         c.add(makeCard("TELRA", eq.RA() / Unit.hourAngle, "(hour) Boresight RA."));
         c.add(makeCard("TELDEC", eq.DEC() / Unit.deg, "(deg) Boresight DEC."));
-        c.add(makeCard("TELEQUI", eq.epoch.toString(), "Boresight epoch."));
+        c.add(makeCard("TELEQUI", eq.getSystem().getJulianYear(), "Boresight epoch."));
 
         c.add(makeCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
 
@@ -143,7 +143,7 @@ public class SofiaTelescopeData extends SofiaData {
 
         c.add(makeCard("OBSRA", eq.RA() / Unit.hourAngle, "(hour) Requested RA."));
         c.add(makeCard("OBSDEC", eq.DEC() / Unit.deg, "(deg) Requested DEC."));
-        c.add(makeCard("EQUINOX", eq.epoch.getYear(), "(yr) The coordinate epoch."));
+        c.add(makeCard("EQUINOX", eq.getSystem().getJulianYear(), "(yr) The coordinate epoch."));
 
 
         if(!Double.isNaN(zenithAngle.start)) c.add(new HeaderCard("ZA_START", zenithAngle.start / Unit.deg, "(deg) Zenith angle at start."));
@@ -165,7 +165,7 @@ public class SofiaTelescopeData extends SofiaData {
         else if(name.equals("bdec")) return boresightEquatorial.DEC() / Unit.deg;
         else if(name.equals("rra")) return requestedEquatorial.RA() / Unit.hourAngle;
         else if(name.equals("rdec")) return requestedEquatorial.DEC() / Unit.deg;
-        else if(name.equals("epoch")) return requestedEquatorial.epoch.toString();
+        else if(name.equals("epoch")) return requestedEquatorial.getSystem();
         else if(name.equals("vpa")) return VPA / Unit.deg; 
         else if(name.equals("za")) return zenithAngle.midPoint() / Unit.deg;
         else if(name.equals("los")) return lineOfSightAngle / Unit.deg;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -27,10 +27,9 @@ package crush.telescope;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialSystem;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
-import jnum.astro.JulianEpoch;
 import jnum.astro.Weather;
 import jnum.fits.FitsToolkit;
 import jnum.math.SphericalCoordinates;
@@ -78,9 +77,9 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
 
     public void calcEquatorial() {
         equatorial = horizontal.toEquatorial(site, LST);
-        equatorial.epoch = JulianEpoch.forMJD(getMJD());
-        if(fromApparent == null) calcPrecessions(CoordinateEpoch.J2000);
-        fromApparent.precess(equatorial);       
+        equatorial.setSystem(new EquatorialSystem.Topocentric(getInstrument().getName(), site, getMJD()));
+        if(fromApparent == null) calcEquatorialTransforms(EquatorialSystem.ICRS);
+        fromApparent.transform(equatorial);       
     }
 
 

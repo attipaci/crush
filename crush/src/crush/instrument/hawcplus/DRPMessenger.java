@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -118,7 +118,7 @@ class DRPMessenger extends Thread {
 		    }
 
 		    String text = message.toString();
-		    out.write(text.getBytes("UTF-8");
+		    out.write(text.getBytes("UTF-8"));
 
 		    if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text);
 

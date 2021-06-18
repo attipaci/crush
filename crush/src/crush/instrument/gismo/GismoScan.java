@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -65,7 +65,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 	String scanID, obsType, operator;
 	IRAMPointingModel observingModel, tiltCorrections;
 		
-	public CoordinateEpoch epoch;
+	public EquatorialSystem system;
 	public Class<? extends SphericalCoordinates> basisSystem;
 	public Class<? extends SphericalCoordinates> offsetSystem;
 	public boolean projectedOffsets = true;
@@ -321,7 +321,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
 		
-		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
+		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg, 2850.0 * Unit.m);
 		
 		// IRAM Pico Veleta PDF 
 		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
@@ -406,12 +406,11 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		
 		LST = header.getDoubleValue("LST", Double.NaN) * Unit.hour;
 		
-		epoch = hasOption("epoch") ? 
-				CoordinateEpoch.forString(option("epoch").getValue()) 
-			: new JulianEpoch(header.getDoubleValue("EQUINOX", 2000.0));
+		system = hasOption("epoch") ? 
+				EquatorialSystem.forString(option("epoch").getValue()) : EquatorialSystem.fromHeader(header);
 		
 		if(basisSystem == EquatorialCoordinates.class) {
-			equatorial = new EquatorialCoordinates(lon, lat, epoch);	
+			equatorial = new EquatorialCoordinates(lon, lat, system);	
 			calcHorizontal();
 			isTracking = true;
 		}
@@ -424,7 +423,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 			try { 
 				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance(); 
 				basisCoords.set(lon, lat);
-				if(basisCoords instanceof Precessing) ((Precessing) basisCoords).setEpoch(epoch);
+				if(basisCoords instanceof PrecessingCoordinates) ((PrecessingCoordinates) basisCoords).setSystem(system);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
 				isTracking = true;
@@ -616,15 +615,14 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		else if(startTime == null) timeStamp = date + "T" + startTime;
 		else timeStamp = date;	
 		
-		epoch = hasOption("epoch") ? 
-				CoordinateEpoch.forString(option("epoch").getValue()) 
-			: new JulianEpoch(header.getDoubleValue("EQUINOX"));
+		system = hasOption("epoch") ? 
+				EquatorialSystem.forString(option("epoch").getValue()) : EquatorialSystem.fromHeader(header);
 		
 		
 		equatorial = new EquatorialCoordinates(
 				header.getDoubleValue("RAEP") * Unit.hourAngle,
 				header.getDoubleValue("DECEP") * Unit.deg,
-				epoch);
+				system);
 	
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { warning(e); }
