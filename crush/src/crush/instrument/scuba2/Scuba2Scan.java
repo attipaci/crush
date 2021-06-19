@@ -185,8 +185,8 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 
 		if(horizontal == null) {
 			horizontal = new HorizontalCoordinates();
-			horizontal.setLongitude(0.5*(firstFrame.horizontal.x() + lastFrame.horizontal.x()));
-			horizontal.setLatitude(0.5*(firstFrame.horizontal.y() + lastFrame.horizontal.y()));
+			horizontal.setLongitude(0.5*(firstFrame.horizontal.longitude() + lastFrame.horizontal.longitude()));
+			horizontal.setLatitude(0.5*(firstFrame.horizontal.latitude() + lastFrame.horizontal.latitude()));
 		}
 
 		info("   Mean parallactic angle is " + Util.f1.format(getPositionAngle() / Unit.deg) + " deg.");

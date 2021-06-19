@@ -414,13 +414,13 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         }
 
         horizontal = new HorizontalCoordinates(
-                0.5 * (first.horizontal.x() + last.horizontal.x()),
-                0.5 * (first.horizontal.y() + last.horizontal.y())
+                0.5 * (first.horizontal.AZ() + last.horizontal.AZ()),
+                0.5 * (first.horizontal.EL() + last.horizontal.EL())
                 );
 
         site = new GeodeticCoordinates(
-                0.5 * (first.site.x() + last.site.x()), 
-                0.5 * (first.site.y() + last.site.y()),
+                0.5 * (first.site.longitude() + last.site.longitude()), 
+                0.5 * (first.site.latitude() + last.site.latitude()),
                 0.0                                                     // TODO Actual flight altitude
                 );
         info("Location: " + site.toString(2));
