@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hawcplus;
@@ -43,7 +43,6 @@ import crush.telescope.sofia.SofiaScanningData;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
-import jnum.astro.EquatorialSystem;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
@@ -135,7 +134,7 @@ class HawcScan extends SofiaScan<HawcIntegration> {
         //           it relied on a manual checkbox in the CDH GUI.
         isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
 
-        if(hasOption("OBJRA") && hasOption("OBJDEC")) 
+        if(hasOption("OBJRA") && hasOption("OBJDEC"))
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.system);
 
         super.parseHeader(header);	

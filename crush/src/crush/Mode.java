@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -38,7 +38,7 @@ import jnum.math.Range;
 /**
  * A class that captures the common mode signal behavior of a group of channels. A fundamental element of CRUSH
  * is the removal of common modes from the timestream data. 
- * <p>
+ * 
  * 
  * Similar and typically a disjoint set of common modes of an instrument may be grouped in a {@link Modality}.
  * 
@@ -47,7 +47,7 @@ import jnum.math.Range;
  * @see Signal
  * @see Modality
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  */
 public class Mode implements Serializable {
@@ -365,7 +365,7 @@ public class Mode implements Serializable {
 
 
     protected static int nextMode = 0;
-    public final static int TOTAL_POWER = nextMode++;
-    public final static int CHOPPED = nextMode++;
+    public static final int TOTAL_POWER = nextMode++;
+    public static final int CHOPPED = nextMode++;
 
 }

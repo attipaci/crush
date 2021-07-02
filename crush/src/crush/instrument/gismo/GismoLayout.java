@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.gismo;
@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 
 import crush.Channel;
 import crush.Instrument;
+import crush.Pixel;
 import crush.PixelLayout;
 import crush.instrument.GridIndexed;
 import crush.instrument.SingleEndedLayout;
@@ -83,6 +84,11 @@ class GismoLayout extends SingleEndedLayout implements GridIndexed {
         }
             
         super.validate();
+        
+        // AK: FIXME
+        // Fallout from straightening out some of the coordinate jumble, GISMO ended up upside-down... 
+        // But how? And, why only GISMO?
+        getInstrument().stream().map(Channel::getPixel).map(Pixel::getPosition).forEach(Vector2D::flip);
     }
     
 

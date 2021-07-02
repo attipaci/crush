@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.polka;
@@ -218,12 +218,12 @@ public class PolKa extends Laboca implements Oscillating {
     
     
     
-    public final static int ANALYZER_UNKNOWN = -1;
-    public final static int ANALYZER_NONE = 0;
-    public final static int ANALYZER_H = 1;
-    public final static int ANALYZER_V = 2;
+    public static final int ANALYZER_UNKNOWN = -1;
+    public static final int ANALYZER_NONE = 0;
+    public static final int ANALYZER_H = 1;
+    public static final int ANALYZER_V = 2;
     
-    public final static String[] analyzerIDs = { "0", "H", "V" };
+    public static final String[] analyzerIDs = { "0", "H", "V" };
     
 	
 }

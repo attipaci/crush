@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope;
 
@@ -33,16 +33,15 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.HorizontalCoordinates;
-import jnum.data.LocalAverage;
-import jnum.data.Locality;
-import jnum.data.LocalizedData;
-import jnum.data.WeightedPoint;
+import jnum.data.localized.LocalAverage;
+import jnum.data.localized.Locality;
+import jnum.data.localized.LocalizedData;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.util.LogFile;
 
 
-public class PointingTable extends LocalAverage<PointingTable.Entry> {
+public class PointingTable extends LocalAverage<PointingTable.Location, Vector2D> {
 	/**
 	 * 
 	 */
@@ -77,10 +76,9 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 		
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
-			Entry pointing = new Entry();
 			try { 
-				pointing.id = row.get("id").getValue();
-				AstroTime time = AstroTime.forStandardDate(pointing.id);			
+				String date = row.get("id").getValue();
+				AstroTime time = AstroTime.forStandardDate(date);			
 				
 				double MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 					
@@ -88,22 +86,19 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 						row.get("AZd").getDouble() * Unit.deg,
 						row.get("ELd").getDouble() * Unit.deg
 				);	
-				
-				pointing.location = new Location(MJD, horizontal);
-				
+			
 				try {
-					pointing.dx.setValue(row.get("pnt.X").getDouble() * Unit.arcsec);
-					pointing.dy.setValue(row.get("pnt.Y").getDouble() * Unit.arcsec);
-					
-					pointing.dx.setWeight(1.0);
-					pointing.dy.setWeight(1.0);
-						
-					pointing.significance = row.get("src.peak").getDouble() / row.get("src.dpeak").getDouble();
-
-					pointing.FWHM = row.get("src.FWHM").getDouble() * Unit.arcsec;
-					
-					if(pointing.significance > minS2N) if(sizeRange.contains(pointing.FWHM)) 
-						add(pointing);
+				    double s2n = row.get("src.peak").getDouble() / row.get("src.dpeak").getDouble();
+				    if(s2n < minS2N) continue;
+				    
+				    double FWHM = row.get("src.FWHM").getDouble() * Unit.arcsec;
+				    if(!sizeRange.contains(FWHM)) continue;
+				    
+				    Vector2D p = new Vector2D(row.get("pnt.X").getDouble(), row.get("pnt.Y").getDouble());
+                    p.scale(Unit.arcsec);
+                    
+			
+                    add(new LocalizedData<>(new Location(MJD, horizontal), p, 3.0 * Unit.arcsec));
 				}
 				catch(NumberFormatException e) {}
 				
@@ -124,33 +119,23 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	
 	
 	public Vector2D getIncrement(double MJD, double Tamb, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {		
-		Entry mean = getLocalAverage(new Location(MJD, horizontal), new Model(pointingModel, Tamb));
+		LocalizedData<Location, Vector2D> mean = getLocalAverage(new Location(MJD, horizontal), 1.0);
 		
+		Vector2D p = mean.getData();
+		
+		p.subtract(pointingModel.getCorrection(horizontal, (MJD % 1.0) * Unit.day, Tamb));
+
 		CRUSH.info(this, "Incremental Pointing is " + 
-				Util.f1.format(mean.dx.value() / Unit.arcsec) + "," +
-				Util.f1.format(mean.dy.value() / Unit.arcsec) + 
-				" (quality:" + Util.f2.format(mean.dx.weight()) + ")."
+				Util.f1.format(p.x() / Unit.arcsec) + "," +
+				Util.f1.format(p.y() / Unit.arcsec) + 
+				" (quality:" + Util.f2.format(mean.weight()) + ")."
 				);
 		
-		return new Vector2D(mean.dx.value(), mean.dy.value());
-		
+		return p;
 	}
 	
-	class Model {
-		IRAMPointingModel pointingModel;
-		double ambientT;
-		
-		public Model(IRAMPointingModel pointingModel, double ambientT) {
-			this.pointingModel = pointingModel;
-			this.ambientT = ambientT;			
-		}
-			
-		public Vector2D getCorrection(Entry pointing) {			
-			return pointingModel.getCorrection(pointing.location.horizontal, (pointing.location.MJD % 1.0) * Unit.day, ambientT);
-		}
-	}
 
-	class Location extends Locality {
+	class Location implements Locality {
 		double MJD;
 		HorizontalCoordinates horizontal;
 		
@@ -168,61 +153,16 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 		}
 
 		@Override
-		public int compareTo(Locality o) {
-			return Double.compare(MJD, ((Location) o).MJD);
+        public double getSortingValue() {
+		    return MJD * Unit.day / timeWindow;
 		}
-		
+			
 		@Override
 		public String toString() { return Double.toString(MJD) + " : " + horizontal; }
 
-		@Override
-		public double sortingDistanceTo(Locality other) {
-			return Math.abs((((Location) other).MJD - MJD) * Unit.day / timeWindow);
-		}
-	}
-
-	
-	class Entry extends LocalizedData {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 6919207692208960243L;
-		Location location;
-		String id;
-		
-		WeightedPoint dx = new WeightedPoint();
-		WeightedPoint dy = new WeightedPoint();
-		double significance;
-		double FWHM;
-		
-		
-		@Override
-		public Locality getLocality() {
-			return location;
-		}
-		@Override
-		public void setLocality(Locality loc) {
-			location = (Location) loc;
-		}
-		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
-			Entry entry = (Entry) other;
-			
-			Vector2D corr = env == null ? new Vector2D() : ((Model) env).getCorrection(entry);
-			
-			dx.average(entry.dx.value() - corr.x(), relativeWeight * entry.dx.weight());
-			dy.average(entry.dy.value() - corr.y(), relativeWeight * entry.dy.weight());
-		}
-	
-		
 	}
 
 
-	@Override
-	public Entry getLocalizedDataInstance() {
-		return new Entry();
-	}	
-	
 }
 
 

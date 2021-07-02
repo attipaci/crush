@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -38,20 +38,20 @@ import jnum.math.Vector2D;
 /**
  * A class for representing a pixel or feed in an instrument, such as a directly illuminated continuum detector, 
  * or a antenna-coupled set of detector channels (e.g. in a heterodyne mixer, or multichroic pixel).
- * <p>
+ * 
  * 
  * Each pixel has a 2D focal plane position, and may contain one or more detector {@link Channel}s that couple through
  * the same feed / pixel / antenna, or physical detector plane position. Moreover, similarly to <code>Channel</code>s, 
  * pixels also have fixed indices (between 0 and below {@link Instrument#maxPixels()}), and (optionally) unique 
  * {@link String} IDs, that enable lookup functionality.
- * <p>
+ * 
  * 
  * The position of, and the association of channels to, a pixel/feed, is typically handled by a {@link PixelLayout}
  * implementation.
- * <p>
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  */
 public class Pixel extends ChannelGroup<Channel> implements Metric<Pixel> {
@@ -330,11 +330,11 @@ public class Pixel extends ChannelGroup<Channel> implements Metric<Pixel> {
      * Calculates the symmetric overlap of this pixel with another pixel, assuming a Gaussian response with FWHM = resolution.
      * The overlap is the relative response in one pixel when a point source (of <code>pointSize</code> in the projected image
      * plane) is placed over the other pixel. 
-     * <p>
+     * 
      * 
      * For now, CRUSH assumes symmetry, i.e. that (A overlap B) = (B overlap A), which is a good approximation for pixels
      * with similar and approximately Gaussian (or azymuthally symmetric) beam profiles.
-     * <p>
+     * 
      * 
      * 
      * @param pixel         The othe pixel.

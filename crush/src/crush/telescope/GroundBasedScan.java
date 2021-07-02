@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope;
@@ -27,9 +27,11 @@ package crush.telescope;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
+import jnum.astro.EquatorialCoordinates;
 import jnum.astro.EquatorialSystem;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
+import jnum.astro.JulianEpoch;
 import jnum.astro.Weather;
 import jnum.fits.FitsToolkit;
 import jnum.math.SphericalCoordinates;
@@ -48,6 +50,8 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     public GeodeticCoordinates site;
 
     public double LST = Double.NaN;
+    
+    private double apparentEPA, refEpochEPA;
 
 
     protected GroundBasedScan(TelescopeInstrument<?> instrument) {
@@ -74,6 +78,53 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
 
         super.validate();
     }
+    
+    
+    @Override
+    protected void calcApparent() {
+        super.calcApparent();
+        
+        // If 'rotepoch' is defined then use it to correct for the apparent system's position
+        // angle in ICRS. If not present, then just assume that the instrument rotation 
+        // is up-to-date.
+        if(hasOption("rotepoch")) {
+            // Calculate the position angle of the apparent coordinates in ICRS.
+            apparentEPA = apparent.getEquatorialPositionAngle();
+        
+            // Calculate to set default reference epoch equatorial position angle in ICRS.
+            EquatorialCoordinates ref = equatorial.copy();
+            ref.transformTo(new EquatorialSystem.Dynamical(new JulianEpoch(option("rotepoch").getDouble())));
+            refEpochEPA = ref.getEquatorialPositionAngle();
+            
+            info("Position angle correction due to precession: " + Util.f2.format((apparentEPA - refEpochEPA) / Unit.arcmin) + " arcmin.");
+        }
+        else apparentEPA = refEpochEPA = 0.0;
+    }
+
+    /**
+     * Gets the position angle of the apparent RA/Dec axes of the observed target wrt the ICRS
+     * coordinates of the same target. 
+     * 
+     * @return  (rad) The position angle of the apparent coordinate axes in the ICRS system.
+     * 
+     * @see #getReferenceEpochEPA()
+     */
+    public final double getApparentEPA() {
+        return apparentEPA;
+    }
+
+    /**
+     * Gets the position angle of the apparent RA/Dec axes for the observed target at the reference epoch 
+     * at which the instrument rotation was calibrated, wrt. the ICRS coordinates of the same target.
+     * 
+     * @return  (rad) The position angle of the apparent coordinate axes in the ICRS system.
+     * 
+     * @see #getApparentEPA()
+     */
+    public final double getReferenceEpochEPA() {
+        return refEpochEPA;
+    }
+    
 
     public void calcEquatorial() {
         equatorial = horizontal.toEquatorial(site, LST);

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hirmes;
@@ -497,36 +497,36 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     }
 
 
-    final static int readoutRows = 36;
-    final static int readoutCols = 33;
+    static final int readoutRows = 36;
+    static final int readoutCols = 33;
 
-    final static int rows = 16;
+    static final int rows = 16;
 
-    final static int subarrays = 3;    
-    final static int subCols = 32;
+    static final int subarrays = 3;    
+    static final int subCols = 32;
 
-    final static int lowresCols = 64;
-    final static int hiresCols = 8;
+    static final int lowresCols = 64;
+    static final int hiresCols = 8;
 
-    final static int lowresPixels = 32 * Hirmes.readoutCols; // Including blinds
-    final static int hiresPixels = 4 * Hirmes.readoutCols;   // Including blinds
+    static final int lowresPixels = 32 * Hirmes.readoutCols; // Including blinds
+    static final int hiresPixels = 4 * Hirmes.readoutCols;   // Including blinds
 
-    final static int pixels = lowresPixels + hiresPixels;
+    static final int pixels = lowresPixels + hiresPixels;
 
-    final static int LORES_ARRAY = 0;
-    final static int HIRES_ARRAY = 1;
+    static final int LORES_ARRAY = 0;
+    static final int HIRES_ARRAY = 1;
 
-    final static int LORES_BLUE_SUBARRAY = 0;
-    final static int LORES_RED_SUBARRAY = 1;
-    final static int HIRES_SUBARRAY = 2; 
+    static final int LORES_BLUE_SUBARRAY = 0;
+    static final int LORES_RED_SUBARRAY = 1;
+    static final int HIRES_SUBARRAY = 2; 
 
-    final static int IMAGING_MODE = 0;
-    final static int LORES_MODE = 1;
-    final static int MIDRES_MODE = 2;
-    final static int HIRES_MODE = 3;
+    static final int IMAGING_MODE = 0;
+    static final int LORES_MODE = 1;
+    static final int MIDRES_MODE = 2;
+    static final int HIRES_MODE = 3;
 
 
-    final static String[] subID = { "blue", "red", "hi" };
-    final static String[] modeName = { "imaging", "lo-res", "mid-res", "hi-res" };
+    static final String[] subID = { "blue", "red", "hi" };
+    static final String[] modeName = { "imaging", "lo-res", "mid-res", "hi-res" };
 }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,13 +18,13 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.polarization;
 
 public final class PolarModulation {
-	public final static int N = 1; 
-	public final static int Q = 2;
-	public final static int U = 3;
-	public final static int V = 4;	
+	public static final int N = 1; 
+	public static final int Q = 2;
+	public static final int U = 3;
+	public static final int V = 4;	
 }

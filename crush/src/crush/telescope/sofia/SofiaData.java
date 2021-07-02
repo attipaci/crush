@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.sofia;
@@ -82,10 +82,6 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return new HeaderCard(key, value, comment);
     }
 
-    public static HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, Float.isNaN(value) ? UNKNOWN_FLOAT_VALUE : value, comment);
-    }
-
     public static HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
         return new HeaderCard(key, Double.isNaN(value) ? UNKNOWN_DOUBLE_VALUE : value, comment);
     }
@@ -146,8 +142,8 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return merged;
     }
     
-    public final static int UNKNOWN_INT_VALUE = -9999;
-    public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
-    public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;
-    public final static String UNKNOWN_STRING_VALUE = "UNKNOWN";
+    public static final int UNKNOWN_INT_VALUE = -9999;
+    public static final float UNKNOWN_FLOAT_VALUE = -9999.0F;
+    public static final double UNKNOWN_DOUBLE_VALUE = -9999.0;
+    public static final String UNKNOWN_STRING_VALUE = "UNKNOWN";
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.scuba2;
@@ -92,6 +92,7 @@ class Scuba2Subarray implements Cloneable, Copiable<Scuba2Subarray> {
 			scuba2.warning("Flatfield data not found for subarray " + id + ".");
 			return;
 		}
+		
 		double[][][] data = (double[][][]) hdu.getRow(0)[col];
 		
 		for(int c=Scuba2Subarray.PIXELS; --c >= 0; ) {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,10 +18,10 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.devel;
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2011 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -41,7 +41,7 @@ package crush.devel;
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 
@@ -455,11 +455,11 @@ public class DetectionTool {
 	}
 	
 
-	final static int SIGNAL_TO_NOISE = 0;
-	final static int MAX_FALSE_DETECTIONS = 1;
-	final static int FALSE_DETECTION_CHANCE = 2;
-	final static int SINGLE_BEAM_CONFIDENCE = 3;
-	final static int DETECTION_CONFIDENCE = 4;
+	static final int SIGNAL_TO_NOISE = 0;
+	static final int MAX_FALSE_DETECTIONS = 1;
+	static final int FALSE_DETECTION_CHANCE = 2;
+	static final int SINGLE_BEAM_CONFIDENCE = 3;
+	static final int DETECTION_CONFIDENCE = 4;
 
 	
 }

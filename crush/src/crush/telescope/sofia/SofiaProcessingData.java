@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.sofia;
@@ -159,7 +159,7 @@ public class SofiaProcessingData extends SofiaData {
         return processLevelComment[level];
     }
 
-    private final static String[] processLevelComment = {
+    private static final String[] processLevelComment = {
             "Unknown processing level", 
             "Raw engineering/diagnostic data.",
             "Raw uncalibrated science data.",

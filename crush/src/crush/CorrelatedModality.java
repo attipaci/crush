@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 // Copyright (c) 2009,2010 Attila Kovacs
 
@@ -34,13 +34,13 @@ import jnum.math.Range;
 /**
  * A class representing a collection of similar {@link CorrelatedMode}s, by some organizing principle. These modes typically
  * form a disjoint set, whose channels may partially or fully span an {@link Instrument}. 
- * <p>
+ * 
  * 
  * Besides the hard-coded modalities created explicitly by {@link Instrument#createModalities()}, additional correlated modalities 
  * are automatically created for {@link ChannelDivision}s specified at runtime via the <code>division</code> configuration option.
- * <p>
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  * @param <ModeType>    The generic type of the correlated modes contained in this modality.
  */

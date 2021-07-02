@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -62,8 +62,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private final static String version = "2.60-a1";
-    private final static String revision = "devel.2";
+    private static final String version = "2.60-a1";
+    private static final String revision = "devel.10";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -123,7 +123,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
      * 
      * 
      * @param instrumentName    The (case-insensitive) name of the CRUSH-supported instrument for which to instantiate a
-     *                          a new pipeline instance. E.g. <tt>"hirmes"</tt> or <tt>"hawc+"</tt>.
+     *                          a new pipeline instance. E.g. <code>"hirmes"</code> or <code>"hawc+"</code>.
      * @throws Exception        An appropriate exception will be thrown if the specified instrument is unrecognised or if
      *                          the pipeline could not be fully initialized for that specific instrument.
      */
@@ -137,7 +137,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     /**
      * Initializes CRUSH for the given instrument, and no extra options...
      * 
-     * @param instrumentName    The instrument to use CRUSH with, e.g. <tt>"sharc2"</tt>, or <tt>"hirmes"</tt>
+     * @param instrumentName    The instrument to use CRUSH with, e.g. <code>"sharc2"</code>, or <code>"hirmes"</code>
      * @throws Exception        If CRUSH could not be initialized with the specified instrument name.
      */
     private final void setInstrument(String instrumentName) throws Exception {
@@ -157,8 +157,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      * 
      * 
      * @param args          The list of argument to initialize CRUSH with. The first argument must be the
-     *                      instrument name to use CRUSH with, e.g. <tt>"sharc2"</tt> or <tt>"hirmes"</tt>, or 
-     *                      else <tt>"-help"</tt> to print just a help screen. The arguments that follow must
+     *                      instrument name to use CRUSH with, e.g. <code>"sharc2"</code> or <code>"hirmes"</code>, or 
+     *                      else <code>"-help"</code> to print just a help screen. The arguments that follow must
      *                      either be options, starting with a dash ('-'), or else scan specifiers. E.g.   
      *                                       
      *                      <pre>
@@ -498,12 +498,12 @@ public class CRUSH extends Configurator implements BasicMessaging {
      * Attempts to load a scan's data for the current instrument, and using the current configuration settings.  
      * 
      * 
-     * @param scanID    Scan file name or path (absolute, or relative to <tt>datapath</tt>), or scan IDs, numbers, or ranges, depending
+     * @param scanID    Scan file name or path (absolute, or relative to <code>datapath</code>), or scan IDs, numbers, or ranges, depending
      *                  on what ways of specifiying scans is available for the given instrument.
      * @throws OutOfMemoryError If we ran out of Java heap space while loading the scan. You way need to tweak the '-Xmx' runtime
      *          option to java to allow it to use more RAM.
      * @throws FileNotFoundException if no scan file could be matched to the given scanID under the current set of configuration
-     *          options (e.g. <tt>datapath</tt>, <tt>object</tt>, <tt>date</tt>, or <tt>flight</tt> &mdash; depending what the 
+     *          options (e.g. <code>datapath</code>, <code>object</code>, <code>date</code>, or <code>flight</code> &mdash; depending what the 
      *          current instrument might use for locating data).
      * @throws UnsupportedScanException If a scan file was found but the file is not supported by the current instrument. For
      *          example if you try to load a SHARC-2 scan while CRUSH was initialized for HIRMES.

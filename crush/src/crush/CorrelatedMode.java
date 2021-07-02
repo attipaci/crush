@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -28,20 +28,20 @@ import java.lang.reflect.*;
 /**
  * A class for correlated common mode signals, which do not have a known external driving source (in contrast to 
  * {@link crush.instrument.Response}).
- * <p>
+ * 
  * 
  * The removal of correlated common modes, will always involve an estimation of the common mode signal from the
  * associated detector timestreams themselves, using the current set of relative detector gains (normalized to
  * a robust mean of 1). Optionally, it may also involve the estimation of the relative detector channel gains 
  * themselves, to that common mode, similarly to {@link crush.instrument.Response}s. When gain estimation is
  * enabled, the derived gains will be explicitly renormalized to a robust mean of 1.
- * <p>
+ * 
  * 
  * Similar correlated modes can be group together into a {@link CorrelatedModality}, similarly to how 
  * similar {@link ChannelGroup}s constitute a {@link ChannelDivision}.
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  */
 public class CorrelatedMode extends Mode {

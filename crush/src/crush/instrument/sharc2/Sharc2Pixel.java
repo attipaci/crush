@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.sharc2;
@@ -83,8 +83,8 @@ public class Sharc2Pixel extends Channel {
 	
 	public static Vector2D defaultSize = new Vector2D(4.89 * Unit.arcsec, 4.82 * Unit.arcsec);
 
-	public final static int FLAG_13HZ = softwareFlags.next('^', "13Hz pickup").value();
-	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public static final int FLAG_13HZ = softwareFlags.next('^', "13Hz pickup").value();
+	public static final int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
 
 
   

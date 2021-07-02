@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hirmes;
@@ -232,15 +232,15 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
 
 
 
-    final static Vector2D loresPixelSpacing = new Vector2D(1.180 * Unit.mm, 1.180 * Unit.mm);
+    static final Vector2D loresPixelSpacing = new Vector2D(1.180 * Unit.mm, 1.180 * Unit.mm);
 
-    final static double defaultPlateScale = 6.203 * Unit.arcsec / Unit.mm;
+    static final double defaultPlateScale = 6.203 * Unit.arcsec / Unit.mm;
 
-    final static double hiresWidthMicrons[] = { 480, 574, 686, 821, 982, 1175, 1405, 1680 };
-    final static double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
+    static final double hiresWidthMicrons[] = { 480, 574, 686, 821, 982, 1175, 1405, 1680 };
+    static final double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
     
-    final static double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
-    final static Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);
+    static final double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
+    static final Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);
 
 
 

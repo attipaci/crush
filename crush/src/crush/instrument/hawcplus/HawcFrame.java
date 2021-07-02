@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hawcplus;
@@ -176,9 +176,9 @@ class HawcFrame extends SofiaFrame {
 
                 Vector2D offset = chopperPosition.copy();
                 
-                horizontalToNativeEquatorial(offset);
+                horizontalToEquatorial(offset);
                 
-                equatorial.addNativeOffset(offset);
+                equatorial.addOffset(offset);
             }
 
             // TODO HWP angle in equatorial... (check sign)
@@ -200,23 +200,23 @@ class HawcFrame extends SofiaFrame {
     }
   
     void instrumentToEquatorial(Vector2D offset) {
-        offset.rotate(-instrumentVPA);
+        offset.rotate(instrumentVPA);
     }
 
     void equatorialToInstrument(Vector2D offset) {
-        offset.rotate(instrumentVPA);
+        offset.rotate(-instrumentVPA);
     }
    
-    public final static int JUMP_RANGE = 1<<7;  // Jumps are 7-bit signed values...
+    public static final int JUMP_RANGE = 1<<7;  // Jumps are 7-bit signed values...
     
-    public final static int FITS_FLAG_NORMAL_OBSERVING = 0;
-    public final static int FITS_FLAG_LOS_REWIND = 1;
-    public final static int FITS_FLAG_IVCURVES = 2;
-    public final static int FITS_FLAG_BETWEEN_SCANS = 3;
+    public static final int FITS_FLAG_NORMAL_OBSERVING = 0;
+    public static final int FITS_FLAG_LOS_REWIND = 1;
+    public static final int FITS_FLAG_IVCURVES = 2;
+    public static final int FITS_FLAG_BETWEEN_SCANS = 3;
 
-    public final static int FITS_ROWS = 41;
-    public final static int FITS_COLS = 128;
-    public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
+    public static final int FITS_ROWS = 41;
+    public static final int FITS_COLS = 128;
+    public static final int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
 
     public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
     public static byte SAMPLE_TRANSIENT_NOISE = sampleFlags.next('T', "transient noise").value();

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -607,8 +607,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
 
     
-    public final static boolean ENABLE_BLANKING = true;
-    public final static boolean NO_BLANKING = false;
+    public static final boolean ENABLE_BLANKING = true;
+    public static final boolean NO_BLANKING = false;
  
    
 }

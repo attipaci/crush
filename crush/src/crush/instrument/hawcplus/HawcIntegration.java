@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hawcplus;
@@ -83,8 +83,9 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
         ensureCapacity(records);
         for(int t=records; --t>=0; ) add(null);
 
-        for(int i=0; i<dataHDUs.size(); i++) 
-            new HawcPlusRowReader(dataHDUs.get(i), getScan().fits.getStream()).read(1);	
+        for(int i=0; i<dataHDUs.size(); i++) try(ArrayDataInput in = getScan().fits.getStream()) {
+            new HawcPlusRowReader(dataHDUs.get(i), in).read(1);	
+        }
     }
 
     private class HawcPlusRowReader extends HDURowReader { 
@@ -258,12 +259,12 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     EquatorialCoordinates reference = hawcScan.isNonSidereal ? frame.objectEq : getScan().equatorial;
 
                     // I  -> T      rot by phi (instrument rotation)
-                    // T' -> E      rot by -theta_ta
-                    // T  -> H      rot by ROF
-                    // H  -> E'     rot by PA
-                    // I' -> E      rot by -theta_si
+                    // T  -> E'     rot by -theta_ta
+                    // T  -> H      rot by ROF   
+                    // H  -> E'     rot by -PA
+                    // I  -> E'     rot by -theta_si
                     //
-                    // T -> H -> E': theta_ta = ROF + PA
+                    // T -> H -> E': theta_ta = ROF - PA
                     //
                     //    PA = theta_ta - ROF
                     //
@@ -279,11 +280,11 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     frame.setRotation(frame.instrumentVPA - frame.telescopeVPA);
 
                     // rotation from telescope coordinates to equatorial.
-                    frame.setParallacticAngle(frame.telescopeVPA);
+                    frame.setParallacticAngle(-frame.telescopeVPA);
 
                     // Calculate the scanning offsets...
-                    frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(reference);
-                    frame.equatorialNativeToHorizontal(frame.horizontalOffset);
+                    frame.horizontalOffset = frame.equatorial.getOffsetFrom(reference);
+                    frame.equatorialToHorizontal(frame.horizontalOffset);
 
                     // In telescope XEL (phiS), EL (phiR)
                     frame.chopperPosition = new Vector2D(
@@ -294,13 +295,13 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     // TODO empirical scaling...
                     frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
 
-                    if(invertChop) frame.chopperPosition.invert();
+                    if(invertChop) frame.chopperPosition.flip();
       
                     // Rotate the chopper offset into the TA frame...
-                    // C -> E' rot by theta_cp
-                    // T -> E' rot by theta_ta
-                    // C -> T rot by theta_cp - theta_ta
-                    frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
+                    // C -> E' rot by -theta_cp
+                    // E'-> T rot by theta_ta
+                    // C -> T rot by heta_ta - theta_cp
+                    frame.chopperPosition.rotate(frame.telescopeVPA - frame.chopVPA);
                    
                     // TODO if MCCS fixes alt/az inconsistency then we can just rely on their data...
                     //frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);                

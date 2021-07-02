@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.motion;
 
@@ -60,9 +60,9 @@ public enum Motion {
 		
 	}
 	
-	public final static int TELESCOPE = 1<<0;
-	public final static int SCANNING = 1<<1;
-	public final static int CHOPPER = 1<<2;
-	public final static int PROJECT_GLS = 1<<3;
+	public static final int TELESCOPE = 1<<0;
+	public static final int SCANNING = 1<<1;
+	public static final int CHOPPER = 1<<2;
+	public static final int PROJECT_GLS = 1<<3;
 	
 }

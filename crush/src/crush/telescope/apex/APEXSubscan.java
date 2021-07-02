@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.apex;
@@ -264,7 +264,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 		private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
 		private int[] phase;
 		private boolean chopperIncluded;
-		private final static double m900 = -900.0;
+		private static final double m900 = -900.0;
 		
 		DataParTable(TableHDU<?> hdu) throws FitsException {
 			super(hdu);
@@ -401,14 +401,14 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 					if(hasObjectCoords) {
 					    if(basisCoords != null) {
                             basisCoords.set(objX[t] * Unit.deg, objY[t] * Unit.deg);
-                            exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(basisCoords.toEquatorial());
-                            exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
+                            exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(basisCoords.toEquatorial());
+                            exposure.equatorialToHorizontal(exposure.horizontalOffset);
                         }
 					    else if(getScan().basisSystem == EquatorialCoordinates.class) { 
-					        exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(
+					        exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(
                                     new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.getSystem())
                             );
-					        exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
+					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
 					    }
 					    else {
 					        exposure.horizontalOffset = exposure.horizontal.getOffsetFrom(

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -48,14 +48,14 @@ import jnum.text.TableFormatter;
 /**
  * The abstract class that manages {@link Pixel}s in an {@link Instrument}. As such, the layout is integrally linked to
  * a specific instrument state. 
- * <p>
+ * 
  * 
  * In general, it is advisable that 
  * implementations of this class perform all the pixel position calculations (so they are easily followed in one place), 
  * setting and updating pixel properties, and assigning the parent instrument's channels to pixels.
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  */
 public abstract class PixelLayout implements Cloneable, Serializable, TableFormatter.Entries {

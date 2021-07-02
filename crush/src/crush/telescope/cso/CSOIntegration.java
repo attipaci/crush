@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope.cso;
 
@@ -224,8 +224,8 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		return -Math.log(1.0-eps) * getScan().horizontal.sinLat();
 	}
 	
-	public final static float antennaTick = (float) (0.01 * Unit.s);
-	public final static float tenthArcsec = (float) (0.1 * Unit.arcsec);
+	public static final float antennaTick = (float) (0.01 * Unit.s);
+	public static final float tenthArcsec = (float) (0.1 * Unit.arcsec);
 
 	static MaiTau maitau225GHz = new MaiTau();
 	static MaiTau maitau350um = new MaiTau();

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope;
@@ -72,7 +72,8 @@ public abstract class TelescopeFrame extends Frame {
     
     @Override
     public TelescopeInstrument<?> getInstrument() { return (TelescopeInstrument<?>) getIntegration().getInstrument(); }
-  
+ 
+    
     public float getTransmission() { return transmission; }
     
     protected void setTransmission(float value) { transmission = value; }
@@ -118,8 +119,8 @@ public abstract class TelescopeFrame extends Frame {
         coords.setNativeLatitude(equatorial.y() + getNativeY(position));
     }
     
-    public void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
-        getEquatorialNativeOffset(offset);
+    public void getEquatorialOffset(final Vector2D position, final Vector2D offset) {
+        getEquatorialOffset(offset);
         offset.setX(offset.x() + getNativeX(position));
         offset.setY(offset.y() + getNativeY(position));
     }
@@ -128,23 +129,22 @@ public abstract class TelescopeFrame extends Frame {
     public SphericalCoordinates getNativeCoords() { return equatorial; }
         
     public void getNativeOffset(final Vector2D position, final Vector2D offset) {
-        getEquatorialNativeOffset(position, offset);
+        getEquatorialOffset(position, offset);
     }
     
     @Override
     public void getNativeOffset(final Vector2D offset) {
-        getEquatorialNativeOffset(offset);
+        getEquatorialOffset(offset);
     }
     
-
     
-    public void getEquatorialNativeOffset(Vector2D offset) {
-        equatorial.getNativeOffsetFrom(getScan().equatorial, offset);        
+    public void getEquatorialOffset(Vector2D offset) {
+        equatorial.getOffsetFrom(getScan().equatorial, offset);        
     }
     
-    public Vector2D getEquatorialNativeOffset() {
+    public Vector2D getEquatorialOffset() {
         Vector2D offset = new Vector2D();
-        getEquatorialNativeOffset(offset);
+        getEquatorialOffset(offset);
         return offset;
     }
     
@@ -183,7 +183,7 @@ public abstract class TelescopeFrame extends Frame {
             // Deproject SFL native offsets...
             final EquatorialCoordinates eq = projector.getEquatorial();
             Vector2D offset = projector.getOffset();
-            getEquatorialNativeOffset(fpOffset, offset);
+            getEquatorialOffset(fpOffset, offset);
             eq.addNativeOffset(offset);
             projector.setEquatorial(eq);
         }
@@ -196,21 +196,9 @@ public abstract class TelescopeFrame extends Frame {
     }   
     
 
-    // Native offsets are in standard directions (e.g. -RA, DEC)
-    public void nativeToNativeEquatorial(Vector2D offset) {}
-    
-    public final void nativeToEquatorial(Vector2D offset) {
-        nativeToNativeEquatorial(offset);
-        offset.scaleX(-1.0);
-    }
-    
-    // Native offsets are in standard directions (e.g. -RA, DEC)
-    public void nativeEquatorialToNative(Vector2D offset) {}
-    
-    public final void equatorialToNative(Vector2D offset) {
-        offset.scaleX(-1.0);
-        nativeEquatorialToNative(offset);
-    }
+    public final void nativeToEquatorial(Vector2D offset) {}
+
+    public final void equatorialToNative(Vector2D offset) {}
     
     public void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
         equatorial.copy(coords);

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -45,10 +45,10 @@ import jnum.parallel.ParallelTask;
  * A class for representing a time-variable signal. It may be a known measured signal (such as an electronic bias,
  * a temperature sensor's readout, or a telescope position, or a derivative of these). Alternatively, it may be
  * a common mode signal derived from the detector data themselves (see {@link CorrelatedSignal}).
- * <p>
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  */
 public class Signal implements Serializable, Cloneable, Copiable<Signal> {

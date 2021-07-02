@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.apex;
@@ -32,7 +32,6 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
 import jnum.astro.CelestialCoordinates;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.EquatorialSystem;
 import jnum.astro.GeodeticCoordinates;
@@ -219,32 +218,47 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		ext = ".fits" + ext;
 		dir += File.separator;
 		
-		int subscans = readScanInfo(getFits(dir + "SCAN" + ext));
+		int subscans = 0;
+		
+		try(Fits scanFits = getFits(dir + "SCAN" + ext)) {
+		    subscans = readScanInfo(scanFits);
+		}
 		
 		APEXInstrument<? extends Channel> instrument = getInstrument();
-		
-		instrument.readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
+
+		try(Fits febeFits = getFits(dir + getFEBECombination() + "-FEBEPAR" + ext)) {
+		    instrument.readPar(febeFits);
+		}
+
 		instrument.configure();
 		clear();	
-		
-		int[] bands = instrument.activeBands;
-		
-		for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
-			try {
-				SubscanType subscan = getIntegrationInstance();
 
-				subscan.integrationNo = i;
-				subscan.getInstrument().band = bands[j];
-				
-				info("Integration " + subscan.getID() + ":");
-				
-				subscan.readDataPar(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
-				subscan.readData(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-" + bands[j] + ext));
-				if(readMonitor()) subscan.readMonitor(getFits(dir + (i+1) + File.separator + "MONITOR" + ext));
-				
-				add(subscan);
-			}
-			catch(Exception e) { error(e); }
+		int[] bands = instrument.activeBands;
+
+		for(int i=0; i<subscans; i++) for(int j=0; j < bands.length; j++) {
+		    try {
+		        SubscanType subscan = getIntegrationInstance();
+
+		        subscan.integrationNo = i;
+		        subscan.getInstrument().band = bands[j];
+
+		        info("Integration " + subscan.getID() + ":");
+
+		        try(Fits dparFits = getFits(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext)) {
+		            subscan.readDataPar(dparFits);
+		        }
+
+		        try(Fits dataFits = getFits(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-" + bands[j] + ext)) {
+		            subscan.readData(dataFits);
+		        }
+
+		        if(readMonitor()) try (Fits monFits = getFits(dir + (i+1) + File.separator + "MONITOR" + ext)) {
+		            subscan.readMonitor(monFits);
+		        }
+
+		        add(subscan);
+		    }
+		    catch(Exception e) { error(e); }
 		}
 	
 	}

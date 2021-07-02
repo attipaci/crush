@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.sofia;
@@ -38,6 +38,6 @@ public class SofiaChannel extends Channel {
         super(instrument, fixedIndex);
     }
     
-    public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
-    public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
+    public static final int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
+    public static final int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
 }

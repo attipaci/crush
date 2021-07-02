@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.sharc2;
@@ -444,9 +444,9 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
 
 
 
-    public final static int rows = 12;
-    public final static int cols = 32;
-    public final static int pixels = rows * cols;
+    public static final int rows = 12;
+    public static final int cols = 32;
+    public static final int pixels = rows * cols;
 
 
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,9 +18,8 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.instrument.gismo;
 
@@ -88,7 +87,9 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
-		read(getFits(scanDescriptor), readFully);
+	    try(Fits fits = getFits(scanDescriptor)) {
+	        read(fits, readFully);
+	    }
 	}
 
 	

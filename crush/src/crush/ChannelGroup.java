@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 
@@ -35,16 +35,16 @@ import jnum.data.Statistics;
  * A class for groping channels together. For example, all channels read out through the same readout MUX may
  * constitute such a group. Also, pixels in an instrument, with one or more channels associated to them, are 
  * also an example of a <code>ChannelGroup</code>.
- * <p>
+ * 
  * 
  * Channel groups which exhibit a correlated behavior, such as correlated noise or a common response to an
  * external signal (such as an electronic modulationm, temeprature drifts, or telescope motion), are associated
  * to an appropriate {@link Mode} (such as a {@link Response} or {@link CorrelatedMode}). 
- * <p>
+ * 
  * 
  * Channel groups are typically created by {@link Instrument#createGroups()}. They can be hard-coded groups,
  * or else specified in the runtime configurations via the <code>group</code> option.
- * <p>
+ * 
  * 
  * 
  * @see Pixel
@@ -52,7 +52,7 @@ import jnum.data.Statistics;
  * @See ChannelDivision
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  * @param <ChannelType>     The generic type of the channels contained in this group.
  * 

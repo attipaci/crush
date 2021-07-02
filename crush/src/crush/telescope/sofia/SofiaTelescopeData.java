@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,13 +18,12 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.sofia;
 
 import jnum.Unit;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.EquatorialSystem;
 import jnum.fits.FitsToolkit;

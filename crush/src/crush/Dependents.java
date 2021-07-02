@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -33,44 +33,44 @@ import jnum.CopiableContent;
 /**
  * Dependents represent the partial degrees of freedom lost due to modeling of the data. Consider, some
  * modeled parameter <i>Z</i>, which can be expressed as a linear combination of data points <i>x<sub>i</sub></i>:
- * <p>
+ * 
  * 
  * <i>Z = a<sub>1</sub> x<sub>1</sub> + a<sub>2</sub> x<sub>2</sub> ... a<sub>n</sub> x<sub>n</sub></i>
- * <p>
+ * 
  * 
  * Then,
- * <p>
+ * 
  * 
  * <i>p<sub>i</sub> = a<sub>i</sub></i> / (<i>a<sub>1</sub> x<sub>1</sub> + a<sub>2</sub> x<sub>2</sub> ... a<sub>n</sub> x<sub>n</sub></i>)
- * <p>
+ * 
  * 
  * represents the fractional dependence of <i>Z</i> on the single datum <i>x<sub>i</sub></i> (i.e. the fractional contribution of
  * <i>x<sub>i</sub></i> to the estimate of <i>Z</i>). Consequently, the modeling of the parameter <i>Z</i>, results in
  * a partial loss of degrees of freedom <i>x<sub>i</sub></i>, by the amount of <i>p<sub>i</sub></i>.
- * <p>
+ * 
  * 
  * CRUSH assumes that <i>p<sub>i</sub></i> can be separated into a per-channel term <i>p<sub>c</sub></i> and per-frame term <i>p<sub>t</sub></i>:
- * <p>
+ * 
  * 
  * <i>p<sub>i</sub></i> = <i>p<sub>c</sub></i> <i>p<sub>t</sub></i>
- * <p>
+ * 
  * 
  * Thus, the model dependents are accounted for on a per-channel and per-frame basis only. 
- * <p>
+ * 
  * 
  * Accounting for the lost degrees of freedom becomes important in deriving unbiased estimates if the underlying 
  * noise variance, and hence crucial for the derivation of proper noise weights. Failure to keep precise
  * account of the degrees of freedom lost in the reduction will lead to weighting instabilities when iteration, which
  * will tend to grow exponentially with iterations.
- * <p>
+ * 
  * 
  * Typically, developers of CRUSH will not have to worry much about dependents accounting, unless they are implementing
  * additional modeling capabilities for CRUSH.
- * <p>
  * 
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  */
 public class Dependents implements Serializable, Cloneable, CopiableContent<Dependents> {

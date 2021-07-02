@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,12 +18,12 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
 
-import jnum.data.LocalAverage;
+import jnum.data.localized.LocalAverage;
 import jnum.reporting.ConsoleReporter;
 
 
@@ -32,7 +32,7 @@ import jnum.reporting.ConsoleReporter;
  * indentation to improve readability.
  * 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  */
 public class CRUSHConsoleReporter extends ConsoleReporter {

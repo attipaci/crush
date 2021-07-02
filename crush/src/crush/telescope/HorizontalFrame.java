@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope;
 
@@ -99,9 +99,9 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	
 	@Override
-	public final void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
+	public final void getEquatorialOffset(final Vector2D position, final Vector2D offset) {
 		getHorizontalOffset(position, offset);
-		horizontalToNativeEquatorial(offset);
+		horizontalToEquatorial(offset);
 	}
 	
 	@Override
@@ -157,6 +157,19 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	    return PA;
 	}
 	
+	/**
+	 * Correct for rotation of the equatorial system due to precession.
+	 * Since the instrument orientation is defined in the horizontal system, it is propagated to
+	 * the dynamical equator at the time of observations. When referenced back to ICRS for mapping
+	 * the dynamical frame will appear rotated somehat. But we can correct for that here.
+	 * The equatorial position angle is defined looking towards the origin, whereas the instrument
+	 * and horizontal coordinates are looking out. Hence an inversion of the sign...
+	 */
+    @Override
+    public void setRotation(double angle) {
+        super.setRotation(angle - getScan().getApparentEPA() + getScan().getReferenceEpochEPA());
+    }
+	
 	public GeodeticCoordinates getSite() { return getScan().site; }
  	
 	public void calcHorizontal() {
@@ -171,8 +184,8 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		// Uses the scanning offsets, on top of the tracking coordinate of the scan...
 		if(getScan().isTracking) {
 			if(equatorial == null) equatorial = getScan().equatorial.clone();
-			equatorial.setNativeLongitude(getScan().equatorial.x() + (PA.cos() * horizontalOffset.x() - PA.sin() * horizontalOffset.y()) / getScan().equatorial.cosLat());
-			equatorial.setNativeLatitude(getScan().equatorial.y() + (PA.cos() * horizontalOffset.y() + PA.sin() * horizontalOffset.x()));	
+			equatorial.setLongitude(getScan().equatorial.x() + (PA.cos() * horizontalOffset.x() - PA.sin() * horizontalOffset.y()) / getScan().equatorial.cosLat());
+			equatorial.setLatitude(getScan().equatorial.y() + (PA.cos() * horizontalOffset.y() + PA.sin() * horizontalOffset.x()));	
 		}
 		// Otherwise do the proper conversion....
 		else {
@@ -192,38 +205,14 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		setTransmission(Math.exp(-zenithTau/horizontal.sinLat()));
 	}
 	
-	// Rotate by PA
-	public final void horizontalToNativeEquatorial(Vector2D offset) {
-		final double x = offset.x();
-		offset.setX(PA.cos() * x - PA.sin() * offset.y());
-		offset.setY(PA.sin() * x + PA.cos() * offset.y());
-	}
-	
 	public final void horizontalToEquatorial(Vector2D offset) {
-		horizontalToNativeEquatorial(offset);
-		offset.scaleX(-1.0);
-	}
-	
-	// Rotate by -PA
-	public final void equatorialNativeToHorizontal(Vector2D offset) {
-		final double x = offset.x();
-		offset.setX(PA.cos() * x + PA.sin() * offset.y());
-		offset.setY(PA.cos() * offset.y() - PA.sin() * x);
+	    offset.derotate(PA);
+		offset.flipX();  // AZ is reversed in the standard convention of looking in towards the origin...
 	}
 	
 	public final void equatorialToHorizontal(Vector2D offset) {
-		offset.scaleX(-1.0);
-		equatorialNativeToHorizontal(offset);
-	}
-	
-	@Override
-	public final void nativeToNativeEquatorial(Vector2D offset) {
-		horizontalToNativeEquatorial(offset);
-	}
-	
-	@Override
-	public final void nativeEquatorialToNative(Vector2D offset) {
-		equatorialNativeToHorizontal(offset);
+		offset.flipX(); // AZ is reversed in the standard convention of looking in towards the origin...
+		offset.rotate(PA);
 	}
 	
 	@Override

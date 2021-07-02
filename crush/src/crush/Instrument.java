@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -65,20 +65,20 @@ import nom.tam.util.Cursor;
 /**
  * A class that captures an instrument's configuration/operation state (properties) at a given point in time, such as for a chunk 
  * of contiguous stream of data, such as a scan or an integration, together with its own set of configuration options.
- * <p>
+ * 
  * 
  * Every scan/integration should have a fully independent <code>Instrument</code> object (with all their channels and properties
  * also being fully independent) s.t. modifications to one scan/integration will not affect another.
  * Independent instrument states may be derived from one another, using {@link #copy()}, migrating
  * all properties of one instrument to another indepenent one. 
- * <p>
+ * 
  * 
  * Instruments primarily consists of a number of detector channels, which provide timestream data (see {@link Frame}).
  * These channels may be organized into various {@link ChannelGroup}s and {@link Pixel}s, after the channels have
  * been fully populated (see {@link #createEnsembles()}, {@link #createLayout()}). 
- * <p>
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  * @param <ChannelType>
  */
@@ -247,20 +247,20 @@ implements TableFormatter.Entries, BasicMessaging {
     /**
      * Validates this instrument state for the given scan, populating all fields and properties given the
      * options for the instrument, and loading appropriate configuration files.
-     * <p>
+     * 
      * 
      * The instrument should be populated with all canonical channels prior to calling this method (e.g. via
      * a {@link #populate(int)} call or otherwise).
-     * <p>
+     * 
      * 
      * If the pixel layout has not been initialized, this will call {@link #getLayoutInstance()} as necessary
      * before calling {@link PixelLayout#validate()}.
-     * <p>
+     * 
      * 
      * After the validation the instrument should have all its canonical channels and pixels added and
      * configured. Pruning (slimming) of these may happen at a later stage, during {@link Integration#validate()}, if the 
      * <code>noslim</code> option isn't set.
-     * <p>
+     * 
      *    
      */
     public void validate() {
@@ -1546,12 +1546,12 @@ implements TableFormatter.Entries, BasicMessaging {
 
     private static Recycler recycler = new Recycler();
 
-    public final static int GAINS_SIGNED = 0;
-    public final static int GAINS_BIDIRECTIONAL = 1;
+    public static final int GAINS_SIGNED = 0;
+    public static final int GAINS_BIDIRECTIONAL = 1;
 
     // TODO no lookup access?
-    public final static Unit arcsec = Unit.get("arcsec");
-    public final static Unit arcmin = Unit.get("arcmin");
-    public final static Unit deg = Unit.get("deg");
+    public static final Unit arcsec = Unit.get("arcsec");
+    public static final Unit arcmin = Unit.get("arcmin");
+    public static final Unit deg = Unit.get("deg");
 
 }

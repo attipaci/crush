@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -41,16 +41,16 @@ import jnum.util.FlagBlock;
 /**
  * A class that represents a detector channel in an {@link Instrument}, and its properties for the given <code>Instrument</code> state. 
  * Channels can be uniquely identified either by a fixed index (starting from zero, and less than {@link Instrument#storeChannels}), or optionally also by a String ID.
- * <p>
+ * 
  * 
  * Channels of an <code>Instrument</code> can be grouped (see {@link ChannelGroup}) by their common properties (e.g. TES channels read out
  * through the same SQUID mux can constitute such a group). {@link Pixel}s are also such a group of channels, which share the same
  * physical location, and coupling. Thus, in monochromatic continuum cameras (e.g. SHARC-2, GISMO, or HAWC+) each pixel has exactly
  * one channel, whereas spectroscopic or multicolor, or multipol instruments can have several or many channels per <code>Pixel</code>.
  * The way channels are assigned to pixels, is managed by the {@link PixelLayout} class.
- * <p>
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * 
+ * @author Attila Kovacs
  *
  *
  */
@@ -346,25 +346,25 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public static final FlagSpace<Integer> flagSpace = new FlagSpace.Integer("channel-flags");
 	
 	public static final FlagBlock<Integer> hardwareFlags = flagSpace.getFlagBlock(0, 8);
-	public final static int FLAG_DEAD = hardwareFlags.next('X', "Dead").value();
-	public final static int FLAG_BLIND = hardwareFlags.next('B', "Blind").value();
-	public final static int HARDWARE_FLAGS = (int) hardwareFlags.getMask();
+	public static final int FLAG_DEAD = hardwareFlags.next('X', "Dead").value();
+	public static final int FLAG_BLIND = hardwareFlags.next('B', "Blind").value();
+	public static final int HARDWARE_FLAGS = (int) hardwareFlags.getMask();
 	
 	public static final FlagBlock<Integer> softwareFlags = flagSpace.getFlagBlock(8, 31);
-	public final static int FLAG_DISCARD = softwareFlags.next('d', "Discarded").value();
-	public final static int FLAG_GAIN = softwareFlags.next('g', "Gain").value();
-	public final static int FLAG_SENSITIVITY = softwareFlags.next('n', "Noisy").value();
-	public final static int FLAG_DOF = softwareFlags.next('f', "Degrees-of-freedom.").value();
-	public final static int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
-	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();    
-    public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
+	public static final int FLAG_DISCARD = softwareFlags.next('d', "Discarded").value();
+	public static final int FLAG_GAIN = softwareFlags.next('g', "Gain").value();
+	public static final int FLAG_SENSITIVITY = softwareFlags.next('n', "Noisy").value();
+	public static final int FLAG_DOF = softwareFlags.next('f', "Degrees-of-freedom.").value();
+	public static final int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
+	public static final int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();    
+    public static final int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
 
 	
-	public final static int SOFTWARE_FLAGS = (int) softwareFlags.getMask();
+	public static final int SOFTWARE_FLAGS = (int) softwareFlags.getMask();
 	
 	
-	public final static double DEFAULT_VARIANCE = 1.0;
-	public final static double DEFAULT_WEIGHT = 1.0;
+	public static final double DEFAULT_VARIANCE = 1.0;
+	public static final double DEFAULT_WEIGHT = 1.0;
 
 	
 }

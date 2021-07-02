@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 // Copyright (c) 2009,2010 Attila Kovacs
 
@@ -32,16 +32,16 @@ import java.util.*;
  * same organizing principle. These groups are typically a disjoint (non overlapping) set, which may partially
  * or fully span the channels of an {@link Instrument}. For example, each readout MUX may have a corresponding 
  * {@link ChannelGroup}, which together constitude a division based on MUX association.
- * <p>
+ * 
  * 
  * In other words, you may have a <code>ChannelDivision</code> named "muxes", which consists of a the
  * channel groups "mux-1", "mux-2", "mux-3" ...
- * <p>
+ * 
  * 
  * Similarly, the correlated {@link Mode}s associated to the channel groups in the division, can be similarly
  * grouped into a {@link Modality}, and can be decorrelated together during reduction 
  * (see <code>correlated.&lt?&gt</code> option and sub-options in the GLOSSARY. 
- * <p>
+ * 
  * 
  * Channel divisions are typically created via {@link Instrument#createDivisions()}. Most divisions are
  * hard-coded, and often pattern based using {@link Instrument#getDivision(String, java.lang.reflect.Field, int)}.
@@ -50,7 +50,7 @@ import java.util.*;
  * 
  * @see Modality 
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  * @param <ChannelType>     The generic type of the channels contained within this division.
  */

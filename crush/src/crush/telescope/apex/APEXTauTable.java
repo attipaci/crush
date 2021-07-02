@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope.apex;
 
@@ -28,17 +28,16 @@ import java.util.*;
 import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.DataPoint;
-import jnum.data.ScalarLocality;
+import jnum.data.localized.LocalAverage;
+import jnum.data.localized.LocalizedData;
+import jnum.data.localized.ScalarLocality;
 import jnum.io.LineParser;
+import jnum.math.Scalar;
 import jnum.text.SmartTokenizer;
-import jnum.data.LocalAverage;
-import jnum.data.Locality;
-import jnum.data.LocalizedData;
 
 
 
-public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
+public class APEXTauTable extends LocalAverage<ScalarLocality, Scalar> {
 	/**
 	 * 
 	 */
@@ -49,7 +48,6 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	public String fileName;
 	public double timeWindow = 1.5 * Unit.hour;
 	
-
 	
 	private APEXTauTable(String fileName) throws IOException {
 		read(fileName);
@@ -60,12 +58,15 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                Entry skydip = new Entry();
+
                 tokens.skip(2);
-                skydip.timeStamp = new TimeStamp(tokens.nextDouble());
-                skydip.tau.setValue(tokens.nextDouble());
-                skydip.tau.setRMS(1.0);
-                add(skydip);
+
+                add(new LocalizedData<> (
+                        new ScalarLocality(tokens.nextDouble()),
+                        new Scalar(tokens.nextDouble()), 
+                        0.005
+                ));
+
                 return true;
             }   
 		}.read(fileName);
@@ -76,72 +77,30 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	}	
 	
 	public double getTau(double MJD) {
-		Entry mean = getLocalAverage(new TimeStamp(MJD));
+		LocalizedData<ScalarLocality, Scalar> mean = getLocalAverage(new ScalarLocality(MJD), timeWindow / Unit.day);
 		
-		if(mean.tau.weight() == 0.0) {
+		if(mean.weight() == 0.0) {
 			CRUSH.info(this, "... No skydip data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
 				CRUSH.info(this, "... expanding tau lookup window to 6 hours.");
-				timeWindow = 6.0 * Unit.hour;
-				mean = getLocalAverage(new TimeStamp(MJD));
+				mean = getLocalAverage(new ScalarLocality(MJD), (6.0 * Unit.hour) / Unit.day);
 			}
 			else {
 				CRUSH.warning(this, "Local tau is unknown.");
 				return 0.0;
 			}
 		}
-		else if(Double.isInfinite(mean.tau.value())) {
+		else if(Double.isInfinite(mean.getData().value())) {
 			CRUSH.warning(this, "Inifinite local tau.");
 			return 0.0;
 		}
 		
-		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");
-		return mean.tau.value();
-	}
-	
-	class TimeStamp extends ScalarLocality {
-		
-		public TimeStamp(double MJD) { super(MJD); }
-		
-		@Override
-		public double distanceTo(Locality other) {
-			return super.distanceTo(other) * Unit.day / Math.abs(timeWindow);
-		}
+		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.getData().value()) + " (from " + mean.getCount() + " skydips)");
+		return mean.getData().value();
 	}
 
-	
-	class Entry extends LocalizedData {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 3293214668641028650L;
-		TimeStamp timeStamp;
-		DataPoint tau = new DataPoint();
-		
-		
-		@Override
-		public Locality getLocality() {
-			return timeStamp;
-		}
 
-		@Override
-		public void setLocality(Locality loc) {
-			timeStamp = (TimeStamp) loc;
-		}
-
-		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
-			Entry entry = (Entry) other;
-			tau.average(entry.tau.value(), relativeWeight * entry.tau.weight());
-		}	
-	}
-
-	@Override
-	public Entry getLocalizedDataInstance() {
-		return new Entry();
-	}
-	
 	public static APEXTauTable get(String fileName) throws IOException {
 	    APEXTauTable table = tables.get(fileName);
 	    if(table == null) {

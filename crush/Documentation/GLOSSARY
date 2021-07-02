@@ -2712,12 +2712,20 @@
 
 :: rotation		@Advanced
 			Define the instrument rotation (in degrees) if
-			applicable.	
+			applicable.
+			@see: 'rotEpoch'
 
 :: rotation.*		@Instrument: SCUBA-2, HAWC+, HIRMES
 			Specify subarray offsets. See the instrument README 
 			docs for specifics.
 			@See: 'offset.*' 
+
+:: rotEpoch=<year>	@Advanced
+			@Since: 2.60
+			Specify the year (float) at which the instrument
+			rotation was measured, s.t. position angle corrections
+			due to precession can take that into account.		
+			@see: 'rotation'
 
 :: rounds=N		@Advanced
 			Iterate N times. You may want to increase the number

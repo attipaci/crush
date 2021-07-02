@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hawcplus;
@@ -208,23 +208,23 @@ class DRPMessenger extends Thread {
 		}
 	}
 	
-	public final static String TYPE_CRITICAL = "CRIT";
-	public final static String TYPE_ERROR = "ERR";
-	public final static String TYPE_WARNING = "WARN";
-	public final static String TYPE_INFO = "INFO";
-	public final static String TYPE_DEBUG = "DEBUG";
+	public static final String TYPE_CRITICAL = "CRIT";
+	public static final String TYPE_ERROR = "ERR";
+	public static final String TYPE_WARNING = "WARN";
+	public static final String TYPE_INFO = "INFO";
+	public static final String TYPE_DEBUG = "DEBUG";
 	
-	public final static String DEFAULT_HOST = "127.0.0.1";
-	public final static int DEFAULT_DRP_PORT = 50747;
-	public final static int DEFAULT_QUEUE_CAPACITY = 100;
-	public final static int DEFAULT_TIMEOUT_MILLIS = 1000;
-	public final static int MAX_MESSAGE_BYTES = 1000;
+	public static final String DEFAULT_HOST = "127.0.0.1";
+	public static final int DEFAULT_DRP_PORT = 50747;
+	public static final int DEFAULT_QUEUE_CAPACITY = 100;
+	public static final int DEFAULT_TIMEOUT_MILLIS = 1000;
+	public static final int MAX_MESSAGE_BYTES = 1000;
 	
-	private final static String timePrefix = " @ ";
-	private final static String timeFormatSpec = "HH:mm:ss.SSS";
-	private final static DateFormat timeFormat = new SimpleDateFormat(timeFormatSpec);
+	private static final String timePrefix = " @ ";
+	private static final String timeFormatSpec = "HH:mm:ss.SSS";
+	private static final DateFormat timeFormat = new SimpleDateFormat(timeFormatSpec);
 	
-	private final static String DRP_REPORTER_ID = "HAWC-DRP";
+	private static final String DRP_REPORTER_ID = "HAWC-DRP";
 	
 	static { timeFormat.setTimeZone(TimeZone.getTimeZone("UTC")); }
 

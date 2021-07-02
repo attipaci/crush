@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.sourcemodel;
 
@@ -252,7 +252,7 @@ public class PixelMap extends AbstractSource2D {
 					((Projection2D) getProjection()).project(source.getCoordinates(), pixel.getPosition());				
 
 					// The pixel position is the opposite of its apparent offset.
-					pixel.getPosition().invert();
+					pixel.getPosition().flip();
 				}
 			}
 		}

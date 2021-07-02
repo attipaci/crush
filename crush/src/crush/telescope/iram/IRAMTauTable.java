@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope.iram;
 
@@ -30,15 +30,14 @@ import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
-import jnum.data.DataPoint;
-import jnum.data.ScalarLocality;
+import jnum.data.localized.LocalAverage;
+import jnum.data.localized.LocalizedData;
+import jnum.data.localized.ScalarLocality;
 import jnum.io.LineParser;
+import jnum.math.Scalar;
 import jnum.text.SmartTokenizer;
-import jnum.data.LocalAverage;
-import jnum.data.Locality;
-import jnum.data.LocalizedData;
 
-public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
+public class IRAMTauTable extends LocalAverage<ScalarLocality, Scalar> {
 	
 	/**
 	 * 
@@ -78,15 +77,16 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);     
                 if(tokens.countTokens() < 4) return false;
-                
-                Entry skydip = new Entry();
+           
                 String dateSpec = tokens.nextToken() + " " + tokens.nextToken();
                 Date date = df.parse(dateSpec);
-                skydip.timeStamp = new TimeStamp(AstroTime.getMJD(date.getTime()));         
                 
-                skydip.tau.setValue(tokens.nextDouble());    
-                skydip.tau.setRMS(tokens.nextDouble());
-                add(skydip);
+                add(new LocalizedData<>(
+                        new ScalarLocality(AstroTime.getMJD(date.getTime())),         
+                        new Scalar(tokens.nextDouble()),
+                        tokens.nextDouble()
+                ));
+
                 return true;
             }
         }.read(fileName);
@@ -100,66 +100,15 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		
 	}
 	
+	  
+	
 	public double getTau(double MJD) {
-		Entry mean = getCheckedLocalAverage(new TimeStamp(MJD));
-		CRUSH.values(this, "Local average tau(225GHz) = " + mean.tau.toString(Util.f3) + " (from " + mean.measurements + " measurements)");
-		return mean.tau.value();
+		LocalizedData<ScalarLocality, Scalar> mean = getCheckedLocalAverage(new ScalarLocality(MJD), timeWindow / Unit.day);
+		CRUSH.values(this, "Local average tau(225GHz) = " + mean.getData().toString(Util.f3) + " (from " + mean.getCount() + " measurements)");
+		return mean.getData().value();
 	}
 	
-	
-	class TimeStamp extends ScalarLocality {
-		
-		public TimeStamp(double MJD) { super(MJD); }
-		
-		@Override
-		public double distanceTo(Locality other) {
-			return super.distanceTo(other) * Unit.day / Math.abs(timeWindow);
-		}
-	}
 
-	class Entry extends LocalizedData {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -7635791450826001376L;
-		TimeStamp timeStamp;
-		DataPoint tau = new DataPoint();
-		
-		@Override
-		public Locality getLocality() {
-			return timeStamp;
-		}
-
-		@Override
-		public void setLocality(Locality loc) {
-			timeStamp = (TimeStamp) loc;
-		}
-
-		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {	
-			Entry point = (Entry) other;	
-			tau.average(point.tau.value(), relativeWeight * point.tau.weight());
-		}
-
-		@Override
-		public boolean isConsistentWith(LocalizedData other) {
-			Entry entry = (Entry) other;
-			DataPoint difference = entry.tau.copy();
-			difference.subtract(tau);	
-			return Math.abs(difference.significance()) < 5.0;
-		}
-		
-		@Override
-		public String toString() { 
-			return timeStamp.toString() + ": " + tau;
-		}
-		
-	}
-
-	@Override
-	public Entry getLocalizedDataInstance() {
-		return new Entry();
-	}
 
 	
 }

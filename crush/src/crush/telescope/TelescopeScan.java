@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope;
@@ -58,6 +58,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     
     public EquatorialCoordinates equatorial, apparent;
     public EquatorialTransform fromApparent, toApparent;
+
     
     protected TelescopeScan(TelescopeInstrument<?> instrument) {
         super(instrument);
@@ -112,7 +113,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         toApparent.transform(apparent);
     }
 
-
+    
     @Override
     public SphericalCoordinates getPositionReference(String system) {
         if(system.equals("native")) return getNativeCoordinates(); 
@@ -327,8 +328,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     
     @Override
     public String getASCIIHeader() {
-        return super.getASCIIHeader() + 
-                "# Equatorial: " + equatorial + "\n";
+        return super.getASCIIHeader() + "# Equatorial: " + equatorial + "\n";
     }
     
 

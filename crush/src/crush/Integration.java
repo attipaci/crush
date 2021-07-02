@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -62,11 +62,11 @@ import nom.tam.fits.*;
  * 
  * A class that represents a contiguous set of frames (i.e. exposures) obtained during a streaming measurement, with
  * a fixed observational setup, as captured by a single fixed {@link Instrument} state.
- * <p>
+ * 
  * 
  * @see Scan
  * 
- * @author Attila Kovacs <attila@sigmyne.com>
+ * @author Attila Kovacs
  *
  * @param <InstrumentType>  The generic type of {@link Instrument} that may produce this integration.
  * @param <FrameType>       The generic {@link Frame} type contained in this integration.

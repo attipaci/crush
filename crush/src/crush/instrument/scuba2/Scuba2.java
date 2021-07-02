@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.scuba2;
@@ -201,8 +201,7 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 				+ " ZOff=" + Util.f2.format(focusZOffset)
 		);		
 		
-        
-        getLayout().parseHeader(header);
+        createLayout().parseHeader(header);
 	}
 	
 	/*
@@ -280,8 +279,8 @@ public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> {
 
 
 	
-	public final static int SUBARRAY_COLS = 40;
-	public final static int SUBARRAY_ROWS = 32;
-	public final static int SUBARRAYS = 4;
+	public static final int SUBARRAY_COLS = 40;
+	public static final int SUBARRAY_ROWS = 32;
+	public static final int SUBARRAYS = 4;
 
 }

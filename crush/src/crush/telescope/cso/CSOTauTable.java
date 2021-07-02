@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope.cso;
 
@@ -31,16 +31,16 @@ import jnum.Configurator;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.DataPoint;
-import jnum.data.LocalAverage;
-import jnum.data.Locality;
-import jnum.data.LocalizedData;
+import jnum.data.localized.LocalAverage;
+import jnum.data.localized.LocalizedData;
+import jnum.data.localized.ScalarLocality;
 import jnum.io.LineParser;
+import jnum.math.Scalar;
 import jnum.text.SmartTokenizer;
 
 
 
-public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
+public class CSOTauTable extends LocalAverage<CSOTauTable.TimeStamp, Scalar> {
 	/**
 	 * 
 	 */
@@ -73,12 +73,13 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                Entry entry = new Entry();
-                entry.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
-                entry.tau.setValue(tokens.nextDouble());
+
+                TimeStamp ts = new TimeStamp(iMJD, tokens.nextToken());
+                double tau = tokens.nextDouble();
                 tokens.skip();
-                entry.tau.setRMS(ExtraMath.hypot(0.005, tokens.nextDouble()));
-                add(entry);
+       
+                add(new LocalizedData<>(ts, new Scalar(tau), ExtraMath.hypot(0.005, tokens.nextDouble())));
+                
                 return true;
             }
 		}.read(fileName);
@@ -90,15 +91,14 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	
 	public double getTau(double MJD) {
 			
-		Entry mean = getLocalAverage(new TimeStamp(MJD));
+		LocalizedData<TimeStamp, Scalar> mean = getLocalAverage(new TimeStamp(MJD), timeWindow / Unit.day);
 		
-		if(mean.tau.weight() == 0.0) {
-			CRUSH.info(this, "... No skydip data was found in specified time window.");
+		if(mean.weight() == 0.0) {
+			CRUSH.info(this, "... No tau data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
 				CRUSH.info(this, "... expanding tau lookup window to 6 hours.");
-				timeWindow = 6.0 * Unit.hour;
-				mean = getLocalAverage(new TimeStamp(MJD));
+				mean = getLocalAverage(new TimeStamp(MJD), (6.0 * Unit.hour) / Unit.day);
 			}
 			else {
 				CRUSH.warning(this, "Tau is unknown.");
@@ -106,69 +106,19 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 			}
 		}
 		
-		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " measurements)");
-		return mean.tau.value();
+		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.getData().value()) + " (from " + mean.getCount() + " measurements)");
+		return mean.getData().value();
 	}
 	
-	class TimeStamp extends Locality {
-		double MJD;
-		
-		public TimeStamp(double MJD) { this.MJD = MJD; }
-		
+	class TimeStamp extends ScalarLocality {
+
+		public TimeStamp(double MJD) { super(MJD); }
+		 
 		public TimeStamp(int iMJD, String hhmm) { 
-			this.MJD = iMJD + (Integer.parseInt(hhmm.substring(0, 2)) * Unit.hour + Integer.parseInt(hhmm.substring(2)) * Unit.min) / Unit.day; 
-		}
-		
-		@Override
-		public double distanceTo(Locality other) {
-			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));
-		}
-
-		@Override
-		public int compareTo(Locality o) {
-			return Double.compare(MJD, ((TimeStamp) o).MJD);
-		}
-		
-		@Override
-		public String toString() { return Double.toString(MJD); }
-
-		@Override
-		public double sortingDistanceTo(Locality other) {
-			return distanceTo(other);
+		    this(iMJD + (Integer.parseInt(hhmm.substring(0, 2)) * Unit.hour + Integer.parseInt(hhmm.substring(2)) * Unit.min) / Unit.day);
 		}
 	}
 
-	
-	class Entry extends LocalizedData {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 7189114815744822461L;
-		TimeStamp timeStamp;
-		DataPoint tau = new DataPoint();
-		
-		
-		@Override
-		public Locality getLocality() {
-			return timeStamp;
-		}
-
-		@Override
-		public void setLocality(Locality loc) {
-			timeStamp = (TimeStamp) loc;
-		}
-
-		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
-			Entry entry = (Entry) other;
-			tau.average(entry.tau.value(), relativeWeight * entry.tau.weight());
-		}	
-	}
-
-	@Override
-	public Entry getLocalizedDataInstance() {
-		return new Entry();
-	}
 	
 }
 

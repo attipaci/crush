@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,9 +18,8 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
 package crush.instrument.laboca;
 
@@ -86,9 +85,9 @@ public class LabocaPixel extends Channel {
 		cableGain = 1.0;
 	}
 	
-	public final static int FLAG_RESISTOR = softwareFlags.next('R', "Resistor").value();
+	public static final int FLAG_RESISTOR = softwareFlags.next('R', "Resistor").value();
 	
-	public final static int FLAG_CABLE = softwareFlags.next('c', "Bad cable gain").value();
-	public final static int FLAG_BOX = softwareFlags.next('b', "Bad amplifier box gain").value();
-	public final static int FLAG_AMP = softwareFlags.next('a', "Bad amp gain").value();
+	public static final int FLAG_CABLE = softwareFlags.next('c', "Bad cable gain").value();
+	public static final int FLAG_BOX = softwareFlags.next('b', "Bad amplifier box gain").value();
+	public static final int FLAG_AMP = softwareFlags.next('a', "Bad amp gain").value();
 }

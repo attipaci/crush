@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.scuba2;
@@ -134,7 +134,7 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, UnsupportedIntegrationException, IOException {
 		if(CRUSH.debug) CRUSH.detail(this, "<FILE> " + file.getFile().getName());
 		
-		try(Fits fits = new Fits(file.getFile())) {		
+		try(Fits fits = new Fits(file.getFile()); ArrayDataInput in = fits.getStream()) {		
 		    BasicHDU<?>[] HDU = fits.read();
 
 		    if(isFirstFile) {
@@ -149,11 +149,11 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 		    Scuba2Subarray subarray = getInstrument().subarray[file.getSubarrayIndex()];
 		    subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
 
-		    readArrayData((ImageHDU) HDU[0], fits.getStream(), subarray.channelOffset, (float) subarray.scaling);
-
+		    readArrayData((ImageHDU) HDU[0], in, subarray.channelOffset, (float) subarray.scaling);
+		    
 		    if(hasOption("darkcorrect")) readDarkSquidData(file.getSubarrayIndex(), getDarkSquidHDU(HDU));
-
-		    subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
+		    
+		    subarray.parseFlatcalHDU(getFlatcalHDU(HDU));	   		   
 
 		    fits.close();
 		}

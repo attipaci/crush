@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hirmes;
@@ -250,18 +250,18 @@ public class HirmesPixel extends SofiaChannel {
         if(tokens.hasMoreTokens()) pinGain = tokens.nextDouble();      
     }
     
-    public final static Vector2D physicalSize = new Vector2D(1.18 * Unit.mm, 1.01 * Unit.mm);
-    public final static double gainNormBandwidth = Unit.GHz;
+    public static final Vector2D physicalSize = new Vector2D(1.18 * Unit.mm, 1.01 * Unit.mm);
+    public static final double gainNormBandwidth = Unit.GHz;
     
     
-    public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
-    public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
-    public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
-    public final static int FLAG_PIN = softwareFlags.next('p', "Bad MUX pin gain").value();
-    public final static int FLAG_ELEVENSY = softwareFlags.next('e', "Bad SQUID elevensy gain").value();
-    public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
-    public final static int FLAG_COL = softwareFlags.next('c', "Bad detector col gain").value();
-    public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
-    public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
+    public static final int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
+    public static final int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
+    public static final int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
+    public static final int FLAG_PIN = softwareFlags.next('p', "Bad MUX pin gain").value();
+    public static final int FLAG_ELEVENSY = softwareFlags.next('e', "Bad SQUID elevensy gain").value();
+    public static final int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
+    public static final int FLAG_COL = softwareFlags.next('c', "Bad detector col gain").value();
+    public static final int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
+    public static final int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
 
 }

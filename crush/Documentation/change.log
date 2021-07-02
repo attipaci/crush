@@ -1,4 +1,10 @@
-2.60-a1 (devel.2)
+>>> LABOCA OK
+>>> SCUBA2 OK
+>>> SHARC2 OK
+>>> HAWC+ OK-ish		(VPA inverted, chopper?)
+>>> GISMO pixel positions upside down???...
+
+2.60-a1 (devel.10)
 
 	Overview
 	----------------------------------------------------------------------
@@ -9,6 +15,13 @@
 
 	[BUG] Reductions in ecliptic, galactic, supergalactic coordinate
 	systems had the wrong coordinate transformations to/from equatorial.
+
+	[NEW] Accounting for small field rotation due to precession (since
+	instrument orientation is defined in horizontal, and propagated to
+	apparent coordinate system, which itself slowly rotates in ICRS, 
+	where the mapping actually happens. New option 'rotepoch' can be
+	used to specify the epoch (e.g. 2021.3) at which the instrument
+	rotation was determined.
 
 	[CHANGE] Updated for jnum 0.40, in which CoordinateEpochs are
 	replaced by EquatorialSystem for high-precision astrometry. As a result
@@ -21,6 +34,9 @@
 	the full-precision IAU2000A/R06 nutation model if desired. In 
 	principle, CRUSH is now capable of precision astrometry at the few 
 	micro-arcsecond level.
+
+	[FIX] Plugged potential resource leaks, even though these were pretty
+	rare, unlikely, and harmless even if they did occur on occasion.
 
 	[FIX] Reductions in supergalactic coordinates (system=supergalactic) 
 	inadvertently resulted in mapping in ecliptic coordinate system.

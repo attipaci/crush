@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,9 +18,9 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
+
 
 package crush.instrument.gismo;
 
@@ -50,8 +50,6 @@ public class GismoPixel extends Channel {
 		// mux & pin filled when reading 'wiring.dat'
 	}
 	
-
-
 	
 	static Vector2D getPosition(Vector2D size, double row, double col) {
 		return new Vector2D(size.x() * col, -size.y() * row);
@@ -83,11 +81,11 @@ public class GismoPixel extends Channel {
 	static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
 	
 	
-	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
-	public final static int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();
-	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
-	public final static int FLAG_COL = softwareFlags.next('x', "Bad col gain").value();
-	public final static int FLAG_SAE = softwareFlags.next('e', "SAE").value();
+	public static final int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
+	public static final int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public static final int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public static final int FLAG_COL = softwareFlags.next('x', "Bad col gain").value();
+	public static final int FLAG_SAE = softwareFlags.next('e', "SAE").value();
 
 	
 }

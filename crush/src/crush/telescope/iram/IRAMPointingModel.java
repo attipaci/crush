@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 package crush.telescope.iram;
 
@@ -143,21 +143,21 @@ public class IRAMPointingModel {
 
 	}
 	
-	public final static int CONSTANTS = 14;
+	public static final int CONSTANTS = 14;
 	
-	public final static int AZ_ENC_OFFSET = 1;
-	public final static int AZ_POINTING = 2;
-	public final static int INCL_EL_AXIS = 3;
-	public final static int INCL_AZ_AXIS_NS = 4;
-	public final static int INCL_AZ_AXIS_EW = 5;
-	public final static int DEC_ERROR = 6;
-	public final static int EL_POINTING = 7;
-	public final static int GRAV_BENDING_COS = 8;
-	public final static int GRAV_BENDING_SIN = 9;
-	public final static int NASMYTH_H = 10;
-	public final static int NASMYTH_V = 11;
-	public final static int AZ_ECCENT_COS = 12;
-	public final static int AZ_ECCENT_SIN = 13;
-	public final static int THIRD_REFRACT = 14;
+	public static final int AZ_ENC_OFFSET = 1;
+	public static final int AZ_POINTING = 2;
+	public static final int INCL_EL_AXIS = 3;
+	public static final int INCL_AZ_AXIS_NS = 4;
+	public static final int INCL_AZ_AXIS_EW = 5;
+	public static final int DEC_ERROR = 6;
+	public static final int EL_POINTING = 7;
+	public static final int GRAV_BENDING_COS = 8;
+	public static final int GRAV_BENDING_SIN = 9;
+	public static final int NASMYTH_H = 10;
+	public static final int NASMYTH_V = 11;
+	public static final int AZ_ECCENT_COS = 12;
+	public static final int AZ_ECCENT_SIN = 13;
+	public static final int THIRD_REFRACT = 14;
 	
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 
@@ -35,8 +35,8 @@ import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Util;
 import jnum.data.Data;
-import jnum.data.Index;
 import jnum.data.Observations;
+import jnum.data.index.Index;
 import jnum.fits.FitsToolkit;
 import jnum.math.Range;
 import nom.tam.fits.Fits;

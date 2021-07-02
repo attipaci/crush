@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.scuba2;
@@ -153,8 +153,8 @@ class Scuba2Layout extends SingleEndedLayout implements GridIndexed {
     
 
 
-    public final static double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
-    public final static double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
+    public static final double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
+    public static final double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
     
     
 }

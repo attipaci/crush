@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.sofia;
@@ -81,21 +81,12 @@ public abstract class SofiaFrame extends HorizontalFrame {
         else super.project(position, projector);        
     }    
     
+    
     public void telescopeToEquatorial(Vector2D offset) {
-        telescopeToNativeEquatorial(offset);
-        offset.scaleX(-1.0);
-    }
-    
-    public void equatorialToTelescope(Vector2D offset) {
-        offset.scaleX(-1.0);
-        nativeEquatorialToTelescope(offset);
-    }
-    
-    public void telescopeToNativeEquatorial(Vector2D offset) {
         offset.rotate(Math.PI - telescopeVPA);
     }
     
-    public void nativeEquatorialToTelescope(Vector2D offset) {
+    public void equatorialToTelescope(Vector2D offset) {
         offset.rotate(Math.PI + telescopeVPA);
     }
     

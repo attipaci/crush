@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.hawcplus;
@@ -591,30 +591,30 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     }
 
 
-    final static int polArrays = 2;
-    final static int polSubarrays = 2;
-    final static int subarrays = polArrays * polSubarrays;
+    static final int polArrays = 2;
+    static final int polSubarrays = 2;
+    static final int subarrays = polArrays * polSubarrays;
 
-    final static int subarrayCols = 32;
-    final static int rows = 41;
-    final static int subarrayPixels = rows * subarrayCols;
+    static final int subarrayCols = 32;
+    static final int rows = 41;
+    static final int subarrayPixels = rows * subarrayCols;
 
-    final static int polCols = polSubarrays * subarrayCols;
-    final static int polArrayPixels = rows * polCols;
+    static final int polCols = polSubarrays * subarrayCols;
+    static final int polArrayPixels = rows * polCols;
 
-    final static int pixels = polArrays * polArrayPixels;
+    static final int pixels = polArrays * polArrayPixels;
 
-    final static int DARK_SQUID_ROW = rows - 1;
+    static final int DARK_SQUID_ROW = rows - 1;
 
 
-    final static int MCE_BIAS_LINES = 20;
+    static final int MCE_BIAS_LINES = 20;
 
     static int R0 = 0;
     static int R1 = 1;
     static int T0 = 2;
     static int T1 = 3;
 
-    public final static String[] polID = { "R", "T" };
+    public static final String[] polID = { "R", "T" };
 
     static double hwpStep = 0.25 * Unit.deg;	
 

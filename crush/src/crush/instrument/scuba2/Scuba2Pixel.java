@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.instrument.scuba2;
@@ -68,8 +68,8 @@ public class Scuba2Pixel extends Channel {
 	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
 	
-	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
-	public final static int FLAG_COL = softwareFlags.next('c', "Bad col gain").value();
-	public final static int FLAG_SUBARRAY = softwareFlags.next('a', "Bad subarray gain").value(); // new in 2.30
+	public static final int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public static final int FLAG_COL = softwareFlags.next('c', "Bad col gain").value();
+	public static final int FLAG_SUBARRAY = softwareFlags.next('a', "Bad subarray gain").value(); // new in 2.30
 	
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
 
 package crush.telescope.apex;
@@ -29,17 +29,16 @@ import java.util.*;
 import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.DataPoint;
-import jnum.data.ScalarLocality;
+import jnum.data.localized.LocalAverage;
+import jnum.data.localized.LocalizedData;
+import jnum.data.localized.ScalarLocality;
 import jnum.io.LineParser;
+import jnum.math.Scalar;
 import jnum.text.SmartTokenizer;
-import jnum.data.LocalAverage;
-import jnum.data.Locality;
-import jnum.data.LocalizedData;
 
 
 
-public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entry> {
+public class APEXCalibrationTable extends LocalAverage<ScalarLocality, Scalar> {
 	/**
 	 * 
 	 */
@@ -60,14 +59,15 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                Entry calibration = new Entry();
-                
+               
                 tokens.skip(2);
-                calibration.timeStamp = new TimeStamp(tokens.nextDouble());
-                calibration.scaling.setValue(1.0 / tokens.nextDouble());
-                calibration.scaling.setWeight(1.0);
-            
-                add(calibration);
+                
+                add(new LocalizedData<>(
+                        new ScalarLocality(tokens.nextDouble()),
+                        new Scalar(1.0 / tokens.nextDouble()),
+                        0.005
+                ));
+  
                 return true;
             }   
 		}.read(datafile);
@@ -78,72 +78,29 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 	}
 	
 	public double getScaling(double MJD) {
-		Entry mean = getLocalAverage(new TimeStamp(MJD));
+		LocalizedData<ScalarLocality, Scalar> mean = getLocalAverage(new ScalarLocality(MJD), timeWindow / Unit.day);
 		
-		if(mean.scaling.weight() == 0.0) {
+		if(mean.weight() == 0.0) {
 			CRUSH.info(this, "... No calibration data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
 				CRUSH.info(this, "... expanding scaling lookup window to 6 hours.");
-				timeWindow = 6.0 * Unit.hour;
-				mean = getLocalAverage(new TimeStamp(MJD));
+				mean = getLocalAverage(new ScalarLocality(MJD), timeWindow / Unit.day);
 			}
 			else {
 				CRUSH.warning(this, "Local calibration scaling is unknown.");
 				return 1.0;
 			}
 		}
-		else if(Double.isInfinite(mean.scaling.value())) {
+		else if(Double.isInfinite(mean.getData().value())) {
 			CRUSH.warning(this, "Inifinite local calibration scaling.");
 			return 1.0;
 		}
 		
-		CRUSH.values(this, "Local average scaling = " + Util.f3.format(mean.scaling.value()) + " (from " + mean.measurements + " cal scans)");
-		return mean.scaling.value();
+		CRUSH.values(this, "Local average scaling = " + Util.f3.format(mean.getData().value()) + " (from " + mean.getCount() + " cal scans)");
+		return mean.getData().value();
 	}
 	
-	class TimeStamp extends ScalarLocality {
-		
-		public TimeStamp(double MJD) { super(MJD); }
-		
-		@Override
-		public double distanceTo(Locality other) {
-			return super.distanceTo(other) * Unit.day / Math.abs(timeWindow);
-		}
-	}
-
-	
-	class Entry extends LocalizedData {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 4103895830752978780L;
-		
-		TimeStamp timeStamp;
-		DataPoint scaling = new DataPoint();
-		
-		
-		@Override
-		public Locality getLocality() {
-			return timeStamp;
-		}
-
-		@Override
-		public void setLocality(Locality loc) {
-			timeStamp = (TimeStamp) loc;
-		}
-
-		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
-			Entry entry = (Entry) other;
-			scaling.average(entry.scaling.value(), relativeWeight * entry.scaling.weight());
-		}	
-	}
-
-	@Override
-	public Entry getLocalizedDataInstance() {
-		return new Entry();
-	}
 	
 	public static APEXCalibrationTable get(String fileName) throws IOException {
 	    APEXCalibrationTable table = tables.get(fileName);
