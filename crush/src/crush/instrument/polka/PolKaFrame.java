@@ -106,7 +106,7 @@ class PolKaFrame extends LabocaFrame {
 		    unpolarizedGain = 1.0F + Qh * polka.etaQh + Uh * polka.etaUh;
 		}
 		else {
-		    final Angle PA = getParallacticAngle();
+		    final Angle PA = getReferenceParallacticAngle();
 		    
 		    // calculate Q and U phases on sky based on the horizontal orientation...
 		    final float cos2PA = (float)(PA.cos() * PA.cos() - PA.sin() * PA.sin());

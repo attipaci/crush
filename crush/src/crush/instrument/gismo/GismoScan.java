@@ -39,7 +39,6 @@ import jnum.data.image.Asymmetry2D;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Range;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.*;
 import nom.tam.fits.*;
@@ -65,8 +64,8 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 	IRAMPointingModel observingModel, tiltCorrections;
 		
 	public EquatorialSystem system;
-	public Class<? extends SphericalCoordinates> basisSystem;
-	public Class<? extends SphericalCoordinates> offsetSystem;
+	public AstroSystem basisSystem;
+	public AstroSystem offsetSystem;
 	public boolean projectedOffsets = true;
 	public boolean skipReconstructed = false;
 	
@@ -403,26 +402,26 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		double lon = header.getDoubleValue("LONGOBJ", Double.NaN) * Unit.deg;
 		double lat = header.getDoubleValue("LATOBJ", Double.NaN) * Unit.deg;
 		
-		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue("CTYPE1"));
+		basisSystem = AstroSystem.fromFitsHeader(header);
 		
 		LST = header.getDoubleValue("LST", Double.NaN) * Unit.hour;
 		
 		system = hasOption("epoch") ? 
 				EquatorialSystem.forString(option("epoch").getValue()) : EquatorialSystem.fromHeader(header);
 		
-		if(basisSystem == EquatorialCoordinates.class) {
+		if(basisSystem.isEquatorial()) {
 			equatorial = new EquatorialCoordinates(lon, lat, system);	
 			calcHorizontal();
 			isTracking = true;
 		}
-		else if(basisSystem == HorizontalCoordinates.class) {
+		else if(basisSystem.isHorizontal()) {
 			horizontal = new HorizontalCoordinates(lon, lat);
 			calcEquatorial();
 			isTracking = false;
 		}
 		else {
 			try { 
-				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance(); 
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance(); 
 				basisCoords.set(lon, lat);
 				if(basisCoords instanceof PrecessingCoordinates) ((PrecessingCoordinates) basisCoords).setSystem(system);
 				equatorial = basisCoords.toEquatorial();
@@ -430,8 +429,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 				isTracking = true;
 			}
 			catch(Exception e) {
-				throw new IllegalStateException("Error instantiating " + basisSystem.getName() +
-						": " + e.getMessage());
+				throw new IllegalStateException("Error instantiating " + basisSystem.getName() + ": " + e.getMessage());
 			}
 		}
 		
@@ -444,12 +442,12 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		String offsetSystemName = header.getStringValue("SYSTEMOF").toLowerCase();
 		projectedOffsets = true;
 		if(offsetSystemName.equals("horizontal")) {
-			offsetSystem = HorizontalCoordinates.class;
+			offsetSystem = AstroSystem.horizontal;
 			projectedOffsets = false;
 		}
-		else if(offsetSystemName.equals("horizontaltrue")) offsetSystem = HorizontalCoordinates.class;
-		else if(offsetSystemName.equals("projection")) offsetSystem = EquatorialCoordinates.class;
-		else if(offsetSystemName.equals("equatorial")) offsetSystem = EquatorialCoordinates.class;
+		else if(offsetSystemName.equals("horizontaltrue")) offsetSystem = AstroSystem.horizontal;
+		else if(offsetSystemName.equals("projection")) offsetSystem = AstroSystem.equatorialFK5J2000;
+		else if(offsetSystemName.equals("equatorial")) offsetSystem = AstroSystem.equatorialFK5J2000;
 		else throw new IllegalStateException("Offset system '" + offsetSystemName + "' is not implemented.");
 		
 		info("Angles are " + (projectedOffsets ? "" : "not ") + "projected");
@@ -741,7 +739,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		if(name.equals("modelY")) return observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
 		if(name.equals("tiltX")) return tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
 		if(name.equals("tiltY")) return tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
-		if(name.equals("dir")) return AstroSystem.getID(basisSystem);
+		if(name.equals("dir")) return basisSystem.getID();
 		return super.getTableEntry(name);
 	}
 
@@ -750,7 +748,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		super.editScanHeader(header);
 		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 		c.add(new HeaderCard("PROJECT", project, "The project ID for this scan"));
-		if(basisSystem != null) c.add(new HeaderCard("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan."));
+		if(basisSystem != null) c.add(new HeaderCard("BASIS", basisSystem.getName(), "The coordinates system of the scan."));
 		
 	}
 	

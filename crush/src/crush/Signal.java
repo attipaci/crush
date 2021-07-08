@@ -221,7 +221,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
     }
 
     public void abs() {
-        IntStream.range(0, value.length).parallel().filter(t -> value[t] < 0.0).forEach(t -> value[t] *= -1.0F);
+        IntStream.range(0, value.length).parallel().filter(t -> value[t] < 0.0).forEach(t -> value[t] = -value[t]);
     }
 
 

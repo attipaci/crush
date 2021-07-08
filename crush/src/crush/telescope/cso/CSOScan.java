@@ -35,7 +35,6 @@ import jnum.Util;
 import jnum.astro.*;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.DataTable;
 
@@ -48,7 +47,7 @@ public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends H
 	protected double tau225GHz;
 	protected double ambientT, pressure, humidity;
 	
-	public Class<? extends SphericalCoordinates> scanSystem;
+	public AstroSystem scanSystem;
 	
 	public Vector2D horizontalOffset, fixedOffset;
 	public double elevationResponse = 1.0;
@@ -149,7 +148,7 @@ public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends H
 	public Object getTableEntry(String name) {
 		if(name.equals("FAZO")) return fixedOffset.x() / Unit.arcsec;
 		if(name.equals("FZAO")) return -fixedOffset.y() / Unit.arcsec;
-		if(name.equals("dir")) return AstroSystem.getID(scanSystem);
+		if(name.equals("dir")) return scanSystem.getID();
 		return super.getTableEntry(name);
 	}
 	
@@ -183,13 +182,15 @@ public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends H
 		return Double.NaN;
 	}
 	
-	public static Class<? extends SphericalCoordinates> getScanSystem(int id) {
+	public static AstroSystem getScanSystem(Header header) {
+	    int id = header.getIntValue("SCANCOORD", SCAN_UNDEFINED);
+	    
 		switch(id) {
-		case SCAN_ALTAZ: return HorizontalCoordinates.class;
-		case SCAN_EQ2000:
-		case SCAN_EQ1950: 
-		case SCAN_APPARENT_EQ: return EquatorialCoordinates.class;
-		case SCAN_GAL: return GalacticCoordinates.class;
+		case SCAN_ALTAZ: return AstroSystem.horizontal;
+		case SCAN_EQ2000: return AstroSystem.equatorialFK5J2000;
+		case SCAN_EQ1950: return AstroSystem.equatorialFK4B1950;
+		case SCAN_APPARENT_EQ: return new AstroSystem.Equatorial(EquatorialSystem.fromHeader(header));
+		case SCAN_GAL: return AstroSystem.galactic;
 		default: return null;
 		}
 	}

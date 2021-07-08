@@ -324,7 +324,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void jackknife() {
         notify("JACKKNIFE: Randomly inverted channels in source.");
-        for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
+        for(Channel channel : this) if(Math.random() < 0.5) channel.coupling = -channel.coupling;
     }
 
     protected void flagChannels() {
@@ -365,7 +365,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("jackknife.alternate")) {
             notify("JACKKNIFE! Alternating scans.");
             IntStream.range(0,  size()).parallel().filter(i -> i%2 != 0).forEach(i -> {
-                for(Integration<?> subscan : scans.get(i)) subscan.gain *= -1.0;
+                for(Integration<?> subscan : scans.get(i)) subscan.gain = -subscan.gain;
             });
         }  
     }

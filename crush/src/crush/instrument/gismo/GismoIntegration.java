@@ -205,12 +205,12 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					// Use ALWAYS the scanning offsets around the object coordinate...
 					// First make sure the horizontal coordinates of the tracking center
 					// are correct even if tracking (e.g. equatorial). 
-					if(gismoScan.basisSystem == HorizontalCoordinates.class) {
+					if(gismoScan.basisSystem.isHorizontal()) {
 						frame.horizontal = new HorizontalCoordinates(X0[i], Y0[i]);
 						if(gismoScan.basisOffset != null) 
 							frame.horizontal.addOffset(gismoScan.basisOffset);
 					}
-					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
+					else if(gismoScan.basisSystem.isEquatorial()) {
 						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], getScan().equatorial.getSystem());
 						if(gismoScan.basisOffset != null) 
 							frame.equatorial.addOffset(gismoScan.basisOffset);
@@ -218,7 +218,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					}
 					else {
 						try {
-							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.getConstructor().newInstance();
+							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.getCoordinateInstance();
 							celestial.set(X0[i], Y0[i]);
 							if(gismoScan.basisOffset != null) 
 								celestial.addOffset(gismoScan.basisOffset);
@@ -232,14 +232,14 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					}
 						
 					// Calculate the parallactic angle
-					frame.calcParallacticAngle();	
+					frame.calcApparentParallacticAngle();	
 		
 					// Load the scanning offsets...
 					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
 					if(!gismoScan.projectedOffsets) frame.horizontalOffset.scaleY(frame.horizontal.cosLat());
 					
 					// Convert scanning offsets to horizontal if necessary...
-					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
+					if(gismoScan.offsetSystem.isEquatorial())
 						frame.equatorialToHorizontal(frame.horizontalOffset);
 					
 					// Add the static horizontal offsets
@@ -413,7 +413,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;	
-					frame.calcParallacticAngle();
+					frame.calcApparentParallacticAngle();
 	
 					// The GISMO specific columns...
 					frame.frameNumber = SN[i];

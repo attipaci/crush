@@ -284,7 +284,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                 if(CRUSH.debug) CRUSH.trace(e);
             }
         }
-        if(hasOption("invert")) gain *= -1.0;
+        if(hasOption("invert")) gain = -gain;
 
         if(!hasOption("noslim")) slim(getThreadCount());
         else instrument.reindex();
@@ -313,7 +313,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     public void jackknife() {
         if(hasOption("jackknife")) if(Math.random() < 0.5) {
             notify("JACKKNIFE: This integration will produce an inverted source.");
-            gain *= -1.0;
+            gain = -gain;
         }
 
         if(hasOption("jackknife.frames")) {

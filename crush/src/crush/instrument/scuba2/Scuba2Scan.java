@@ -36,7 +36,6 @@ import jnum.astro.GalacticCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.astro.Weather;
-import jnum.math.SphericalCoordinates;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -63,7 +62,7 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 	boolean[] hasSubarray = new boolean[Scuba2.SUBARRAYS];
 	int subarrays;
 	
-	Class<? extends SphericalCoordinates> trackingClass;
+	AstroSystem trackingSystem;
 	
 	Scuba2Scan(Scuba2 instrument) {
 		super(instrument);
@@ -351,52 +350,49 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 	}
 	
 	void parseCoordinateInfo(Header header) {
-		String trackingSystem = header.getStringValue("TRACKSYS");
+		String sys = header.getStringValue("TRACKSYS");
 		
 		final double lon = header.getDoubleValue("BASEC1", Double.NaN) * Unit.deg;
 		final double lat = header.getDoubleValue("BASEC2", Double.NaN) * Unit.deg;
 		
-		if(trackingSystem == null) {
-			trackingClass = null;
-			return;
-		}
+		if(sys == null) return;
 		isTracking = true;
 		
-		if(trackingSystem.equals("AZEL")) {
-			trackingClass = HorizontalCoordinates.class;
+		if(sys.equals("AZEL")) {
+			trackingSystem = AstroSystem.horizontal;
 			horizontal = new HorizontalCoordinates(lon, lat);
 			info("Horizontal: " + horizontal.toString(1));
 			isTracking = false;
 		}
-		else if(trackingSystem.equals("APP") || trackingSystem.equals("GAPPT")) {
-			trackingClass = EquatorialCoordinates.class;
-			EquatorialSystem local = new EquatorialSystem.Topocentric("JCMT", site, getMJD());
+		else if(sys.equals("APP") || sys.equals("GAPPT")) {
+		    EquatorialSystem local = new EquatorialSystem.Topocentric("JCMT", site, getMJD());
+			trackingSystem = new AstroSystem.Equatorial(local);
 			apparent = new EquatorialCoordinates(lon, lat, local);
 			equatorial = apparent.clone();
 			equatorial.toICRS();
 			info("Apparent: " + apparent.toString(1));
 			info("Equatorial: " + equatorial.toString(1));
 		}
-		else if(trackingSystem.equals("J2000")) {
-			trackingClass = EquatorialCoordinates.class;
+		else if(sys.equals("J2000")) {
+			trackingSystem = AstroSystem.equatorialFK5J2000;
 			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK5.J2000);	
 			info("Equatorial: " + equatorial.toString(1));
 		}
-		else if(trackingSystem.equals("B1950")) {
-			trackingClass = EquatorialCoordinates.class;
+		else if(sys.equals("B1950")) {
+			trackingSystem = AstroSystem.equatorialFK5J2000;
 			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK4.B1950);
 			info("Equatorial: " + equatorial.toString(1));
 		}
-		else if(trackingSystem.equals("GAL")) {
-			trackingClass = GalacticCoordinates.class;
+		else if(sys.equals("GAL")) {
+			trackingSystem = AstroSystem.galactic;
 			GalacticCoordinates galactic = new GalacticCoordinates(lon, lat);
 			equatorial = galactic.toEquatorial();
 			info("Galactic: " + galactic.toString(1));
 			info("Equatorial: " + equatorial.toString(1));
 		}
 		else {
-			trackingClass = null;
-			warning("Unsupported tracking system: " + trackingSystem);
+			trackingSystem = null;
+			warning("Unsupported tracking system: " + sys);
 		}
 		
 		// GAPPT ?
@@ -454,7 +450,7 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 		if(name.equals("obsmode")) return obsMode;
 		if(name.equals("obstype")) return obsMode;
 		if(name.equals("obspattern")) return scanPattern;
-		if(name.equals("dir")) return AstroSystem.getID(trackingClass);
+		if(name.equals("dir")) trackingSystem.getID();
 		return super.getTableEntry(name);
 	}
 	

@@ -37,10 +37,10 @@ import crush.telescope.TelescopeFrame;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
+import jnum.astro.AstroSystem;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 
 public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegration<FrameType> implements PhaseModulated, Chopping {
@@ -348,10 +348,10 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 				public void init() {
 					super.init();
 					tempOffset = new Vector2D();
-					Class<? extends SphericalCoordinates> basisSystem = getScan().basisSystem;
+					AstroSystem basisSystem = getScan().basisSystem;
 					
-					if(basisSystem != HorizontalCoordinates.class && basisSystem != EquatorialCoordinates.class) {
-						try { basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance(); }
+					if(!basisSystem.isHorizontal() && !basisSystem.isEquatorial()) {
+						try { basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance(); }
 						catch(Exception e) {
 							throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() +
 									": " + e.getMessage());
@@ -386,7 +386,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 						exposure.equatorial = basisCoords.toEquatorial();
 						exposure.calcHorizontal();
 					}	
-					else if(getScan().basisSystem == EquatorialCoordinates.class) {
+					else if(getScan().basisSystem.isEquatorial()) {
 						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.getSystem());
 						exposure.calcHorizontal();
 					}
@@ -395,7 +395,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 					    exposure.calcEquatorial();
 					}
 
-                    exposure.calcParallacticAngle();
+                    exposure.calcApparentParallacticAngle();
             
 					// Equatorial offset to moving reference...
 					if(hasObjectCoords) {
@@ -404,7 +404,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
                             exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(basisCoords.toEquatorial());
                             exposure.equatorialToHorizontal(exposure.horizontalOffset);
                         }
-					    else if(getScan().basisSystem == EquatorialCoordinates.class) { 
+					    else if(getScan().basisSystem.isEquatorial()) { 
 					        exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(
                                     new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.getSystem())
                             );
@@ -420,7 +420,7 @@ public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegra
 					else {
 					    exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
 					
-					    if(getScan().nativeSystem == EquatorialCoordinates.class)
+					    if(getScan().nativeSystem.isEquatorial())
 					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
 					}
 					    

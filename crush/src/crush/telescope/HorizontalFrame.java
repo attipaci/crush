@@ -140,34 +140,61 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	
 	// Calculates the parallactic angle from the site and the horizontal coordinates...
-	public void calcParallacticAngle() {
-		setParallacticAngle(horizontal.getParallacticAngle(getScan().site));		
+	public void calcApparentParallacticAngle() {
+		setApparentParallacticAngle(horizontal.getParallacticAngle(getScan().site));		
 	}
 	
 	// Calculates the parallactic angle from the site and the equatorial coordinates...
-	public void calcParallacticAngle(double LST) {
-		setParallacticAngle(equatorial.getParallacticAngle(getScan().site, LST));		
+	public void calcApparentParallacticAngle(double LST) {
+		setApparentParallacticAngle(equatorial.getParallacticAngle(getScan().site, LST));		
 	}
-	
-	public void setParallacticAngle(double angle) {
-	    PA = new Angle(angle);
-	}
-	
-	public Angle getParallacticAngle() {
-	    return PA;
+
+	/**
+	 * Its sets the parallactic angle for this frame at the apparent epoch of the scan. 
+	 * That is the angle of the dynamical North from the vertical as seem looking out 
+	 * (which is the same as the angle of the vertical from North when looking in), 
+	 * at the time of observation.
+	 * 
+	 * The actual parallactic angle that is set, is then referred to the reference
+	 * dynamical equator at which the instrument rotation was determined and includes 
+	 * a correction for the rotation of the apparent axes due to precession. Thus, the 
+	 * value subsequently returned by  {@link #getReferenceParallacticAngle()} may be
+	 * somewhat different from the argument specified here.
+	 *
+	 * For instrument rotations that were derived using CRUSH 2.60 or later, the
+	 * reference equator is the ICRS (~J2000) equator.
+     * 
+     * @param angle     (rad) the parallactic angle in the apparent coordinate system.
+     *
+     * @see #getReferenceParallacticAngle()
+     */
+	public void setApparentParallacticAngle(double angle) {
+	    PA = new Angle(angle + getScan().getApparentEPA() - getScan().getReferenceEpochEPA());
 	}
 	
 	/**
-	 * Correct for rotation of the equatorial system due to precession.
-	 * Since the instrument orientation is defined in the horizontal system, it is propagated to
-	 * the dynamical equator at the time of observations. When referenced back to ICRS for mapping
-	 * the dynamical frame will appear rotated somehat. But we can correct for that here.
-	 * The equatorial position angle is defined looking towards the origin, whereas the instrument
-	 * and horizontal coordinates are looking out. Hence an inversion of the sign...
+	 * Returns the parallactic angle of the scan reference position for the reference
+	 * dynamical equator at which the instrument rotation was determined. 
+	 * That is the angle of the North from the local vertical at the referenced epoch, as 
+	 * seen looking out (which is the same as the angle of the vertical from North when looking in).
+	 * 
+	 * It is not exactly the same value as is set by {@link #setApparentParallacticAngle(double)} 
+	 * or {@link #calcApparentParallacticAngle()}, which are referred to the dynamical equator at
+	 * the time of observing.
+	 * 
+	 * For instrument rotations that were derived using CRUSH 2.60 or later, the
+     * reference equator is the ICRS (~J2000) equator.
+	 * 
+	 * @return
 	 */
+	public Angle getReferenceParallacticAngle() {
+	    return PA;
+	}
+	
+
     @Override
     public void setRotation(double angle) {
-        super.setRotation(angle - getScan().getApparentEPA() + getScan().getReferenceEpochEPA());
+        super.setRotation(angle);
     }
 	
 	public GeodeticCoordinates getSite() { return getScan().site; }
@@ -205,14 +232,26 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		setTransmission(Math.exp(-zenithTau/horizontal.sinLat()));
 	}
 	
+	/**
+	 * Converts an offset position from horizontal (&delta;Az, &delta;El) to equatorial (&delta;RA, &delta;Dec) 
+	 * offsets, by rotating the outwards looking offset vector with +PA (PA being the parallactinc angle).
+	 * 
+	 * @param offset       (rad) The offset that is converted from (&delta;Az, &delta;El), to (&delta;RA, &delta;Dec).
+	 */
 	public final void horizontalToEquatorial(Vector2D offset) {
-	    offset.derotate(PA);
-		offset.flipX();  // AZ is reversed in the standard convention of looking in towards the origin...
+	    offset.rotate(PA);
+		offset.flipX();   // AZ is reversed in the standard convention of looking in towards the origin...
 	}
 	
+	/**
+     * Converts an offset position from equatorial (&delta;RA, &delta;Dec) to horizontal (&delta;Az, &delta;El) 
+     * offsets, by rotating the outward looking offset vector with -PA (PA being the parallactinc angle).
+     * 
+     * @param offset       (rad) The offset that is converted from (&delta;Az, & delta;El) to (&delta;RA, &delta;dDec).
+     */
 	public final void equatorialToHorizontal(Vector2D offset) {
-		offset.flipX(); // AZ is reversed in the standard convention of looking in towards the origin...
-		offset.rotate(PA);
+		offset.flipX();   // AZ is reversed in the standard convention of looking in towards the origin...
+		offset.derotate(PA);
 	}
 	
 	@Override

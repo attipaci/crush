@@ -261,10 +261,10 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     // I  -> T      rot by phi (instrument rotation)
                     // T  -> E'     rot by -theta_ta
                     // T  -> H      rot by ROF   
-                    // H  -> E'     rot by -PA
+                    // H  -> E'     rot by PA
                     // I  -> E'     rot by -theta_si
                     //
-                    // T -> H -> E': theta_ta = ROF - PA
+                    // T -> H -> E': theta_ta = ROF + PA
                     //
                     //    PA = theta_ta - ROF
                     //
@@ -280,7 +280,7 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     frame.setRotation(frame.instrumentVPA - frame.telescopeVPA);
 
                     // rotation from telescope coordinates to equatorial.
-                    frame.setParallacticAngle(-frame.telescopeVPA);
+                    frame.setApparentParallacticAngle(frame.telescopeVPA);
 
                     // Calculate the scanning offsets...
                     frame.horizontalOffset = frame.equatorial.getOffsetFrom(reference);

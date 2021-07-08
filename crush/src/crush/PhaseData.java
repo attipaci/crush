@@ -28,9 +28,10 @@ import java.text.NumberFormat;
 
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.text.NumberFormating;
 
 
-public class PhaseData implements Serializable {
+public class PhaseData implements Serializable, NumberFormating {
 	/**
 	 * 
 	 */
@@ -191,7 +192,8 @@ public class PhaseData implements Serializable {
 		if(channelParms != null) addChannelDeps(mode, G, correlated.weight(), channelParms);
 	}
 	
-	public String toString(NumberFormat nf) {
+	@Override
+    public String toString(NumberFormat nf) {
 		StringBuffer text = new StringBuffer();
 		for(int c=0; c<value.length; c++) text.append((weight[c] > 0.0 ? nf.format(value[c]) : "NaN") + "\t");
 		return new String(text);

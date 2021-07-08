@@ -2724,7 +2724,10 @@
 			@Since: 2.60
 			Specify the year (float) at which the instrument
 			rotation was measured, s.t. position angle corrections
-			due to precession can take that into account.		
+			due to precession can take that into account.
+			For instrument rotations measured with CRUSH 2.60 or
+			later, you can ommit setting this value, or else you
+			should set this value to 2000.0 always.		
 			@see: 'rotation'
 
 :: rounds=N		@Advanced

@@ -1,5 +1,5 @@
 /* *****************************************************************************
- * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2021 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -53,7 +53,7 @@ import nom.tam.util.Cursor;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.51
+ * @version 2.60
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -63,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static final String version = "2.60-a1";
-    private static final String revision = "devel.10";
+    private static final String revision = "devel.11";
 
     public static String home = ".";
     public static boolean debug = false;

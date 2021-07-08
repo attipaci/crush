@@ -39,7 +39,6 @@ import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -59,8 +58,8 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 
 	//public boolean isChopped = false;
 	
-	public Class<? extends SphericalCoordinates> nativeSystem;
-	public Class<? extends SphericalCoordinates> basisSystem;
+	public AstroSystem nativeSystem;
+	public AstroSystem basisSystem;
 	
 	//public double chopperThrow, chopperFrequency;
 	
@@ -387,34 +386,31 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		boolean hasNative = header.findCard("CTYPE1").getComment().contains("Native");
 		
 		// If there is information on the native frame, then use it. Else, assume horizontal...
-		if(hasNative) {
-			String label = header.getStringValue("CTYPE1");
-			nativeSystem = SphericalCoordinates.getFITSClass(label);
-		}
-		else nativeSystem = HorizontalCoordinates.class;
+		if(hasNative) nativeSystem = AstroSystem.fromFitsHeader(header);
+		else nativeSystem = AstroSystem.horizontal;
 			
 		// In some cases the reference values of main coordinate system are given in the alternative basis system...
 		// This is rather confusing and wrong, but using the comment field one can try to figure out what belongs where...
 		boolean confused = hasNative && header.findCard("CRVAL1").getComment().contains("basis");
 		
 		// The scan coordinates are set to those of the tracking object....
-		String keyword = confused ? "CTYPE1B" : "CTYPE1";
-		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue(keyword));
+		String alt = confused ? "B" : "";
+		basisSystem = AstroSystem.fromFitsHeader(header, alt);
 						
 		double lon = header.getDoubleValue("BLONGOBJ") * Unit.deg;
 		double lat = header.getDoubleValue("BLATOBJ") * Unit.deg;
 		
-		if(basisSystem == EquatorialCoordinates.class) {
+		if(basisSystem.isEquatorial()) {
 			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK5.J2000);	
 			calcHorizontal();	
 		}
-		else if(basisSystem == HorizontalCoordinates.class) {
+		else if(basisSystem.isHorizontal()) {
 			horizontal = new HorizontalCoordinates(lon, lat);
 			calcEquatorial();
 		}
 		else {
 			try { 
-				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance();
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance();
 				basisCoords.set(lon, lat);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
@@ -425,7 +421,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		}
 		
 		// Tracking assumed for equatorial...
-		isTracking = !HorizontalCoordinates.class.isAssignableFrom(basisSystem);
+		isTracking = !basisSystem.isHorizontal();
 		
 		return header.getIntValue("NOBS");	
 	}	
@@ -435,7 +431,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		super.editScanHeader(header);
 		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 		c.add(new HeaderCard("PROJECT", project, "The project ID for this scan"));
-		c.add(new HeaderCard("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan."));
+		c.add(new HeaderCard("BASIS", basisSystem.getName(), "The coordinates system of the scan."));
 	}
 	
 	@Override
@@ -453,7 +449,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		if(name.equals("planet?")) return isNonSidereal;
 		if(name.equals("obsmode")) return mode;
 		if(name.equals("obstype")) return type;
-		if(name.equals("dir")) return AstroSystem.getID(basisSystem);
+		if(name.equals("dir")) return basisSystem.getID();
 		return super.getTableEntry(name);
 	}
 

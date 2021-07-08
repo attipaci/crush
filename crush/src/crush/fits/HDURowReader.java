@@ -26,8 +26,8 @@ package crush.fits;
 import java.io.IOException;
 
 import crush.CRUSH;
-import jnum.data.ArrayUtil;
 import jnum.parallel.ParallelTask;
+import jnum.util.ArrayUtil;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 

@@ -31,10 +31,10 @@ import java.util.concurrent.ExecutorService;
 import crush.*;
 import jnum.Unit;
 import jnum.data.*;
-import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.region.GaussianSource;
+import jnum.data.index.Index2D;
 import jnum.projection.Projection2D;
 import nom.tam.fits.FitsException;
 

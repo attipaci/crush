@@ -246,7 +246,7 @@ class Sharc2Integration extends CSOIntegration<Sharc2Frame> {
 					        AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
 					        EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 
-					frame.setParallacticAngle(PA[i] * Unit.deg);
+					frame.setApparentParallacticAngle(PA[i] * Unit.deg);
 
 					frame.LST = LST[i] * Unit.hour;
 

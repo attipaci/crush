@@ -251,7 +251,7 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 	
 		// Get the tracking coordinates for the scan, if not already set...
 		Scuba2Scan scubaScan = getScan();
-		if(scubaScan.trackingClass == null) scubaScan.parseCoordinateInfo(header);
+		if(scubaScan.trackingSystem == null) scubaScan.parseCoordinateInfo(header);
 		
 		info("Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
 				+ Util.f2.format(rawFrames / totalIntegrationTime) + " Hz.");
@@ -350,7 +350,7 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 					frame.horizontal.addOffset(frame.chopperPosition);
 				}
 				
-				frame.calcParallacticAngle();
+				frame.calcApparentParallacticAngle();
 
 				frame.frameNumber = SN[i];
 				if(DT != null) frame.detectorT = DT[i];

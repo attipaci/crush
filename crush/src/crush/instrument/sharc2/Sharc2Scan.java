@@ -27,11 +27,11 @@ package crush.instrument.sharc2;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
+import jnum.astro.AstroSystem;
 import jnum.astro.AstroTime;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.EquatorialSystem;
 import jnum.astro.EquatorialTransform;
-import jnum.astro.HorizontalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
@@ -286,8 +286,8 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
 		
-		if(header.containsKey("SCANCOORD")) scanSystem = getScanSystem(header.getIntValue("SCANCOORD", SCAN_UNDEFINED));
-		if(scanSystem == null) scanSystem = HorizontalCoordinates.class;
+		if(header.containsKey("SCANCOORD")) scanSystem = getScanSystem(header);
+		if(scanSystem == null) scanSystem = AstroSystem.horizontal;
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");

@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs  - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.instrument.saboca;
 

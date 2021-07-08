@@ -37,15 +37,17 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
 import jnum.astro.PrecessingCoordinates;
+import jnum.colorscheme.ColorScheme;
+import jnum.colorscheme.Colorful;
 import jnum.data.Statistics;
 import jnum.data.image.Data2D;
 import jnum.data.image.Gaussian2D;
 import jnum.data.image.Grid2D;
 import jnum.data.image.Image2D;
-import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.SphericalGrid;
+import jnum.data.index.Index2D;
 import jnum.math.Coordinate2D;
 import jnum.math.Metric;
 import jnum.math.Range;
@@ -54,9 +56,7 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
 import jnum.plot.BufferedImageLayer;
-import jnum.plot.ColorScheme;
 import jnum.plot.ImageArea;
-import jnum.plot.colorscheme.Colorful;
 import jnum.projection.Projection2D;
 import jnum.projection.Projector2D;
 
@@ -866,7 +866,7 @@ public abstract class AbstractSource2D extends SourceModel {
         if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnit().value();
         if(name.equals("system")) {
             Grid2D<?> grid = getGrid();
-            if(grid instanceof SphericalGrid) return new AstroSystem(((SphericalGrid) grid).getReference().getClass()).getID();
+            if(grid instanceof SphericalGrid) return (((SphericalGrid) grid).getReference()).getTwoLetterID();
             return "cartesian";
         }
         return super.getTableEntry(name);

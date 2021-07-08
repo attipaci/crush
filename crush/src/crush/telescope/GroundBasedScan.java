@@ -84,13 +84,14 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     protected void calcApparent() {
         super.calcApparent();
         
+        // Calculate the position angle of the apparent coordinates in ICRS.
+        apparentEPA = apparent.getEquatorialPositionAngle();
+    
         // If 'rotepoch' is defined then use it to correct for the apparent system's position
         // angle in ICRS. If not present, then just assume that the instrument rotation 
         // is up-to-date.
         if(hasOption("rotepoch")) {
-            // Calculate the position angle of the apparent coordinates in ICRS.
-            apparentEPA = apparent.getEquatorialPositionAngle();
-        
+            
             // Calculate to set default reference epoch equatorial position angle in ICRS.
             EquatorialCoordinates ref = equatorial.copy();
             ref.transformTo(new EquatorialSystem.Dynamical(new JulianEpoch(option("rotepoch").getDouble())));
@@ -98,7 +99,7 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
             
             info("Position angle correction due to precession: " + Util.f2.format((apparentEPA - refEpochEPA) / Unit.arcmin) + " arcmin.");
         }
-        else apparentEPA = refEpochEPA = 0.0;
+        else refEpochEPA = 0.0; // Assuming ICRS/J2000 for the reference epoch if not otherwise defined.
     }
 
     /**
@@ -141,7 +142,7 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     
     @Override
     public double getPositionAngle() {
-        return 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle().value() + getLastIntegration().getLastFrame().getParallacticAngle().value());
+        return 0.5 * (getFirstIntegration().getFirstFrame().getReferenceParallacticAngle().value() + getLastIntegration().getLastFrame().getReferenceParallacticAngle().value());
     }
     
     @Override

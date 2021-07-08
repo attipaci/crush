@@ -30,10 +30,10 @@ import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.fitting.ChiSquared;
-import jnum.data.fitting.ConvergenceException;
 import jnum.data.fitting.DownhillSimplex;
 import jnum.data.fitting.Minimizer;
 import jnum.data.fitting.Parameter;
+import jnum.math.ConvergenceException;
 import jnum.math.Range;
 
 // Simple sky dip:
