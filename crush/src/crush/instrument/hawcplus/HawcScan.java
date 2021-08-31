@@ -31,10 +31,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import crush.CRUSH;
 import crush.telescope.sofia.GyroDrifts;
 import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;
@@ -63,8 +60,6 @@ class HawcScan extends SofiaScan<HawcIntegration> {
 
     HawcScan(Hawc instrument) {
         super(instrument);
-        // Turn off warnings about multiple occurences of header keys...
-        if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
     }
     
     @Override

@@ -26,15 +26,12 @@ package crush.instrument.scuba2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import crush.CRUSH;
 import jnum.Configurator;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
-import nom.tam.fits.Header;
 
 
 class Scuba2Fits implements Comparable<Scuba2Fits> {
@@ -69,8 +66,6 @@ class Scuba2Fits implements Comparable<Scuba2Fits> {
 		this.file = file;
 		this.fileName = file.getName();
 		
-		// Turn off warnings about multiple occurences of header keys...
-		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 		fits = new Fits(file);
 		HDU = fits.read();
 	}

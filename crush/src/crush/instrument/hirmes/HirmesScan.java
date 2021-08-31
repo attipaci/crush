@@ -30,10 +30,7 @@ import nom.tam.fits.Header;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import crush.CRUSH;
 import crush.telescope.sofia.GyroDrifts;
 import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;
@@ -61,8 +58,6 @@ class HirmesScan extends SofiaScan<HirmesIntegration> {
 
     HirmesScan(Hirmes instrument) {
         super(instrument);
-        // Turn off warnings about multiple occurences of header keys...
-        if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
     }
 
     @Override

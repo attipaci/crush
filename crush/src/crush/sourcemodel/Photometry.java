@@ -71,7 +71,7 @@ public abstract class Photometry extends SourceModel {
     }
     
     public boolean contains(String id) {
-        return fluxes.contains(id);
+        return fluxes.containsKey(id);
     }
     
     public final DataPoint getFlux(Channel channel) {

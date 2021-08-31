@@ -1,6 +1,12 @@
 >>> GISMO pixel positions upside down???...
 >>> HAWC+ check chop/scan data...
 >>> profile source filter. 
+>>> check thumbnail orientation and adjust as necessary... 
+    (Celestial & horizontal coordinates looking out, i.e. reversed)
+>>> see if DUT1 (and wobble?) is present in FITS files and use as appropriate 
+    for apparent coordinate systems...
+>>> Try get SCUBA-2 calibration with Uranus...
+
 
 
 2.60-a1 (devel.10)
@@ -33,6 +39,11 @@
 	the full-precision IAU2000A/R06 nutation model if desired. In 
 	principle, CRUSH is now capable of precision astrometry at the few 
 	micro-arcsecond level.
+
+	[CHANGE] Fixes to nom-tam-fits, now 1.15.3-AK2. Logger to longer warns
+	on multiple CONTINUE keywords. Code bumped to Java 8. Updated
+	dependencies, javadoc fixes, and no override to finalize() in 
+	BufferedFile.
 
 	[FIX] Plugged potential resource leaks, even though these were pretty
 	rare, unlikely, and harmless even if they did occur on occasion.

@@ -45,8 +45,6 @@ import nom.tam.util.Cursor;
 
 import java.io.*;
 import java.util.Hashtable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 
@@ -193,9 +191,6 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		String name = getFileName(getDataPath(), spec, projectID);	
 	
 		File file = new File(name);
-		
-		// Turn off warnings about multiple occurences of header keys...
-        if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	
 		if(file.exists()) {
 			info("Scan " + spec + " (details follow...)");
