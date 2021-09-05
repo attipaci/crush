@@ -244,8 +244,8 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         else timeStamp = date;
 
         AstroTime time = new AstroTime();
-        time.parseFitsTimeStamp(timeStamp);
-        setMJD(time.getMJD());	
+        time.parseFITSTimeStamp(timeStamp);
+        setMJD(time.MJD());	
         
         checksum = header.getString("DATASUM");             // not in 3.0
         checksumVersion = header.getString("CHECKVER");     // not in 3.0

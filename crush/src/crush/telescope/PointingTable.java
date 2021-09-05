@@ -80,7 +80,7 @@ public class PointingTable extends LocalAverage<PointingTable.Location, Vector2D
 				String date = row.get("id").getValue();
 				AstroTime time = AstroTime.forStandardDate(date);			
 				
-				double MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
+				double MJD = Math.round(time.MJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 					
 				HorizontalCoordinates horizontal = new HorizontalCoordinates(
 						row.get("AZd").getDouble() * Unit.deg,

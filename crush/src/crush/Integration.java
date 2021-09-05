@@ -3267,10 +3267,11 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             }
 
             @Override
-            protected void process(FrameType exposure) {     
+            protected void process(FrameType exposure) {  
+               
                 for(Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);
-
+                
                     // Check to make sure the sample produces a valid position...
                     // If not, then flag out the corresponding data...
                     if(projector.getOffset().isNaN()) {
@@ -3299,8 +3300,10 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         };
 
         findCorners.process();
-
+        
         Range2D range = findCorners.getResult();
+        
+        
 
         // Check for null range...
         if(range == null) {

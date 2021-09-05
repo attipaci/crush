@@ -409,11 +409,11 @@ implements TableFormatter.Entries, BasicMessaging {
                 StringTokenizer tokens = new StringTokenizer(rangeSpec, "-");
                 Range mjdRange = new Range();
                 String spec = tokens.nextToken().replace('.', '-');
-                mjdRange.setMin(spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD());
+                mjdRange.setMin(spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).MJD());
                 mjdRange.setMax(Double.POSITIVE_INFINITY);
                 if(tokens.hasMoreTokens()) {
                     spec = tokens.nextToken().replace('.', '-');
-                    mjdRange.setMax(spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD());
+                    mjdRange.setMax(spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).MJD());
                 }
 
                 if(mjdRange.contains(MJD)) {

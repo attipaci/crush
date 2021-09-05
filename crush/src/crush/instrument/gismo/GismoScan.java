@@ -623,7 +623,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 				header.getDoubleValue("DECEP") * Unit.deg,
 				system);
 	
-		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).MJD()); }
 		catch(ParseException e) { warning(e); }
 	
 		

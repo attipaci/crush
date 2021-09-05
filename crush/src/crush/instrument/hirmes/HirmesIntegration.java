@@ -210,8 +210,8 @@ class HirmesIntegration extends SofiaIntegration<HirmesFrame> {
                     frame.mceSerial = iSN < 0 ? 0L : ((long[]) row[iSN])[0];
    
                     frame.utc = iTS < 0 ? i * getInstrument().samplingInterval : ((double[]) row[iTS])[0];
-                    timeStamp.setUTC(frame.utc);
-                    frame.MJD = timeStamp.getMJD();
+                    timeStamp.setUNIXTime(frame.utc);
+                    frame.MJD = timeStamp.MJD();
                         
                     set(i, frame);
 

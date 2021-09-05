@@ -72,7 +72,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 			
 		// When the telescope is not tracking, the equatorial coordinates may be bogus...
 		// Use the horizontal coordinates to make sure the equatorial ones make sense...
-		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);	
+		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST, apparent.getSystem());	
 		
 		eq2.setSystem(new EquatorialSystem.Topocentric("CSO", site, getMJD()));
 
@@ -82,7 +82,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		if(eq2.distanceTo(equatorial) > 5.0 * Unit.deg) {
 			info(">>> Fix: invalid (stale) equatorial coordinates.");
 			equatorial = eq2;
-			apparent = horizontal.toEquatorial(site, LST);
+			apparent = horizontal.toEquatorial(site, LST, apparent.getSystem());
 		}
 	}
 	
@@ -297,7 +297,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		info("[" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) info("Equatorial: " + equatorial);	
 		
-		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).MJD()); }
 		catch(ParseException e) { error(e); }
 		
 		iMJD = (int) Math.floor(getMJD());

@@ -169,7 +169,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
     public String getShortDateString() {
         AstroTime time = new AstroTime();
         time.setMJD(getMJD());
-        return time.getFitsShortDate();
+        return time.getFITSShortDate();
     }
 
     public String getSourceName() {

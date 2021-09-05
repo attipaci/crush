@@ -306,6 +306,7 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
     public abstract void getNativeOffset(final Vector2D offset);
     
     
+    
 	public void scale(double factor) {
 	    if(factor == 1.0) return;
 		if(factor == 0.0) Arrays.fill(data, 0.0F);
@@ -329,7 +330,7 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 	
 	public void project(final Vector2D fpOffset, final Projector2D<?> projector) {
 	    if(projector == null) return;
-	    projector.setOffset(fpOffset);	    
+	    projector.setOffset(fpOffset);
 	}
 	
 	

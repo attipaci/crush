@@ -127,7 +127,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	    
 
 	public void project(final Vector2D position, final AstroProjector projector) {
-		if(projector.isHorizontal()) {
+		if(projector.getCoordinates() instanceof HorizontalCoordinates) {
 			projector.setReferenceCoords();
 			final Vector2D offset = projector.getOffset();
 			getHorizontalOffset(position, offset);
@@ -216,7 +216,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 		}
 		// Otherwise do the proper conversion....
 		else {
-			equatorial = horizontal.toEquatorial(getScan().site, LST);
+			equatorial = horizontal.toEquatorial(getScan().site, LST, getScan().apparent.getSystem());
 			getScan().fromApparent.transform(equatorial);
 		}
 	}
@@ -256,12 +256,12 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	
 	@Override
 	public final void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
-		((HorizontalCoordinates) coords).toEquatorial(equatorial, getScan().site, LST);	
+		((HorizontalCoordinates) coords).toEquatorial(getScan().site, LST, equatorial);	
 	}
 	
 	@Override
 	public final void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords) {
-		equatorial.toHorizontal((HorizontalCoordinates) coords, getScan().site, LST);
+		equatorial.toHorizontal(getScan().site, LST, (HorizontalCoordinates) coords);
 	}
 	
 }

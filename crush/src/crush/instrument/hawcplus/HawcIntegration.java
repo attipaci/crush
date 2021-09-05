@@ -209,8 +209,8 @@ class HawcIntegration extends SofiaIntegration<HawcFrame> {
                     frame.mceSerial = iSN < 0 ? 0 : ((long[]) row[iSN])[0];
 
                     frame.utc = ((double[]) row[iTS])[0];
-                    timeStamp.setUTC(frame.utc);
-                    frame.MJD = timeStamp.getMJD();
+                    timeStamp.setUNIXTime(frame.utc);
+                    frame.MJD = timeStamp.MJD();
 
                     frame.hwpAngle = iHWP < 0 ? 0.0F : (float) (((int[]) row[iHWP])[0] * Hawc.hwpStep - hawc.hwpTelescopeVertical);
 

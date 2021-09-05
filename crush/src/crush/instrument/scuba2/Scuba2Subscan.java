@@ -335,7 +335,7 @@ class Scuba2Subscan extends GroundBasedIntegration<Scuba2Frame> {
 				frame.MJD = MJDTAI[i] + TAI2TT;
 				time.setMJD(frame.MJD);
 						
-				frame.LST = time.getLMST(getScan().site.longitude(), scuba2Scan.dUT1);
+				frame.LST = time.LMST(getScan().site.longitude(), scuba2Scan.dUT1);
 					
 				frame.horizontal = new HorizontalCoordinates(AZ[i], EL[i]);
 				frame.horizontalOffset = new Vector2D((AZ[i] - tAZ[i]) * frame.horizontal.cosLat(), EL[i] - tEL[i]);		

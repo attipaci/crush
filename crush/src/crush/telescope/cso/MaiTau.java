@@ -68,7 +68,7 @@ public class MaiTau extends Hashtable<String, MaiTau.Fit> {
 	protected double getTau(double MJD) throws IOException, IllegalStateException {    
 		AstroTime time = new AstroTime();
 		time.setMJD(MJD);
-		String date = AstroTime.getDateFormat("yyyMMdd").format(time.getDate());
+		String date = AstroTime.getUTCDateFormat("yyyMMdd").format(time.getDate());
 
 		Fit fit = get(date);  
 		if(fit == null) throw new IllegalStateException("Invalid date or date not in database.");

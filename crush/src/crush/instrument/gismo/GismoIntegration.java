@@ -396,7 +396,7 @@ class GismoIntegration extends GroundBasedIntegration<GismoFrame> {
 					//frame.chopperPosition.x = chop[i] * Unit.arcsec;
 
 					// Calculate the horizontal offset	
-					apparent.toHorizontal(trackingCenter, getScan().site, frame.LST);
+					apparent.toHorizontal(getScan().site, frame.LST, trackingCenter);
 
 					frame.horizontal = new HorizontalCoordinates(
 							AZ[i] * Unit.deg,

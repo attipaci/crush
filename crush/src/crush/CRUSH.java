@@ -63,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static final String version = "2.60-a1";
-    private static final String revision = "devel.12";
+    private static final String revision = "devel.13";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -1015,7 +1015,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         AstroTime timeStamp = new AstroTime();
         timeStamp.now();
         
-        FitsToolkit.addHistory(FitsToolkit.endOf(header), "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
+        FitsToolkit.addHistory(FitsToolkit.endOf(header), "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFITSTimeStamp());			
     }
 
     @Override

@@ -309,8 +309,8 @@ class Scuba2Scan extends GroundBasedScan<Scuba2Subscan> implements Weather {
 		
 		AstroTime timeStamp = new AstroTime();
 		try { 
-			timeStamp.parseFitsDate(date); 
-			setMJD(timeStamp.getMJD());
+			timeStamp.parseFITSDate(date); 
+			setMJD(timeStamp.MJD());
 		}
 		catch(Exception e) { warning("Could not parse DATE-OBS..."); }
 		

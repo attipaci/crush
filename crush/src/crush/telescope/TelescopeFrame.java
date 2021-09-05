@@ -29,6 +29,8 @@ import crush.Signal;
 import crush.motion.Motion;
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.FocalPlaneCoordinates;
+import jnum.astro.TelescopeCoordinates;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.projection.Projector2D;
@@ -170,7 +172,15 @@ public abstract class TelescopeFrame extends Frame {
     }
     
     private void project(final Vector2D fpOffset, final AstroProjector projector) {
-        if(projector.isFocalPlane()) {
+        if(projector.getCoordinates() instanceof TelescopeCoordinates) {
+            projector.setReferenceCoords();
+            // Deproject SFL focal plane offsets...
+            final Vector2D offset = new Vector2D();
+            getFocalPlaneOffset(fpOffset, offset);
+            projector.getCoordinates().addOffset(offset);
+            projector.reproject();
+        }
+        else if(projector.getCoordinates() instanceof FocalPlaneCoordinates) {
             projector.setReferenceCoords();
             // Deproject SFL focal plane offsets...
             final Vector2D offset = projector.getOffset();

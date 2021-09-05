@@ -128,8 +128,7 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     
 
     public void calcEquatorial() {
-        equatorial = horizontal.toEquatorial(site, LST);
-        equatorial.setSystem(new EquatorialSystem.Topocentric(getInstrument().getName(), site, getMJD()));
+        equatorial = horizontal.toEquatorial(site, LST, new EquatorialSystem.Topocentric(getInstrument().getName(), site, getMJD()));
         if(fromApparent == null) calcEquatorialTransforms(EquatorialSystem.ICRS);
         fromApparent.transform(equatorial);       
     }
