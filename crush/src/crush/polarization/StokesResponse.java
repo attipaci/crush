@@ -42,11 +42,11 @@ public class StokesResponse extends Stokes {
     public int hashCode() { return super.hashCode() ^ (isInvertedQ ? 1 : 0) ^ (isInvertedU ? 1 : 0); }
     
     @Override
-    public boolean equalsStokes(Stokes s) {
+    public boolean equals(Stokes s) {
         if(!(s instanceof StokesResponse)) return false;
         if(((StokesResponse) s).isInvertedQ != isInvertedQ) return false;
         if(((StokesResponse) s).isInvertedU != isInvertedU) return false;
-        return super.equalsStokes(s); 
+        return super.equals(s); 
     }
     
     
