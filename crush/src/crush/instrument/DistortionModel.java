@@ -52,7 +52,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 	public void setOptions(Configurator options) {
 		clear();
 		
-		for(String key : options.branches.keySet()) {
+		for(String key : options.getBranches().keySet()) {
 			if(key.length() != 3) continue;
 			int dir = key.charAt(0);
 			int xExp = key.charAt(1) - '0';

@@ -28,7 +28,7 @@ import jnum.reporting.ConsoleReporter;
 
 
 /**
- * A default {@link Reporter} implementation for CRUSH, which prints CRUSH messages to the console, with some
+ * A default {@link jnum.reporting.Reporter} implementation for CRUSH, which prints CRUSH messages to the console, with some
  * indentation to improve readability.
  * 
  * 

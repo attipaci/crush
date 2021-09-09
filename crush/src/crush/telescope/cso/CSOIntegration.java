@@ -76,7 +76,7 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 		double lower = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).filter(x -> -x > threshold).average().orElse(Double.NaN);
 		
 		if(Double.isNaN(upper) || Double.isNaN(lower)) {
-			getInstrument().forget("detect.chopped");
+			getInstrument().disable("detect.chopped");
 			return;
 		}
 		

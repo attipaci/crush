@@ -293,7 +293,7 @@ public class Gismo extends TelescopeInstrument<GismoPixel> {
 			CRUSH.countdown(5);
 		}
 		
-		Hashtable<String, Vector<String>> settings = option("bias").conditionals;
+		Hashtable<String, Vector<String>> settings = option("bias").getConditionals();
 			
 		if(settings.containsKey(bias + "")) {
 			info("Setting options for bias " + bias);

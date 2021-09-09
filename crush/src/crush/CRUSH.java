@@ -63,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static final String version = "2.60-a1";
-    private static final String revision = "devel.14";
+    private static final String revision = "devel.15";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -199,9 +199,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     @Override
     public void process(String key, String value) {
-        if(key.startsWith("env.[")) processEnvironmentOption(key.substring(5, key.indexOf("]")), value); 
-        else if(key.startsWith("property.[")) processPropertyOption(key.substring(10, key.indexOf("]")), value); 
-        else if(key.equals("debug")) {
+        if(key.equals("debug")) {
             Util.debug = debug = true;
             consoleReporter.setLevel(ConsoleReporter.LEVEL_DEBUG);
             debug("java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
@@ -339,7 +337,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         double obsTime = getTotalObservingTime();
       
-        Hashtable<String, Vector<String>> conditions = option("obstime").conditionals;
+        Hashtable<String, Vector<String>> conditions = option("obstime").getConditionals();
         for(String condition : conditions.keySet()) {
             if(condition.length() < 2) continue;
 
@@ -597,13 +595,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     /**
      * Runs the reduction pipeline for the currently loaded scans and reduction options. This may take a while, but you
-     * can get messages from CRUSH on what's going on via your own {@link jnum.reporter.Reporter} implementation that you can
-     * add to CRUSH's message broadcaster (see {@link #add(Reporter)}).
+     * can get messages from CRUSH on what's going on via your own {@link Reporter} implementation that you can
+     * add to CRUSH's message broadcaster (see {@link #addReporter(Reporter)}).
      * 
      * 
      * @throws Exception    An appropriate exception if something did not go as expected during the reduction process.
      * 
-     * @see #add(Reporter)
+     * @see #addReporter(Reporter)
      * @see #getBroadcaster()
      */
     public void reduce() throws Exception {	
@@ -741,7 +739,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         if(!containsKey("object")) return;
 
-        Hashtable<String, Vector<String>> settings = option("object").conditionals;
+        Hashtable<String, Vector<String>> settings = option("object").getConditionals();
         for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) 
             instrument.getOptions().parseAll(settings.get(spec));
 
@@ -755,8 +753,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
     public static void setIteration(Configurator config, int i, int rounds) {	
-        if(!config.branches.containsKey("iteration")) return;
-        Hashtable<String, Vector<String>> settings = config.branches.get("iteration").conditionals;
+        if(!config.getBranches().containsKey("iteration")) return;
+        Hashtable<String, Vector<String>> settings = config.getBranches().get("iteration").getConditionals();
 
         // Parse explicit iteration settings
         if(settings.containsKey(i + "")) config.parseAll(settings.get(i + ""));		

@@ -77,7 +77,7 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 	
 	/**
 	 * Constructs a frame for the specified integration, with initial index of -1. You must still add this frame to the integration
-	 * explicitly using {@link Integration#add())}, which will set the index appropriately.
+	 * explicitly using {@link Integration#add()}, which will set the index appropriately.
 	 * 
 	 * 
 	 * @param parent   The integration to which this frame belongs

@@ -2795,7 +2795,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             if(chopper.amplitude < threshold) {
                 chopper = null;
                 info("Small chopper fluctuations (assuming chopper not used).");
-                instrument.forget("chopped");
+                instrument.disable("chopped");
                 return;
             }
             chopper.positions = 2;
@@ -2813,7 +2813,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         }
         else {
             info("Chopper not used.");
-            instrument.forget("chopped");
+            instrument.disable("chopped");
         }	
 
         recycle(distance);

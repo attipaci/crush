@@ -189,7 +189,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
     
 
     public Vector2D getPointingCorrection(Configurator option) {
-        Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
+        Vector2D correction = option.isEnabled() ? option.getVector2D() : new Vector2D();
         if(option.hasOption("offset")) correction.add(option.option("offset").getVector2D());
         correction.scale(instrument.getSizeUnit().value());
         return correction;

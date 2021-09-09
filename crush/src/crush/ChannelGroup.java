@@ -39,7 +39,7 @@ import jnum.data.Statistics;
  * 
  * Channel groups which exhibit a correlated behavior, such as correlated noise or a common response to an
  * external signal (such as an electronic modulationm, temeprature drifts, or telescope motion), are associated
- * to an appropriate {@link Mode} (such as a {@link Response} or {@link CorrelatedMode}). 
+ * to an appropriate {@link Mode} (such as a {@link crush.instrument.Response} or {@link CorrelatedMode}). 
  * 
  * 
  * Channel groups are typically created by {@link Instrument#createGroups()}. They can be hard-coded groups,
@@ -156,7 +156,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
      * the specified pattern.
      * 
      * @param flagPattern   The bit-wise flag pattern. Channels that have any of the specified flag bits enabled will be marked
-     *                      with {@link Channel#FLAG_DDEAD}.
+     *                      with {@link Channel#FLAG_DEAD}.
      */
     public void killFlagged(final int flagPattern) {
         parallelStream().filter(x -> x.isFlagged(flagPattern)).forEach(x -> x.flag(Channel.FLAG_DEAD));

@@ -402,7 +402,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(!options.containsKey("date")) return;
 
-        Hashtable<String, Vector<String>> settings = option("date").conditionals;
+        Hashtable<String, Vector<String>> settings = option("date").getConditionals();
 
         for(String rangeSpec : settings.keySet()) {
             try {			
@@ -428,7 +428,7 @@ implements TableFormatter.Entries, BasicMessaging {
     private void setMJDOptions(double MJD) {
         if(!options.containsKey("mjd")) return;
 
-        Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
+        Hashtable<String, Vector<String>> settings = option("mjd").getConditionals();
 
         for(String rangeSpec : settings.keySet()) 
             if(Range.from(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));        
@@ -438,7 +438,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(!options.containsKey("serial")) return;
 
         // Make options an independent set of options, setting MJD specifics...
-        Hashtable<String, Vector<String>> settings = option("serial").conditionals;
+        Hashtable<String, Vector<String>> settings = option("serial").getConditionals();
         for(String rangeSpec : settings.keySet()) if(Range.from(rangeSpec, true).contains(serialNo)) {
             //debug("Setting options for " + rangeSpec);
             options.parseAll(settings.get(rangeSpec));
@@ -452,7 +452,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(!options.containsKey("object")) return;
 
         // Make options an independent set of options, setting object specifics...
-        Hashtable<String, Vector<String>> settings = option("object").conditionals;
+        Hashtable<String, Vector<String>> settings = option("object").getConditionals();
         for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) {
             options.parseAll(settings.get(spec));
         }
@@ -463,7 +463,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         info("Setting FITS header options.");
 
-        final Hashtable<String, Vector<String>> conditionals = options.option("fits").conditionals;
+        final Hashtable<String, Vector<String>> conditionals = options.option("fits").getConditionals();
 
         for(String condition : conditionals.keySet()) {		    
             StringTokenizer tokens = new StringTokenizer(condition, "?");
@@ -489,7 +489,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         Configurator assignments = options.option("fits.assign");
 
-        for(String fitsKey : assignments.branches.keySet()) {
+        for(String fitsKey : assignments.getBranches().keySet()) {
             fitsKey = fitsKey.toUpperCase();
             if(header.containsKey(fitsKey)) {
                 String arg = options.option("fits.assign." + fitsKey).getValue();
@@ -536,8 +536,8 @@ implements TableFormatter.Entries, BasicMessaging {
         return options.setOption(line);
     }
 
-    public boolean forget(String key) {
-        return options.forgetSilent(key);
+    public void disable(String key) {
+        options.disable(key);
     }
 
     public Scan<?> readScan(String descriptor) throws Exception {
@@ -547,7 +547,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public void flagFields(Configurator option) {
-        for(String name : option.getKeys(false)) if(option.hasOption(name)) flagField(name, option.option(name).getList());   
+        for(String name : option.getKeys()) if(option.hasOption(name)) flagField(name, option.option(name).getList());   
     }
 
     public void flagField(String fieldName, List<String> specs) {

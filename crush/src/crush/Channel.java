@@ -126,7 +126,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	/**
 	 * Returns the parent instrument's configuration/operating state to which this channel state belongs.
 	 * 
-	 * @return
+	 * @return     the instrument state.
 	 */
 	public Instrument<? extends Channel> getInstrument() { return instrument; }
 
@@ -225,9 +225,9 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 
 	/**
 	 * Returns the gain applied between the detector stage and the readout stage, if appropriate. By default, it will
-	 * return {@link Instrument.gain}.
+	 * return {@link Instrument#gain}.
 	 * 
-	 * @return
+	 * @return     the gain between the detector stage and the readout stage.
 	 */
 	public double getReadoutGain() {
 		return instrument.gain;

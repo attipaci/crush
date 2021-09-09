@@ -248,7 +248,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		setOptions(getOptions().copy());
 		fitsVersion = ver;
 		
-		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
+		Hashtable<String, Vector<String>> settings = option("ver").getConditionals();
 		
 		for(String rangeSpec : settings.keySet()) 
 			if(Range.from(rangeSpec, true).contains(fitsVersion)) getOptions().parseAll(settings.get(rangeSpec));
@@ -261,7 +261,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		setOptions(getOptions().copy());
 		double fid = new IRAMScanID(id).asDouble();
 		
-		Hashtable<String, Vector<String>> settings = option("id").conditionals;
+		Hashtable<String, Vector<String>> settings = option("id").getConditionals();
 			
 		for(String rangeSpec : settings.keySet()) {
 			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
@@ -559,7 +559,8 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		// Antenna azimuth axis coordinates from Juan Penalver
 		//latitude: N 37d 4m 6.29s
 		//longitude: W 3d 23m 55.51s 
-		site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
+		try { site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s"); }
+		catch(ParseException e) { error(e); }
 		
 		  
         //info("Telescope Location: " + site);

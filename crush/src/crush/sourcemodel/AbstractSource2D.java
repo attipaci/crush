@@ -219,7 +219,7 @@ public abstract class AbstractSource2D extends SourceModel {
 
     public double getRequestedSmoothing(Configurator option) {
         if(option == null) return smoothing;
-        if(!option.isEnabled) return smoothing;
+        if(!option.isEnabled()) return smoothing;
         String spec = option.getValue();	
         if(spec.length() == 0) return smoothing;
         return getSmoothing(spec);

@@ -78,7 +78,7 @@ public class PointingTable extends LocalAverage<PointingTable.Location, Vector2D
 		for(LogFile.Row row : LogFile.read(fileName)) {
 			try { 
 				String date = row.get("id").getValue();
-				AstroTime time = AstroTime.forStandardDate(date);			
+				AstroTime time = AstroTime.forFitsDate(date);			
 				
 				double MJD = Math.round(time.MJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 					
