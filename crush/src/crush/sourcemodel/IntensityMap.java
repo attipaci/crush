@@ -369,9 +369,10 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
         else return s2n.indexOfMaxDev();
     }
 
-    public Coordinate2D getPeakCoords() {
+    public Coordinate2D getPeakCoords() {        
         Projector2D<?> projector = getProjectorInstance();
         Vector2D offset = projector.getOffset();
+        
         getGrid().getOffset(getPeakIndex(), offset);
         projector.setOffset(offset);
         return projector.getCoordinates();
@@ -393,7 +394,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
         double criticalS2N = hasOption("pointing.significance") ? option("pointing.significance").getDouble() : 5.0;
         if(source.getPeak().significance() < criticalS2N) return null;
-
+        
         return source;
     }
 

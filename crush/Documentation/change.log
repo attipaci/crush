@@ -9,7 +9,7 @@
 
 
 
-2.60-a1 (devel.10)
+2.60-a1 (devel.16)
 
 	Overview
 	----------------------------------------------------------------------
@@ -17,6 +17,10 @@
 	(e.g. between catalog and topocentric apparent frames), and maps
 	are now produced in ICRS coordinate frame by default.
 	----------------------------------------------------------------------
+
+	[BUG] {SHARC-2} Chopper DC offset removal was broken since 2.50
+	releases, causing an arbitrary pointing offset in the azimuth direction
+	at the tens of arcsec level. Ooops!!!
 
 	[BUG] Reductions in ecliptic, galactic, supergalactic coordinate
 	systems had the wrong coordinate transformations to/from equatorial.

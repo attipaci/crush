@@ -109,7 +109,7 @@ class Scuba2Layout extends SingleEndedLayout implements GridIndexed {
             if(pointingCenter != null) pixel.getPosition().subtract(pointingCenter);
         }
         
-        if(hasOption("flip")) for(Pixel pixel : getPixels()) pixel.getPosition().scaleX(-1.0);
+        if(hasOption("flip")) for(Pixel pixel : getPixels()) pixel.getPosition().flipX();
         
         if(hasOption("rotate")) {
             double angle = option("rotate").getDouble() * Unit.deg;

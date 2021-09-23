@@ -54,7 +54,7 @@ public enum Motion {
 		case X_MAGNITUDE : return Math.abs(v.x());
 		case Y_MAGNITUDE : return Math.abs(v.y());
 		case MAGNITUDE : return v.length();
-		case NORM : return v.absSquared(); 
+		case NORM : return v.squareNorm(); 
 		default : return Double.NaN;
 		}
 		

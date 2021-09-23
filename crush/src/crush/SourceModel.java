@@ -197,15 +197,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
             scan.setSourceModel(this);
             for(Integration<?> integration : scan)
                 integration.gain *= integration.getInstrument().janskyPerBeam() / janskyPerBeam;
-        }
-        
-        
-        if(getFirstScan().isNonSidereal) {
-            info("Forcing equatorial for moving object.");
-            getOptions().processSilent("system", "equatorial");
-        }
-         
-        
+        } 
     }
 
 

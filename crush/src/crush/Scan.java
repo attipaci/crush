@@ -666,9 +666,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         Coordinate2D nativeCoords = getNativeCoordinates();
 
         if(sourceCoords instanceof Vector2D) if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
-            Vector2D offset = new Vector2D(sourceModel.getReference());
-            offset.subtract((Vector2D) sourceCoords);
-            offset.flip();
+            Vector2D offset = new Vector2D(sourceCoords);
+            offset.subtract((Vector2D) sourceModel.getReference());
             return new Offset2D(sourceModel.getReference(), offset);
         }
 
@@ -829,7 +828,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
         if(nativePointing.getReference() instanceof SphericalCoordinates) {
             try {
-                CoordinateSystem system = ((SphericalCoordinates) nativePointing.getReference()).getLocalCoordinateSystem();
+                SphericalCoordinates ref = (SphericalCoordinates) nativePointing.getReference();
+                CoordinateSystem system = ref.getLocalCoordinateSystem();
                 nameX = system.get(0).getShortLabel();
                 nameY = system.get(1).getShortLabel();
             }
@@ -837,9 +837,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         }
 
         text += "  Offset: ";
-        text += Util.f1.format(nativePointing.x() / sizeUnit.value()) + ", " + Util.f1.format(nativePointing.y() / sizeUnit.value()) + " " 
-                + sizeUnit.name() + " (" + nameX + "," + nameY + ")";
-
+        text += Coordinate2D.toString(nativePointing, sizeUnit, 1) + " (" + nameX + "," + nameY + ")";
+      
 
         return text;
     }	

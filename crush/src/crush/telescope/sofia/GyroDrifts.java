@@ -117,7 +117,7 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
     public double getRMS() {
         if(isEmpty()) return Double.NaN;
         double sum = 0.0;
-        for(Datum drift : this) sum += drift.delta.absSquared();
+        for(Datum drift : this) sum += drift.delta.squareNorm();
         return Math.sqrt(sum / size());
     }
     

@@ -284,7 +284,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 				header.getDoubleValue("RAEP") * raUnit,
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
-	
+		
 		
 		if(header.containsKey("SCANCOORD")) scanSystem = getScanSystem(header);
 		if(scanSystem == null) scanSystem = AstroSystem.horizontal;
@@ -342,7 +342,7 @@ class Sharc2Scan extends CSOScan<Sharc2Integration> {
 		);
 		
 		equatorial.addOffset(eqOffset);
-	
+		
 		// Add pointing corrections...
 		if(hasOption("fazo")) {
 			double fazo = option("fazo").getDouble() * Unit.arcsec;

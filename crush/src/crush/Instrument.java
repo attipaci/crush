@@ -1041,11 +1041,12 @@ implements TableFormatter.Entries, BasicMessaging {
     /**
      *  Returns the offset of the pointing center from the the rotation center for a given rotation...
      *  
-     *  @param rotationAngle    
+     *  @param rotationAngle    the instrument rotation angle
      *  
-     *  @return
+     *  @return     (rad) the offset of the instrument's pointing center from the optical axis, in the telescope's
+     *              native frame.
      */
-    public Vector2D getPointingOffset(double rotationAngle) {
+    public Vector2D getMountOffset(double rotationAngle) {
         return new Vector2D();
     }
 

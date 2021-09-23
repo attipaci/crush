@@ -111,7 +111,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 			
 				// Keep the pointing model referenced to the nominal array center even if
 				// pointing on a different location on the array...
-				model.addNasmythOffset(getInstrument().getLayout().getPointingCenterOffset());	
+				model.addNasmythOffset(getInstrument().getLayout().getMountOffset());	
 				
 				if(option.hasOption("model.static")) model.setStatic(true);
 				
@@ -453,7 +453,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		info("Angles are " + (projectedOffsets ? "" : "not ") + "projected");
 		
 		// NOT Used...
-		//isPlanetary = header.getBooleanValue("MOVEFRAM", false);
+		//isNonSidereal = header.getBooleanValue("MOVEFRAM", false);
 		
 		// parse the static offsets
 		for(int n = 0; ; n++) {
@@ -534,7 +534,7 @@ class GismoScan extends GroundBasedScan<GismoIntegration> implements Weather {
 		
 		// Keep the pointing model referenced to the nominal array center even if
 		// pointing on a different location on the array...
-		observingModel.addNasmythOffset(getInstrument().getLayout().getPointingCenterOffset());
+		observingModel.addNasmythOffset(getInstrument().getLayout().getMountOffset());
 		
 		isTracking = true;
 	}

@@ -55,6 +55,16 @@ class Sharc2Layout extends SingleEndedLayout implements GridIndexed {
         return copy;
     }
     
+
+    @Override
+    public Vector2D getMountOffset() {
+        // Update the rotation center...
+        Vector2D arrayRotationCenter = hasOption("rcenter") ? getInstrument().getArrayPointingCenter() : new Vector2D(6.5, 16.5);
+        Vector2D arrayPointingCenter = getInstrument().getArrayPointingCenter();
+        return getFocalPlanePosition(arrayPointingCenter.x() - arrayRotationCenter.x(), arrayPointingCenter.y() - arrayRotationCenter.y());
+    }
+
+    
     @Override
     public void setDefaultPixelPositions() {
         pixelSize = hasOption("pixelsize") ? option("pixelsize").getDimension2D(Unit.arcsec) : Sharc2Pixel.defaultSize;

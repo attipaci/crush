@@ -55,9 +55,9 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 
 	@Override
 	public void validate() {	
+        removeChopperDCOffset();
+	    
 		if(!hasOption("nochopper")) if(!hasOption("lab")) {
-			removeChopperDCOffset();
-
 			validParallelStream()
 			.peek(f -> f.horizontalOffset.add(f.chopperPosition))        // Add chopper offset to the aggregated horizontal offset...
 			.forEach(f -> f.horizontal.addOffset(f.chopperPosition));    // Add the chopper offset to the absolute coordinates also...
@@ -67,25 +67,25 @@ public abstract class CSOIntegration<FrameType extends HorizontalFrame> extends 
 	}
 	
 	private void removeChopperDCOffset() {
+
 		double threshold = 0.4 * getInstrument().getMinBeamFWHM();
 			
 		double mean = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).average().orElse(Double.NaN);
 		if(Double.isNaN(mean)) return;
+	       
 		
 		double upper = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).filter(x -> x > threshold).average().orElse(Double.NaN);
 		double lower = validParallelStream().mapToDouble(f -> f.chopperPosition.x()).filter(x -> -x > threshold).average().orElse(Double.NaN);
 		
-		if(Double.isNaN(upper) || Double.isNaN(lower)) {
-			getInstrument().disable("detect.chopped");
-			return;
-		}
+		if(Double.isNaN(upper) || Double.isNaN(lower)) getInstrument().disable("detect.chopped");
+		else mean = 0.5 * (upper + lower);
 		
-		info("Removing chopper signal DC offset.");
 		
-		final double level = 0.5 * (upper + lower);
+		info("Removing chopper DC offset.");
 		
-		CRUSH.values(this, "--> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", res: " + Util.f1.format(level / Unit.arcsec) + "\".");
+		CRUSH.values(this, "--> mean: " + Util.f1.format(mean / Unit.arcsec) + "\".");
 
+		final double level = mean;
 		validParallelStream().forEach(f -> f.chopperPosition.subtractX(level));
 		
 		return;

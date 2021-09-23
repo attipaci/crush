@@ -68,7 +68,6 @@ import nom.tam.fits.*;
  * 
  * @author Attila Kovacs
  *
- * @param <InstrumentType>  The generic type of {@link Instrument} that may produce this integration.
  * @param <FrameType>       The generic {@link Frame} type contained in this integration.
  * 
  */
@@ -344,7 +343,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
     }
 
     public void invert() {
-        validParallelStream().forEach(x -> x.invert());
+        validParallelStream().forEach(x -> x.flip());
     }
 
     public int getFrameCount(final int excludeFlags) {
@@ -3200,7 +3199,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             for(int f=nF; --f >= 0; ) {
                 D.get(f, dComponent);
                 S.get(f, sComponent);
-                norm += sComponent.absSquared();
+                norm += sComponent.squareNorm();
 
                 sComponent.conjugate();
                 dComponent.multiplyBy(sComponent);
@@ -3508,6 +3507,19 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
 
         public void setExcludeSamples(byte pattern) { this.excludeSamples = pattern; }
 
+        @Override
+        public FrameView copy() {
+            return copy(true);
+        }
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public FrameView copy(boolean withContent) {
+            FrameView copy = (FrameView) clone();
+            if(channels != null) copy.channels = channels.copy();
+            if(frame != null) copy.frame = (FrameType) frame.copy();
+            return copy;
+        }
 
         @Override
         public int size() {
@@ -3563,6 +3575,19 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             if(this.to < this.from) this.to = this.from;
         }
 
+        @Override
+        public TimeStreamView copy() {
+            return copy(true);
+        }
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public TimeStreamView copy(boolean withContent) {
+            TimeStreamView copy = (TimeStreamView) clone();
+            if(channel != null) copy.channel = channel.copy();
+            return copy;
+        }
+        
         public void setChannel(Channel c) { this.channel = c; }
 
         public void setExcludeFlags(int pattern) { this.excludeFlags = pattern; }

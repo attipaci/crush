@@ -104,7 +104,7 @@ class GismoLayout extends SingleEndedLayout implements GridIndexed {
     
     // Calculates the offset of the pointing center from the nominal center of the array
     @Override
-    public Vector2D getPointingCenterOffset() {
+    public Vector2D getMountOffset() {
         Vector2D offset = arrayPointingCenter.copy();
         final Vector2D pCenter = getDefaultPointingCenter();
         offset.subtract(pCenter);

@@ -32,6 +32,7 @@ import jnum.CopiableContent;
 import jnum.data.Flagging;
 import jnum.math.Angle;
 import jnum.math.Coordinate2D;
+import jnum.math.Inversion;
 import jnum.math.Vector2D;
 import jnum.projection.Projector2D;
 import jnum.util.*;
@@ -46,7 +47,7 @@ import jnum.util.*;
  * @author Attila Kovacs
  *
  */
-public abstract class Frame implements Serializable, Cloneable, CopiableContent<Frame>, Flagging {
+public abstract class Frame implements Serializable, Cloneable, CopiableContent<Frame>, Flagging, Inversion {
 	/**
 	 * 
 	 */
@@ -315,7 +316,10 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 		IntStream.range(0, data.length).parallel().forEach(i -> data[i] *= fScale);
 	}
 	
-	public void invert() { scale(-1.0); }
+	@Override
+    public void flip() { 
+	    IntStream.range(0, data.length).parallel().forEach(i -> data[i] = -data[i]);
+	}
 	
    
 	public void addDataFrom(final Frame other, final double scaling) {

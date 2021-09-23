@@ -164,7 +164,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	 * For instrument rotations that were derived using CRUSH 2.60 or later, the
 	 * reference equator is the ICRS (~J2000) equator.
      * 
-     * @param angle     (rad) the parallactic angle in the apparent coordinate system.
+     * @param angle     (rad) the new parallactic angle in the apparent coordinate system.
      *
      * @see #getReferenceParallacticAngle()
      */
@@ -185,7 +185,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	 * For instrument rotations that were derived using CRUSH 2.60 or later, the
      * reference equator is the ICRS (~J2000) equator.
 	 * 
-	 * @return
+	 * @return     (rad) the parallactic angle in the reference coordinate system.
 	 */
 	public Angle getReferenceParallacticAngle() {
 	    return PA;

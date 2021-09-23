@@ -29,6 +29,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.EquatorialSystem;
+import jnum.astro.EquatorialTransform;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.astro.JulianEpoch;
@@ -81,17 +82,16 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
     
     
     @Override
-    protected void calcApparent() {
+    public void calcApparent() {
         super.calcApparent();
         
         // Calculate the position angle of the apparent coordinates in ICRS.
         apparentEPA = apparent.getEquatorialPositionAngle();
-    
+        
         // If 'rotepoch' is defined then use it to correct for the apparent system's position
         // angle in ICRS. If not present, then just assume that the instrument rotation 
         // is up-to-date.
         if(hasOption("rotepoch")) {
-            
             // Calculate to set default reference epoch equatorial position angle in ICRS.
             EquatorialCoordinates ref = equatorial.copy();
             ref.transformTo(new EquatorialSystem.Dynamical(new JulianEpoch(option("rotepoch").getDouble())));
@@ -126,9 +126,15 @@ public abstract class GroundBasedScan<IntegrationType extends GroundBasedIntegra
         return refEpochEPA;
     }
     
+    @Override
+    protected void calcEquatorialTransforms(EquatorialSystem system) {
+        EquatorialSystem topo = new EquatorialSystem.Topocentric(getInstrument().getTelescopeName(), site, getMJD());
+        fromApparent = new EquatorialTransform(topo, system);
+        toApparent = new EquatorialTransform(system, topo);
+    }
 
     public void calcEquatorial() {
-        equatorial = horizontal.toEquatorial(site, LST, new EquatorialSystem.Topocentric(getInstrument().getName(), site, getMJD()));
+        equatorial = horizontal.toEquatorial(site, LST, new EquatorialSystem.Topocentric(getInstrument().getTelescopeName(), site, getMJD()));
         if(fromApparent == null) calcEquatorialTransforms(EquatorialSystem.ICRS);
         fromApparent.transform(equatorial);       
     }

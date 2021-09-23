@@ -99,7 +99,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         calcEquatorialTransforms(system);
     }
     
-    protected void calcEquatorialTransforms(EquatorialSystem system) {  
+    protected void calcEquatorialTransforms(EquatorialSystem system) {
         EquatorialSystem dynamical = new EquatorialSystem.Dynamical(JulianEpoch.forMJD(getMJD()));
         fromApparent = new EquatorialTransform(dynamical, system);
         toApparent = new EquatorialTransform(system, dynamical);
@@ -107,7 +107,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         
 
     
-    protected void calcApparent() {
+    public void calcApparent() {
         apparent = equatorial.clone();
         if(toApparent == null) calcEquatorialTransforms(equatorial.getSystem());
         toApparent.transform(apparent);
@@ -118,7 +118,6 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
     public SphericalCoordinates getPositionReference(String system) {
         if(system.equals("native")) return getNativeCoordinates(); 
         else if(system.equals("focalplane")) return new FocalPlaneCoordinates(); 
-        else if(isNonSidereal) return equatorial;
         else if(system.equals("ecliptic")) {
             EclipticCoordinates ecliptic = new EclipticCoordinates();
             ecliptic.fromEquatorial(equatorial);
@@ -181,6 +180,8 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         SphericalCoordinates reference = (SphericalCoordinates) sourceModel.getReference();
         
         if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
+            System.err.println("### src " + sourceCoords);
+            System.err.println("### ref " + reference);
             return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference));
         }
         else if(sourceCoords instanceof EquatorialCoordinates)

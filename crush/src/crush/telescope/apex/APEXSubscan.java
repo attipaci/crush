@@ -43,489 +43,416 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.math.Vector2D;
 
-public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegration<FrameType> implements PhaseModulated, Chopping {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2929947229904002745L;
-	public int nodPhase = 0;
+public class APEXSubscan<FrameType extends APEXFrame> extends GroundBasedIntegration<FrameType>
+        implements PhaseModulated, Chopping {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2929947229904002745L;
+    public int nodPhase = 0;
 
-	private Chopper chopper;
-		
-	double pwv = Double.NaN;
-	
-	protected APEXSubscan(APEXScan<? extends APEXSubscan<? extends FrameType>> parent) {
-		super(parent);
-	}
-	
+    private Chopper chopper;
+
+    double pwv = Double.NaN;
+
+    protected APEXSubscan(APEXScan<? extends APEXSubscan<? extends FrameType>> parent) { super(parent); }
+
     @SuppressWarnings("unchecked")
     @Override
-    public APEXScan<? extends APEXSubscan<? extends FrameType>> getScan() { 
-        return (APEXScan<? extends APEXSubscan<? extends FrameType>>) super.getScan(); 
+    public APEXScan<? extends APEXSubscan<? extends FrameType>> getScan() {
+        return (APEXScan<? extends APEXSubscan<? extends FrameType>>) super.getScan();
     }
-    
-    
+
     @Override
     public APEXInstrument<?> getInstrument() { return (APEXInstrument<?>) super.getInstrument(); }
-    
-    public APEXScan<APEXSubscan<FrameType>> getScanInstance() {
-        return new APEXScan<>(getInstrument());
-    }
-	
-	@Override
-	public void setTau() throws Exception {	
-	    
-		try { super.setTau(); }
-		catch(IllegalArgumentException e) {
-			String tauName = option("tau").getPath();
-			try { 
-				APEXTauTable tauTable = APEXTauTable.get(tauName);
-				if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
-				setTau(tauTable.getTau(getMJD()));
-			}
-			catch(ArrayIndexOutOfBoundsException ie) { 
-			    if(!Double.isNaN(pwv)) {
-			        warning("No skydip for this date. Using PWV to determine tau...");
-			        setTau("pwv", pwv);
-			    }
-			    else warning("No skydip tau for this date!"); 
-			}
-			catch(IOException io) { warning("Tau interpolator table could not be read."); }
-		}
-	}
-	
-	@Override
-	public void setScaling() throws Exception {
-		try { super.setScaling(); }
-		catch(NumberFormatException noworry) {
-			String calName = option("scale").getPath();
-			try { 
-				APEXCalibrationTable calTable = APEXCalibrationTable.get(calName);
-				if(hasOption("scale.window")) calTable.timeWindow = option("scale.window").getDouble() * Unit.hour;
-				setScaling(calTable.getScaling(getMJD())); 
-			}
-			catch(ArrayIndexOutOfBoundsException e) { 
-			    warning("No calibration scaling for this date. Assuming 1.0..."); 
-			}
-			catch(IOException e) { warning("Calibration table could not be read."); }
-		}
-	}
-	
-	private void markChopped() {
-		if(nodPhase == 0) 
-			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");
-		
-		// Flag pixels that chop on source
-		// left and right are the pixel positions, where, if there's a pixel, it will have the source
-		// in the left or right beams...
-		//info("on phase is " + integration[i][k].onPhase);
-		
-		
-		
-		Vector2D left = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? 0.0 : 2.0 * getChopper().amplitude, 0.0);
-		Vector2D right = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
-		
-		// 1/5 beams ~90% on the boundary
-		// 1/4 beams ~85% on the boundary
-		// 1/3 beams ~75% on the boundary
-		double tolerance = getInstrument().getPointSize() / 5.0;
-		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * getInstrument().getPointSize();
-		
-		new ChopperPhases(this, chopper).mark(left, right, tolerance);	
-	}
-	
-	
-	
-	@Override
-	public void validate() {
-		super.validate();	
-		if(chopper != null) markChopped();
-	}
-	
-	
-	/*
-	public void readData(Fits fits) throws Exception {
-	    readData((BinaryTableHDU) fits.getHDU(1), fits.getStream());
-	    fits.close();
-	}
-	
-	public void readData(BinaryTableHDU hdu, ArrayDataInput in) throws Exception {	
-		new DataTable(hdu, in).read(1);
-	}
 
-	class DataTable extends HDURowReader {
-	    private int iData;
-	       
-        public DataTable(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException { 
-            super(hdu, in); 
-            iData = hdu.findColumn("DATA");
+    public APEXScan<APEXSubscan<FrameType>> getScanInstance() { return new APEXScan<>(getInstrument()); }
+
+    @Override
+    public void setTau() throws Exception {
+
+        try { super.setTau(); }
+        catch(IllegalArgumentException e) {
+            String tauName = option("tau").getPath();
+            try {
+                APEXTauTable tauTable = APEXTauTable.get(tauName);
+                if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
+                setTau(tauTable.getTau(getMJD()));
+            }
+            catch(ArrayIndexOutOfBoundsException ie) {
+                if(!Double.isNaN(pwv)) {
+                    warning("No skydip for this date. Using PWV to determine tau...");
+                    setTau("pwv", pwv);
+                }
+                else warning("No skydip tau for this date!");
+            }
+            catch(IOException io) {
+                warning("Tau interpolator table could not be read.");
+            }
         }
-       
+    }
+
+    @Override
+    public void setScaling() throws Exception {
+        try { super.setScaling(); }
+        catch(NumberFormatException noworry) {
+            String calName = option("scale").getPath();
+            try {
+                APEXCalibrationTable calTable = APEXCalibrationTable.get(calName);
+                if(hasOption("scale.window")) calTable.timeWindow = option("scale.window").getDouble() * Unit.hour;
+                setScaling(calTable.getScaling(getMJD()));
+            }
+            catch(ArrayIndexOutOfBoundsException e) {
+                warning("No calibration scaling for this date. Assuming 1.0...");
+            }
+            catch(IOException e) {
+                warning("Calibration table could not be read.");
+            }
+        }
+    }
+
+    private void markChopped() {
+        if(nodPhase == 0)
+            throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");
+
+        // Flag pixels that chop on source left and right are the pixel positions, where, if there's a pixel, it
+        // will have the source in the left or right beams...
+
+        // info("on phase is " + integration[i][k].onPhase);
+
+        Vector2D left = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? 0.0 : 2.0 * getChopper().amplitude, 0.0);
+        Vector2D right = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
+
+        // 1/5 beams ~90% on the boundary
+        // 1/4 beams ~85% on the boundary
+        // 1/3 beams ~75% on the boundary
+        double tolerance = getInstrument().getPointSize() / 5.0;
+        if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * getInstrument().getPointSize();
+
+        new ChopperPhases(this, chopper).mark(left, right, tolerance);
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if(chopper != null) markChopped();
+    }
+
+    void readData(Fits fits) throws Exception {
+        readData((BinaryTableHDU) fits.getHDU(1));
+        fits.close();
+    }
+
+    void readData(BinaryTableHDU hdu) throws Exception { new DataTable(hdu).read(); }
+
+    private class DataTable extends HDUReader {
+        private float[] data;
+        private int channels;
+
+        DataTable(TableHDU<?> hdu) throws FitsException {
+            super(hdu);
+
+            int iData = hdu.findColumn("DATA");
+            channels = table.getSizes()[iData];
+
+            APEXInstrument<? extends Channel> instrument = getInstrument();
+
+            instrument.populate(channels);
+            if(instrument.getLayout() != null) instrument.getLayout().assignChannels();
+            instrument.validate();
+
+            data = (float[]) table.getColumn(iData);
+        }
+
         @Override
         public Reader getReader() {
             return new Reader() {
                 @Override
-                public void processRow(int index, Object[] row) throws Exception {
-                    final APEXFrame exposure = get(index);
-                    if(exposure != null) exposure.parse((float[][]) row[iData]);  
+                public void processRow(int t) throws FitsException {
+                    final APEXFrame exposure = get(t);
+                    if(exposure != null) exposure.parse(data, t * channels, channels);
                 }
             };
         }
     }
-    */
-	
-	void readData(Fits fits) throws Exception {
-        readData((BinaryTableHDU) fits.getHDU(1));
+
+    /*
+     * void writeData(String fromName, String toName) throws IOException, FitsException { Fits fits = new Fits(new
+     * File(fromName), fromName.endsWith(".gz")); BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
+     * 
+     * final int iData = hdu.findColumn("DATA");
+     * 
+     * for(Frame exposure : this) { final Object[] row = hdu.getRow(exposure.index); final float[][] data = (float[][])
+     * row[iData]; for(int c=0; c<data.length; c++) data[c][0] = 0.0F; for(Channel channel : getInstrument())
+     * data[channel.getFixedIndex()][0] = exposure.data[channel.getIndex()]; hdu.setRow(exposure.index, row); }
+     * 
+     * FitsToolkit.write(fits, toName); fits.close(); }
+     */
+
+    void readDataPar(Fits fits) throws Exception {
+        readDataPar((BinaryTableHDU) fits.getHDU(1));
         fits.close();
     }
-    
 
-	void readData(BinaryTableHDU hdu) throws Exception { 
-	    new DataTable(hdu).read();
-	}
+    void readDataPar(BinaryTableHDU hdu) throws Exception {
+        final Header header = hdu.getHeader();
+        final int frames = header.getIntValue("NAXIS2");
 
-	private class DataTable extends HDUReader {
-	    private float[] data;
-	    private int channels;
+        clear();
+        ensureCapacity(frames);
+        for(int i = frames; --i >= 0;) add(null);
 
-	    DataTable(TableHDU<?> hdu) throws FitsException { 
-	        super(hdu); 
- 
-	        int iData = hdu.findColumn("DATA");
-	        channels = table.getSizes()[iData];
-	        
-	        APEXInstrument<? extends Channel> instrument = getInstrument();
-	        
-	        instrument.populate(channels);
-	        if(instrument.getLayout() != null) instrument.getLayout().assignChannels();
-	        instrument.validate();
-	        
-	        data = (float[]) table.getColumn(iData);
-	    }
+        getInstrument().samplingInterval = getInstrument().integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
+        // Use the integrationTime to convert to data weights...
+        getInstrument().sampleWeights();
 
-	    @Override
-	    public Reader getReader() {
-	        return new Reader() {
-	            @Override
-	            public void processRow(int t) throws FitsException {
-	                final APEXFrame exposure = get(t);
-	                if(exposure != null) exposure.parse(data, t * channels, channels);          
-	            }
-	        };
-	    }
-	}
+        info("Sampling at " + Util.f3.format(1.0 / getInstrument().samplingInterval) + " Hz.");
+        info(frames + " frames found (" + Util.f1.format(frames * getInstrument().samplingInterval / Unit.min) + " minutes).");
 
-	/*
-	void writeData(String fromName, String toName) throws IOException, FitsException {
-		Fits fits = new Fits(new File(fromName), fromName.endsWith(".gz"));
-		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
-			
-		final int iData = hdu.findColumn("DATA");
-		
-		for(Frame exposure : this) {
-			final Object[] row = hdu.getRow(exposure.index);
-			final float[][] data = (float[][]) row[iData];
-			for(int c=0; c<data.length; c++) data[c][0] = 0.0F;
-			for(Channel channel : getInstrument()) data[channel.getFixedIndex()][0] = exposure.data[channel.getIndex()];
-			hdu.setRow(exposure.index, row);
-		}	
-		
-		FitsToolkit.write(fits, toName);
-		fits.close();
-	}
-	*/
-	
-	void readDataPar(Fits fits) throws Exception {
-	    readDataPar((BinaryTableHDU) fits.getHDU(1));
-	    fits.close();
-	}
-	
-	void readDataPar(BinaryTableHDU hdu) throws Exception {
-		final Header header = hdu.getHeader();	
-		final int frames = header.getIntValue("NAXIS2");
-		
-		clear();
-		ensureCapacity(frames);
-		for(int i=frames; --i >= 0; ) add(null);
-		
-		getInstrument().samplingInterval = getInstrument().integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
-		// Use the integrationTime to convert to data weights...
-		getInstrument().sampleWeights();
-		
-		info("Sampling at " + Util.f3.format(1.0 / getInstrument().samplingInterval) + " Hz.");
-	
-		info(frames + " frames found (" + 
-				Util.f1.format(frames * getInstrument().samplingInterval / Unit.min) + " minutes).");
-	
-		new DataParTable(hdu).read(); 
-	}
-	
-	private class DataParTable extends HDUReader {
-		private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
-		private int[] phase;
-		private boolean chopperIncluded;
-		private static final double m900 = -900.0;
-		
-		DataParTable(TableHDU<?> hdu) throws FitsException {
-			super(hdu);
+        new DataParTable(hdu).read();
+    }
 
-			final Header header = hdu.getHeader();		
+    private class DataParTable extends HDUReader {
+        private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
+        private int[] phase;
+        private boolean chopperIncluded;
+        private static final double m900 = -900.0;
 
-			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
-			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
-			//AZ = (double[]) table.getColumn(hdu.findColumn("AZIMUTH"));
-			//EL = (double[]) table.getColumn(hdu.findColumn("ELEVATIO"));
-			X = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
-			Y = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
-			
-			DX = (double[]) table.getColumn(hdu.findColumn("LONGOFF"));
-			DY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
-			phase = (int[]) table.getColumn(hdu.findColumn("PHASE"));
+        DataParTable(TableHDU<?> hdu) throws FitsException {
+            super(hdu);
 
-			int iOX = hdu.findColumn("MCRVAL1");
+            final Header header = hdu.getHeader();
+
+            MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
+            LST = (double[]) table.getColumn(hdu.findColumn("LST"));
+            // AZ = (double[]) table.getColumn(hdu.findColumn("AZIMUTH"));
+            // EL = (double[]) table.getColumn(hdu.findColumn("ELEVATIO"));
+            X = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
+            Y = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
+
+            DX = (double[]) table.getColumn(hdu.findColumn("LONGOFF"));
+            DY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
+            phase = (int[]) table.getColumn(hdu.findColumn("PHASE"));
+
+            int iOX = hdu.findColumn("MCRVAL1");
             int iOY = hdu.findColumn("MCRVAL2");
-			
+
             if(iOX >= 0 && iOY >= 0) {
                 objX = (double[]) table.getColumn(iOX);
                 objY = (double[]) table.getColumn(iOY);
-                
-                for(int i=objX.length; --i >= 0; ) if(!Double.isNaN(objX[i])) if(objX[i] > m900) {
+
+                for(int i = objX.length; --i >= 0;) if(!Double.isNaN(objX[i])) if(objX[i] > m900) {
                     info("Non-sidereal tracking detected...");
                     getScan().isNonSidereal = true;
                     break;
                 }
             }
-            
-			/*
-			int iRA = hdu.findColumn("RA");
-			int iDEC = hdu.findColumn("DEC");
 
-			if(iRA < 0 && apexScan.isEquatorial) {
-				iRA = hdu.findColumn("BASLONG");
-				iDEC = hdu.findColumn("BASLAT");
-			}
+   
+            int iChop = hdu.findColumn("WOBDISLN");
+            chop = iChop > 0 ? (double[]) table.getColumn(iChop) : null;
 
-			RA = iRA > 0 ? (double[]) table.getColumn(iRA) : null;
-			DEC = iDEC > 0 ? (double[]) table.getColumn(iDEC) : null;
-			 */
+            chopperIncluded = header.getBooleanValue("WOBCOORD", false);
+            // TODO this is an override, which should not be necessary if the data files are fixed.
+            chopperIncluded = false;
 
-			int iChop = hdu.findColumn("WOBDISLN");
-			chop = iChop > 0 ? (double[]) table.getColumn(iChop) : null;
+            final String phase1 = header.getStringValue("PHASE1");
+            final String phase2 = header.getStringValue("PHASE2");
 
-			chopperIncluded = header.getBooleanValue("WOBCOORD", false);
-			// TODO this is an override, which should not be necessary if the data files are fixed.
-			chopperIncluded = false;
+            nodPhase = TelescopeFrame.CHOP_LEFT;
 
-			final String phase1 = header.getStringValue("PHASE1");	
-			final String phase2 = header.getStringValue("PHASE2");
+            if(phase1 != null) {
+                if(phase1.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_LEFT;
+                else if(phase1.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_RIGHT;
+            }
+            else if(phase2 != null) {
+                if(phase2.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_RIGHT;
+                else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_LEFT;
+            }
 
-			nodPhase = TelescopeFrame.CHOP_LEFT;
+            if(getScan().chopper != null) chopper = getScan().chopper.copy();
 
-			if(phase1 != null) {
-				if(phase1.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_LEFT;
-				else if(phase1.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_RIGHT;
-			}
-			else if(phase2 != null) {
-				if(phase2.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_RIGHT;
-				else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_LEFT;
-			}
+            if(chopper != null) info("Nodding " + (nodPhase == TelescopeFrame.CHOP_LEFT ? 
+                    "[LEFT]" : (nodPhase == TelescopeFrame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
+        }
 
-			if(getScan().chopper != null) chopper = getScan().chopper.copy();
+        @Override
+        public Reader getReader() {
+            return new Reader() {
+                private Vector2D tempOffset;
+                private CelestialCoordinates basisCoords;
 
-			if(chopper != null)
-			    info("Nodding " + (nodPhase == TelescopeFrame.CHOP_LEFT ? "[LEFT]" : 
-					(nodPhase == TelescopeFrame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));		
-		}	
-		
-		
-		@Override
-		public Reader getReader() {
-			return new Reader() {				
-				private Vector2D tempOffset;
-				private CelestialCoordinates basisCoords;
-				
-				@Override
-				public void init() {
-					super.init();
-					tempOffset = new Vector2D();
-					AstroSystem basisSystem = getScan().basisSystem;
-					
-					if(!basisSystem.isHorizontal() && !basisSystem.isEquatorial()) {
-						try { basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance(); }
-						catch(Exception e) {
-							throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() +
-									": " + e.getMessage());
-						}
-					}					
-				}
-				
-				@Override
-				public void processRow(int t) throws FitsException {
-				
-					// Continue only if the basis coordinates are valid...
-					// APEX uses -999 deg to mark invalid data...
-					if(X[t] < m900) return;
-					if(Y[t] < m900) return;
+                @Override
+                public void init() {
+                    super.init();
+                    tempOffset = new Vector2D();
+                    AstroSystem basisSystem = getScan().basisSystem;
 
-					// Continue only if the scanning offsets are valid...
-					// APEX uses -999 deg to mark invalid data...
-					if(DX[t] < m900) return;
-					if(DY[t] < m900) return;
-			
-					// Create the frame object once the hurdles above are cleared...
-					final FrameType exposure = getFrameInstance();
-					exposure.index = t;
+                    if(!basisSystem.isHorizontal()) {
+                        try { basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance(); }
+                        catch(Exception e) {
+                            throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() + ": " + e.getMessage());
+                        }
+                    }
 
-					exposure.MJD = MJD[t];
-					exposure.LST = LST[t];
-					
-					boolean hasObjectCoords = objX == null ? false : getScan().isNonSidereal && objX[t] > m900 && objY[t] > m900;
-					
-					if(basisCoords != null) {
-						basisCoords.set(X[t] * Unit.deg, Y[t] * Unit.deg);
-						exposure.equatorial = basisCoords.toEquatorial();
-						exposure.calcHorizontal();
-					}	
-					else if(getScan().basisSystem.isEquatorial()) {
-						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.getSystem());
-						exposure.calcHorizontal();
-					}
-					else {
-					    exposure.horizontal = new HorizontalCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg);
-					    exposure.calcEquatorial();
-					}
+                    getScan().calcApparent();
+                }
 
-                    exposure.calcApparentParallacticAngle();
-            
-					// Equatorial offset to moving reference...
-					if(hasObjectCoords) {
-					    if(basisCoords != null) {
+                @Override
+                public void processRow(int t) throws FitsException {
+
+                    // Continue only if the basis coordinates are valid...
+                    // APEX uses -999 deg to mark invalid data...
+                    if(X[t] < m900) return;
+                    if(Y[t] < m900) return;
+
+                    // Continue only if the scanning offsets are valid...
+                    // APEX uses -999 deg to mark invalid data...
+                    if(DX[t] < m900) return;
+                    if(DY[t] < m900) return;
+
+                    // Create the frame object once the hurdles above are cleared...
+                    final FrameType exposure = getFrameInstance();
+                    exposure.index = t;
+
+                    exposure.MJD = MJD[t];
+                    exposure.LST = LST[t];
+
+                    boolean hasObjectCoords = objX == null ? false : getScan().isNonSidereal && objX[t] > m900 && objY[t] > m900;
+
+                    if(basisCoords != null) {
+                        basisCoords.set(X[t] * Unit.deg, Y[t] * Unit.deg);
+                        exposure.equatorial = basisCoords.toEquatorial();
+                        // Transform the equatorial coordinates to the reference
+                        // system of the scan (J2000/ICRS)
+                        exposure.equatorial.transformTo(getScan().equatorial.getSystem());
+                        exposure.calcHorizontal();
+                    }
+                    else {
+                        exposure.horizontal = new HorizontalCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg);
+                        exposure.calcEquatorial();
+                    }
+
+                    // The relevant parallactic angle here is that relative to the reference system
+                    // So we'll calculate it starting from the equatorial coordinates in that system
+                    exposure.calcApparentParallacticAngle(exposure.LST);
+
+                    // Equatorial offset to moving reference...
+                    if(hasObjectCoords) {
+                        if(basisCoords != null) {
                             basisCoords.set(objX[t] * Unit.deg, objY[t] * Unit.deg);
-                            exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(basisCoords.toEquatorial());
+                            EquatorialCoordinates eq = basisCoords.toEquatorial();
+                            eq.transformTo(exposure.equatorial.getSystem());
+                            exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(eq);
                             exposure.equatorialToHorizontal(exposure.horizontalOffset);
                         }
-					    else if(getScan().basisSystem.isEquatorial()) { 
-					        exposure.horizontalOffset = exposure.equatorial.getOffsetFrom(
-                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.getSystem())
-                            );
-					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
-					    }
-					    else {
-					        exposure.horizontalOffset = exposure.horizontal.getOffsetFrom(
-	                                new HorizontalCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg)
-	                        );
-					    }
-					}
-					// Else just rely on the scanning offsets...
-					else {
-					    exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
-					
-					    if(getScan().nativeSystem.isEquatorial())
-					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
-					}
-					    
-					exposure.zenithTau = (float) zenithTau;	
-					
-					exposure.chopperPhase = phase[t];          
+                        else {
+                            exposure.horizontalOffset = exposure.horizontal
+                                    .getOffsetFrom(new HorizontalCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg));
+                        }
+                    }
+                    // Else just rely on the scanning offsets...
+                    else {
+                        exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
+                        if(getScan().nativeSystem.isEquatorial()) exposure.equatorialToHorizontal(exposure.horizontalOffset);
+                    }
+
+                    exposure.zenithTau = (float) zenithTau;
+
+                    exposure.chopperPhase = phase[t];
                     exposure.nodFlag = nodPhase;
-				    
-					// Add the chopper offsets, if available...
-					if(chop != null) if(chop[t] > m900) {			    
-					    exposure.chopperPosition.setX(chop[t] * Unit.deg);
-		
-					    if(!chopperIncluded) {
-					        // Add the chopping offsets to the horizontal coordinates and offsets
-					        exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());
-					        exposure.horizontalOffset.addX(exposure.chopperPosition.x());
-					        // Add to the equatorial coordinate also...
-					        tempOffset.copy(exposure.chopperPosition);
-					        exposure.horizontalToEquatorial(tempOffset);
-					        exposure.equatorial.addOffset(tempOffset);
-					    }
-					}
 
-					set(t, exposure);
-				}		
-			};
-		}
-	}
-	
-	void readMonitor(Fits fits) throws IOException, FitsException {
-	    readMonitor((BinaryTableHDU) fits.getHDU(1));
-	    fits.close();
-	}
+                    // Add the chopper offsets, if available...
+                    if(chop != null) if(chop[t] > m900) {
+                        exposure.chopperPosition.setX(chop[t] * Unit.deg);
 
-	protected void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException {    
-	    
-	    if(hasOption("tau.pwv")) return;
-	    
+                        if(!chopperIncluded) {
+                            // Add the chopping offsets to the horizontal coordinates and offsets
+                            exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());
+                            exposure.horizontalOffset.addX(exposure.chopperPosition.x());
+                            // Add to the equatorial coordinate also...
+                            tempOffset.copy(exposure.chopperPosition);
+                            exposure.horizontalToEquatorial(tempOffset);
+                            exposure.equatorial.addOffset(tempOffset);
+                        }
+                    }
+
+                    set(t, exposure);
+                }
+            };
+        }
+    }
+
+    void readMonitor(Fits fits) throws IOException, FitsException {
+        readMonitor((BinaryTableHDU) fits.getHDU(1));
+        fits.close();
+    }
+
+    protected void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException {
+
+        if(hasOption("tau.pwv")) return;
+
         final int n = hdu.getNRows();
         final int iLABEL = hdu.findColumn("MONPOINT");
         final int iVALUE = hdu.findColumn("MONVALUE");
-        
+
         int N = 0;
         double sum = 0.0;
-    
-	    for(int i=0; i<n; i++) {
+
+        for(int i = 0; i < n; i++) {
             Object[] row = hdu.getRow(i);
-             
-            if(((String) row[iLABEL]).equals("PWV")) {     
+
+            if(((String) row[iLABEL]).equals("PWV")) {
                 sum += ((double[]) row[iVALUE])[0];
                 N++;
             }
         }
-        
-	    if(N == 0) {
-	        if(!hasOption("tau")) warning("PWV not recorded in FITS. Set tau explicitly or via lookup table.");
-	        return;
-	    }
-	    
-	    pwv = sum / N; 
-	    
-	    if(!hasOption("tau.pwv")) {
-            try { getOptions().process("tau.pwv", pwv + ""); } 
-            catch (LockedException e) {}
-	    }
-	    
+
+        if(N == 0) {
+            if(!hasOption("tau")) warning("PWV not recorded in FITS. Set tau explicitly or via lookup table.");
+            return;
+        }
+
+        pwv = sum / N;
+
+        if(!hasOption("tau.pwv")) {
+            try { getOptions().process("tau.pwv", pwv + ""); }
+            catch(LockedException e) {}
+        }
+
         info("--> PWV = " + Util.f3.format(pwv) + " mm, from " + N + " entries.");
-	}
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame(this);
-	}
-			
-	void fitsRCP() {
-		info("Using RCP data contained in the FITS.");
-		getInstrument().getPixels().parallelStream().forEach(p -> p.setPosition(((APEXPixel) p).fitsPosition.copy()));
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public FrameType getFrameInstance() { return (FrameType) new APEXFrame(this); }
 
-	@Override
+    void fitsRCP() {
+        info("Using RCP data contained in the FITS.");
+        getInstrument().getPixels().parallelStream().forEach(p -> p.setPosition(((APEXPixel) p).fitsPosition.copy()));
+    }
+
+    @Override
     public String getID() {
-	    StringBuffer id = new StringBuffer(super.getID());
-	    APEXInstrument<? extends Channel> instrument = getInstrument();
-	    if(instrument.activeBands.length > 1) id.append("|B" + getInstrument().band);
-	    if(instrument.sideband != null) id.append("|" + instrument.sideband);
-	    return new String(id);
-	}
-	
-	@Override
+        StringBuffer id = new StringBuffer(super.getID());
+        APEXInstrument<? extends Channel> instrument = getInstrument();
+        if(instrument.activeBands.length > 1) id.append("|B" + getInstrument().band);
+        if(instrument.sideband != null) id.append("|" + instrument.sideband);
+        return new String(id);
+    }
+
+    @Override
     public int getPhase() { return nodPhase; }
-	
-	@Override
-	public PhaseSet getPhases() {
-		Chopper chopper = getChopper();
-		return chopper == null ? null : chopper.phases;
-	}
 
-	@Override
-	public Chopper getChopper() {
-		return chopper;
-	}
+    @Override
+    public PhaseSet getPhases() {
+        Chopper chopper = getChopper();
+        return chopper == null ? null : chopper.phases;
+    }
 
-	@Override
-	public void setChopper(Chopper chopper) {
-		this.chopper = chopper;
-	}
+    @Override
+    public Chopper getChopper() { return chopper; }
+
+    @Override
+    public void setChopper(Chopper chopper) { this.chopper = chopper; }
 }

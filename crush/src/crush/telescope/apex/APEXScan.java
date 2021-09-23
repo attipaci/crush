@@ -32,8 +32,6 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
 import jnum.astro.CelestialCoordinates;
-import jnum.astro.EquatorialCoordinates;
-import jnum.astro.EquatorialSystem;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
@@ -375,7 +373,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 			getInstrument().setOption("chopped");
 		}
 					
-		//isPlanetary = header.getBooleanValue("MOVEFRAM");		
+		//isNonSidereal = header.getBooleanValue("MOVEFRAM");		
 		equatorial = null; horizontal = null;
 		
 		boolean hasNative = header.findCard("CTYPE1").getComment().contains("Native");
@@ -395,11 +393,7 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 		double lon = header.getDoubleValue("BLONGOBJ") * Unit.deg;
 		double lat = header.getDoubleValue("BLATOBJ") * Unit.deg;
 		
-		if(basisSystem.isEquatorial()) {
-			equatorial = new EquatorialCoordinates(lon, lat, EquatorialSystem.FK5.J2000);	
-			calcHorizontal();	
-		}
-		else if(basisSystem.isHorizontal()) {
+		if(basisSystem.isHorizontal()) {
 			horizontal = new HorizontalCoordinates(lon, lat);
 			calcEquatorial();
 		}
@@ -408,7 +402,8 @@ public class APEXScan<SubscanType extends APEXSubscan<? extends APEXFrame>> exte
 				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getCoordinateInstance();
 				basisCoords.set(lon, lat);
 				equatorial = basisCoords.toEquatorial();
-				calcHorizontal();
+				equatorial.toICRS();
+				calcHorizontal();	
 			}
 			catch(Exception e) {
 				throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() + ": " + e.getMessage());

@@ -35,7 +35,6 @@ import jnum.Configurator;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.AstroSystem;
 import jnum.astro.PrecessingCoordinates;
 import jnum.colorscheme.ColorScheme;
 import jnum.colorscheme.Colorful;
@@ -195,8 +194,9 @@ public abstract class AbstractSource2D extends SourceModel {
         super.createFrom(collection);
         
         info("Initializing Source Map.");	
-    
+
         Coordinate2D ref = getFirstScan().getPositionReference(hasOption("system") ? option("system").getValue() : "equatorial");
+
         setProjector(getInstrument().getProjectorInstance(ref));
         
         setSize();

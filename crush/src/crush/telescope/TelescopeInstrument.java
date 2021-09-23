@@ -74,18 +74,16 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
     public SphericalGrid getGridInstance() { return new SkyGrid(); }
     
    
-    
-    
     // Returns the offset of the pointing center from the the rotation center for a given rotation...
     @Override
-    public Vector2D getPointingOffset(double rotationAngle) {
-        Vector2D offset = getLayout().getPointingCenterOffset();
-        
-        final double sinA = Math.sin(rotationAngle);
-        final double cosA = Math.cos(rotationAngle);
-        
+    public Vector2D getMountOffset(double rotationAngle) {
+        Vector2D offset = getLayout().getMountOffset();
+            
         if(mount == Mount.CASSEGRAIN) {
-            Vector2D dP = getLayout().getPointingCenterOffset();    
+            final double sinA = Math.sin(rotationAngle);
+            final double cosA = Math.cos(rotationAngle);
+        
+            Vector2D dP = getLayout().getMountOffset();    
             offset.addX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
             offset.addY(dP.x() * sinA + dP.y() * (1.0 - cosA));
         }

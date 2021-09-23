@@ -256,25 +256,25 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
         instrument.info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
 
         // Undo the prior rotation...
-        Vector2D priorOffset = getPointingOffset(rotation);
-        Vector2D newOffset = getPointingOffset(rotation + angle);
-
+        Vector2D priorOffset = getMountOffset(rotation);
+        Vector2D newOffset = getMountOffset(rotation + angle);
+        
         for(Pixel pixel : getPixels()) if(pixel.getPosition() != null) {
             Vector2D position = pixel.getPosition();
 
             // Center positions on the rotation center...
-            position.subtract(priorOffset);
+            position.add(priorOffset);
             // Do the rotation...
             position.rotate(angle);
             // Re-center on the pointing center...
-            position.add(newOffset);
+            position.subtract(newOffset);
         }
         
         rotation += angle;
     }
 
 
-    public final Vector2D getPointingOffset(double angle) { return getInstrument().getPointingOffset(angle); }
+    public final Vector2D getMountOffset(double angle) { return getInstrument().getMountOffset(angle); }
     
     public double getRotation() { return rotation; }
 
@@ -286,7 +286,6 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
     }
     
 
-
     /**
      * Returns the offset of the pointing center w.r.t. the optical axis in the natural focal-plane system of the instrument.
      * 
@@ -294,7 +293,7 @@ public abstract class PixelLayout implements Cloneable, Serializable, TableForma
      *                  of the instrument. 
      * 
      */
-    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
+    public Vector2D getMountOffset() { return new Vector2D(); }
 
     
     public void scramble() {

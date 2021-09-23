@@ -206,7 +206,7 @@ class HirmesLayout extends SingleEndedLayout implements FitsHeaderEditing {
     public Vector2D getSIBSPosition(Vector2D focalPlanePosition) {
         Vector2D v = getImagingPosition(focalPlanePosition);
         v.scale(plateScale);       
-        //v.scaleX(-1.0);
+        //v.flipX();
         return v;
     }
 
