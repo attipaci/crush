@@ -43,12 +43,12 @@ import jnum.data.WeightedPoint;
  * When the user needs a temporary array storage for holding temporary data for one of these objects, one
  * should obtain an instance using a <code>get[...]Array(int size)</code> call, which will return an uninitialized 
  * used or new array, with capacity <i>at least</i> that of the desired <code>size</code> or larger. Then, once
- * the temporary array is no longer needed, one should call one of the {@link #recycle()} methods for reuse.
+ * the temporary array is no longer needed, one should call one of the <code>recycle()</code> methods for reuse.
  * 
  * 
  * As mentioned, the arrays obtained through the recycler are typically uninitialized, since it is assumed
  * the user will populate it with its own data. If needed, the user should explicitly initialize the array
- * after obtaining it, e.g. with an {@link Arrays#fill()}, or an appropriate initializing loop.
+ * after obtaining it, e.g. with an <code>Arrays#fill()</code>, or an appropriate initializing loop.
  * 
  * 
  * 

@@ -113,7 +113,7 @@ public class SofiaTelescopeData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Telescope Data ------>"));
 
         c.add(makeCard("TELESCOP", telescope, "observatory name."));
         c.add(makeCard("TELCONF", telConfig, "telescope configuration."));

@@ -90,9 +90,9 @@ public class BlinkPhotometry extends Photometry {
             @Override
             protected void process(Channel channel) {   
 
-                Datum datum = data.get(channel.getID());
+                Point datum = data.get(channel.getID());
                 if(datum == null) {
-                    datum = new Datum();
+                    datum = new Point();
                     data.put(channel.getID(), datum);
                 }
 

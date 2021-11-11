@@ -91,7 +91,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Array Data ------>"));
         c.add(makeCard("DETECTOR", detectorName, "Detector name"));
         c.add(makeCard("DETSIZE", detectorSizeString, "Detector size"));
         c.add(makeCard("PIXSCAL", pixelSize / Unit.arcsec, "(arcsec) Pixel sizel on sky."));

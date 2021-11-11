@@ -193,7 +193,7 @@ public class ChopperPhases extends PhaseSet {
         int k=0;
 
         for(int i=1; i < size(); i++) points[k++] = getChopSignal(channel, i);
-        return Statistics.Inplace.smartMedian(points, 0, k, 0.25);
+        return Statistics.Destructive.smartMedian(points, 0, k, 0.25);
     }
     
     public WeightedPoint getBGCorrectedLROffset(final Channel channel, final Collection<? extends Channel> bgChannels, final double[] sourceGain) {
@@ -207,7 +207,7 @@ public class ChopperPhases extends PhaseSet {
         int k=0;
 
         for(int i=1; i < size(); i++) points[k++] = getBGCorrectedChopSignal(channel, i, bgChannels, sourceGain);
-        return Statistics.Inplace.smartMedian(points, 0, k, 0.25);
+        return Statistics.Destructive.smartMedian(points, 0, k, 0.25);
     }
     
     

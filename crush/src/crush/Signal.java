@@ -466,7 +466,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
                         assert !Double.isNaN(point.value());
                         assert !Double.isInfinite(point.value());
                     }
-                if(n > 0) Statistics.Inplace.smartMedian(gainData, 0, n, 0.25, increment);
+                if(n > 0) Statistics.Destructive.smartMedian(gainData, 0, n, 0.25, increment);
             }
 
         }.process();

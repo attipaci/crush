@@ -66,7 +66,7 @@ public class SofiaChopperData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Chopper Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Chopper Data ------>"));
         c.add(makeCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
         c.add(makeCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
         c.add(makeCard("CHPAMP2", amplitude2 / Unit.arcsec, "(arcsec) Second chop amplitude on sky."));

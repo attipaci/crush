@@ -314,7 +314,7 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ Fitted Pointing / Calibration Info ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ Fitted Pointing / Calibration Info ------>"));
         
         Offset2D relative = getNativePointingIncrement(pointing);
         Unit sizeUnit = getInstrument().getSizeUnit();

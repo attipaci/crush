@@ -41,7 +41,6 @@ import jnum.math.Range;
  * 
  * @author Attila Kovacs
  *
- * @param <ModeType>    The generic type of the correlated modes contained in this modality.
  */
 public class CorrelatedModality extends Modality<CorrelatedMode> {
 	/**

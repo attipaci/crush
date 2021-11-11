@@ -330,9 +330,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
 
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" CRUSH scan-specific configuration section"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         instrument.getInitialOptions().difference(global).editHeader(header);	
 
@@ -648,7 +648,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
      * The angle between the reference coordinates (e.g. equatorial) and the native coordinate system of the telescope (e.g. horizontal).
      * 
      * 
-     * @return
+     * @return  the position angle of the telescope's native coordinate system in the equatorial frame. (Or alternative the position
+     *          angle of the declination axis relative to the telescope's elevation axis when looking out to sky).
      */
     public double getPositionAngle() { return 0.0; }
 

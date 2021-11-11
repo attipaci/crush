@@ -63,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static final String version = "2.60-a1";
-    private static final String revision = "devel.16";
+    private static final String revision = "devel.17";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -109,7 +109,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
         info();
         
         Locale.setDefault(Locale.US);
+        
         FitsFactory.setUseHierarch(true);
+        FitsFactory.getHierarchFormater().setCaseSensitive(true);
 
         Util.setReporter(broadcaster);
 
@@ -1021,9 +1023,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
         // Add the system descriptors...	
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " CRUSH runtime configuration section", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" CRUSH runtime configuration section"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         c.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
 
@@ -1032,9 +1034,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
             for(int i=1; i<commandLine.length; i++) FitsToolkit.addLongKey(c, "ARG" + i, commandLine[i], "Command-line argument.");
         }
         
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" CRUSH Java VM & OS section"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         c.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
         c.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
@@ -1058,16 +1060,16 @@ public class CRUSH extends Configurator implements BasicMessaging {
         c.add(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
 
 
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " CRUSH configuration section", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" CRUSH configuration section"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         super.editHeader(header);
 
         c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" End of CRUSH configuration section"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
     }
 
     public void shutdown() {

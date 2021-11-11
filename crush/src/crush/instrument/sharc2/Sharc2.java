@@ -365,7 +365,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> {
             data[n++] = T;
         }
 
-        return Statistics.Inplace.smartMedian(data, 0, n, 0.25).value() - excessLoad;
+        return Statistics.Destructive.smartMedian(data, 0, n, 0.25).value() - excessLoad;
     }
 
     public void calcGainCoefficients(double loadT) {

@@ -189,7 +189,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 
         // Calculate the median amplitude
         System.arraycopy(A, 0, temp, 0, A.length);	
-        final double medA = Statistics.Inplace.median(temp, whiteFrom, whiteTo).value();
+        final double medA = Statistics.Destructive.median(temp, whiteFrom, whiteTo).value();
         final double critical = level * medA;
 
         // sigmaP = medP / sqrt(pts)

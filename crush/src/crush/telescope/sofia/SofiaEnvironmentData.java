@@ -58,7 +58,7 @@ public class SofiaEnvironmentData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Environment Data ------>"));
         c.add(makeCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
         c.add(makeCard("WVZ_END", pwv.end / Unit.um, "(um) Precipitable Water Vapor at end."));
         c.add(makeCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));

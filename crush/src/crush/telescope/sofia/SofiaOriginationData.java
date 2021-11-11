@@ -50,7 +50,7 @@ public class SofiaOriginationData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));  
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Origination Data ------>"));  
         c.add(makeCard("ORIGIN", organization, "Creator organization / node."));
         c.add(makeCard("CREATOR", creator, "Creator software / task."));
         c.add(makeCard("OBSERVER", observer, "Name(s) of observer(s)."));

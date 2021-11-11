@@ -124,7 +124,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     }
 
     private void createMap() {
-        map = new Observation2D(Double.class, Double.class, Flag2D.TYPE_INT);
+        map = new Observation2D(Double.class, Double.class, FlagCompanion.Type.INT);
 
         map.setParallel(CRUSH.maxThreads);
         map.setGrid(getGrid());

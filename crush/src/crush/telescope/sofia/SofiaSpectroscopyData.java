@@ -80,7 +80,7 @@ public class SofiaSpectroscopyData extends SofiaData implements Copiable<SofiaSp
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Spectroscopy Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Spectroscopy Data ------>"));
         
         c.add(makeCard("FRONTEND", frontEnd, "Frontend device name."));
         c.add(makeCard("BACKEND", backEnd, "Backend device name."));

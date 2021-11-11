@@ -60,7 +60,7 @@ public class SofiaNoddingData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Nodding Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Nodding Data ------>"));
         c.add(makeCard("NODN", cycles, "Number of nod cycles."));
         c.add(makeCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
         c.add(makeCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));

@@ -282,7 +282,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     public void editHeader(Header header) throws HeaderCardException {             
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ HIRMES Header Keys ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ HIRMES Header Keys ------>"));
         c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
         c.add(SofiaData.makeCard("GRATANGL", gratingAngle / Unit.deg, "Grating angle"));
         c.add(SofiaData.makeCard("FPIK", fpiConstant, "FPI dispersison constant"));

@@ -385,7 +385,7 @@ class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
             sorter[k++] = delta;
         }
         
-        return Statistics.Inplace.median(sorter, 0, k);
+        return Statistics.Destructive.median(sorter, 0, k);
     }
 
    
@@ -401,7 +401,7 @@ class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
             delays[k++] = Math.IEEEremainder(crossings.get(i) - MJD0, mjdPeriod);
         }
 
-        double medianDelay = Statistics.Inplace.select(delays, selectionPoint, 0, k);
+        double medianDelay = Statistics.Destructive.select(delays, selectionPoint, 0, k);
 
         return medianDelay * Unit.day;
     }

@@ -60,7 +60,7 @@ public class SofiaMappingData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Mapping Data ------>"));
         
         c.add(makeCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
         c.add(makeCard("MAPNXPOS", sizeX, "Number of map positions in X"));

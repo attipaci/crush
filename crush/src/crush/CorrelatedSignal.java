@@ -494,7 +494,7 @@ public class CorrelatedSignal extends Signal {
             }
         }
 
-        Statistics.Inplace.smartMedian(buffer, 0, n, 0.25, increment); 
+        Statistics.Destructive.smartMedian(buffer, 0, n, 0.25, increment); 
     }
 
 }

@@ -318,9 +318,9 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 
         // Add the system descriptors...   
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " Section for preserved SOFIA header data", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" Section for preserved SOFIA header data"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         if(fileDate != null) c.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
 
@@ -349,9 +349,9 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         c = FitsToolkit.endOf(header);
 
         // Add the system descriptors...   
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        c.add(new HeaderCard("COMMENT", " Section for scan-specific processing history", false));
-        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
+        c.add(HeaderCard.createCommentCard(" Section for scan-specific processing history"));
+        c.add(HeaderCard.createCommentCard(" ----------------------------------------------------"));
 
         addHistory(c);
         getInstrument().addHistory(header, null);
@@ -361,7 +361,7 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     public void addPreservedHeaderKeysTo(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Additional SI keys from first scan ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Additional SI keys from first scan ------>"));
         
         for(String key : preservedKeys.keySet()) if(!header.containsKey(key)) c.add(preservedKeys.get(key));
     }

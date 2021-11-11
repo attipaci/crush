@@ -60,7 +60,7 @@ public class SofiaDitheringData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Dithering Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Dithering Data ------>"));
         
         c.add(makeCard("DTHCRSYS", coordinateSystem, "Dither coordinate system."));
         

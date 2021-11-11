@@ -1269,7 +1269,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         // Use robust mean (with 10% tails) to estimate average weight.
         weightRange.scale(Math.expm1(n > 10 ? 
-                Statistics.Inplace.robustMean(weights, 0, n, 0.1) : Statistics.Inplace.median(weights, 0, n)
+                Statistics.Destructive.robustMean(weights, 0, n, 0.1) : Statistics.Destructive.median(weights, 0, n)
                 ));
 
         Instrument.recycle(weights);

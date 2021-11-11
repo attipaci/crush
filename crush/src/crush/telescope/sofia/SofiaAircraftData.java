@@ -63,7 +63,7 @@ public class SofiaAircraftData extends SofiaData implements TableFormatter.Entri
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Aircraft Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Aircraft Data ------>"));
         c.add(makeCard("LON_STA", longitude.start / Unit.deg, "(deg) Longitude at start of observation."));
         c.add(makeCard("LON_END", longitude.end / Unit.deg, "(deg) Longitude at end of observation."));
         c.add(makeCard("LAT_STA", latitude.start / Unit.deg, "(deg) Latitude at start of observation."));

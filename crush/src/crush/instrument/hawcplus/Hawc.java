@@ -393,7 +393,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
 
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ HAWC+ Header Keys ------>"));
         c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
         c.add(SofiaData.makeCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
@@ -500,7 +500,7 @@ public class Hawc extends SofiaInstrument<HawcPixel> {
     /**
      * Writes a flatfield file, used for the chop-nod pipelines, according to the specifications by Marc Berthoud.
      * 
-     * @param The FITS file name (and path) where the flatfield data is destined.
+     * @param fileName      the FITS file name (and path) where the flatfield data is destined.
      * @throws IOException
      * @throws FitsException
      */

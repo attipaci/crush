@@ -945,7 +945,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             }
         }
 
-        if(sumw > 0.0) Statistics.Inplace.smartMedian(buffer, 0, n, 0.25, increment);	
+        if(sumw > 0.0) Statistics.Destructive.smartMedian(buffer, 0, n, 0.25, increment);	
     }
 
     public boolean decorrelate(final String modalityName, final boolean isRobust) {
@@ -1169,7 +1169,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
                         p.setWeight(exposure.relativeWeight);
                     }	
 
-                Statistics.Inplace.median(dev2, 0, points, var[channel.index]);
+                Statistics.Destructive.median(dev2, 0, points, var[channel.index]);
                 var[channel.index].scaleValue(1.0 / Statistics.medianNormalizedVariance);
             }
 
@@ -2032,7 +2032,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final Signal v = getScanningVelocitySignal(Motion.MAGNITUDE);
 
         // Robust mean with exluding 20% tails
-        final double avev = Statistics.Inplace.robustMean(v.value, 0.2);
+        final double avev = Statistics.Destructive.robustMean(v.value, 0.2);
 
         // Now calculate the scatter...
         IntStream.range(0,  v.length()).parallel().forEach(t -> {
@@ -2041,7 +2041,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         });
 
         // Robust mean with exluding 20% tails
-        double w = 1.0 / Statistics.Inplace.robustMean(v.value, 0.2);
+        double w = 1.0 / Statistics.Destructive.robustMean(v.value, 0.2);
 
         return new DataPoint(new WeightedPoint(avev, w));    
     }
@@ -2789,7 +2789,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             dt *= Unit.day;
 
             Chopper chopper = new Chopper();
-            chopper.amplitude = Statistics.Inplace.median(distance, 0, n);
+            chopper.amplitude = Statistics.Destructive.median(distance, 0, n);
 
             if(chopper.amplitude < threshold) {
                 chopper = null;

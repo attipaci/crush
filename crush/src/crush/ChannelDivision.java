@@ -42,7 +42,7 @@ import java.util.*;
  * (see <code>correlated.&lt?&gt</code> option and sub-options in the GLOSSARY. 
  * 
  * 
- * Channel divisions are typically created via {@link Instrument#createDivisions()}. Most divisions are
+ * Channel divisions are typically created via <code>Instrument#createDivisions()</code>. Most divisions are
  * hard-coded, and often pattern based using {@link Instrument#getDivision(String, java.lang.reflect.Field, int)}.
  * But, divisions can also be defined in the runtime configuration via the <code>division</code> option.
  * 

@@ -62,7 +62,7 @@ public class SofiaObservationData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Observation Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Observation Data ------>"));
         c.add(makeCard("OBJECT", sourceName, "Object catalog name."));
         c.add(makeCard("DATASRC", dataSource, "data source category."));
         c.add(makeCard("OBSTYPE", obsType, "type of observation."));

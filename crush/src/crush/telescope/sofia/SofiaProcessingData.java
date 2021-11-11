@@ -96,7 +96,7 @@ public class SofiaProcessingData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Processing Information ------>"));
         int level = 0;
         if(processLevel != null) if(processLevel.toUpperCase().startsWith("LEVEL_")) {
             try { level = Integer.parseInt(processLevel.substring(6)); }

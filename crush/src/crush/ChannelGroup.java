@@ -42,7 +42,7 @@ import jnum.data.Statistics;
  * to an appropriate {@link Mode} (such as a {@link crush.instrument.Response} or {@link CorrelatedMode}). 
  * 
  * 
- * Channel groups are typically created by {@link Instrument#createGroups()}. They can be hard-coded groups,
+ * Channel groups are typically created by <code>Instrument#createGroups()</code>. They can be hard-coded groups,
  * or else specified in the runtime configurations via the <code>group</code> option.
  * 
  * 
@@ -202,7 +202,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
             values[n++] = Math.log(1.0 + Math.abs(G[k]));
 
         // Use a robust mean (with 10% tails) to calculate the average gain...
-        double aveG = Statistics.Inplace.robustMean(values, 0, n, 0.1);
+        double aveG = Statistics.Destructive.robustMean(values, 0, n, 0.1);
 
         if(Double.isNaN(aveG)) return 1.0;
 

@@ -42,6 +42,7 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
+import jnum.data.FlagCompanion;
 import jnum.data.SplineSet;
 import jnum.data.Validating;
 import jnum.data.cube.overlay.RangeRestricted3D;
@@ -49,7 +50,6 @@ import jnum.data.cube2.Data2D1;
 import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
 import jnum.data.image.Data2D;
-import jnum.data.image.Flag2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
@@ -192,7 +192,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
 
     private void createCube() {        
-        cube = new Observation2D1(Double.class, Double.class, Flag2D.TYPE_INT);
+        cube = new Observation2D1(Double.class, Double.class, FlagCompanion.Type.INT);
 
         cube.setParallel(CRUSH.maxThreads); 
         cube.setGrid2D(getGrid());

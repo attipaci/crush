@@ -48,9 +48,7 @@ public class ElevationCouplingCurve extends Interpolator {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                Interpolator.Data response = new Interpolator.Data();
-                response.ordinate = tokens.nextDouble() * Unit.deg;
-                response.value = tokens.nextDouble();
+                Interpolator.Point response = new Interpolator.Point(tokens.nextDouble() * Unit.deg, tokens.nextDouble());
                 add(response);
                 return true;
             }     

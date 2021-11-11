@@ -56,7 +56,7 @@ public class SofiaScanningData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Scanning Data ------>"));
         c.add(makeCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
         c.add(makeCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
         c.add(makeCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));

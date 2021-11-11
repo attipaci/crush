@@ -258,7 +258,7 @@ public class PixelMap extends AbstractSource2D {
 		}
 		if(k == 0) return;
 		
-		final double mean = Statistics.Inplace.median(peaks, 0, k);
+		final double mean = Statistics.Destructive.median(peaks, 0, k);
 		
 		for(final Pixel pixel : getFirstScan().getInstrument().getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();

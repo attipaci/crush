@@ -52,7 +52,7 @@ public class SofiaMissionData extends SofiaData {
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Mission Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Mission Data ------>"));
         c.add(makeCard("DEPLOY", base, "aircraft base of operation."));
         c.add(makeCard("MISSN-ID", missionID, "unique Mission ID in Mission Plan from MCCS."));
         c.add(makeCard("FLIGHTLG", flightLeg, "Flight leg identifier."));

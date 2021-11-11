@@ -44,7 +44,7 @@ public class SimpleDeboosting {
 			try { 
 				debooster.table = new SimpleInterpolator(fileName); 
 				
-				for(Interpolator.Data point : debooster.table) {
+				for(Interpolator.Point point : debooster.table) {
 					point.ordinate /= 1e-3;
 					point.value *= 1e-3 * Unit.sqdeg / Unit.rad2;
 					point.value = Math.log(point.value);

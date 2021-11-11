@@ -75,7 +75,7 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 	@Override
 	public void editHeader(Header header) throws HeaderCardException {
 	    Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-		c.add(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
+		c.add(HeaderCard.createCommentCard("<------ SOFIA Instrument Data ------>"));
 		c.add(makeCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
 		c.add(makeCard("DATATYPE", dataType, "Data type."));
 		c.add(makeCard("INSTCFG", instrumentConfig, "Instrument configuration."));

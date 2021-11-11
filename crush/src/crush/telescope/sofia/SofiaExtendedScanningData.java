@@ -88,7 +88,7 @@ public class SofiaExtendedScanningData extends SofiaScanningData {
         super.editHeader(header);
         
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Extra Scanning Data ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Extra Scanning Data ------>"));
                 
         c.add(makeCard("SCNPATT", pattern, "Scan pattern."));
         c.add(makeCard("SCNCRSYS", coordinateSystem, "Scan coordinate system."));

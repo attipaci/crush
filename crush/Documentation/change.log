@@ -49,6 +49,9 @@
 	dependencies, javadoc fixes, and no override to finalize() in 
 	BufferedFile.
 
+	[FIX] {APEX} {LABOCA} Simplify and fix parsing and processing of MBFITS
+	position information. 
+
 	[FIX] Plugged potential resource leaks, even though these were pretty
 	rare, unlikely, and harmless even if they did occur on occasion.
 

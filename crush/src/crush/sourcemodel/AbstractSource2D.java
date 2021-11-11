@@ -551,7 +551,7 @@ public abstract class AbstractSource2D extends SourceModel {
         }
         
         Coordinate2D median = getScan(0).getReferenceCoordinates().copy();
-        median.set(Statistics.Inplace.median(x), Statistics.Inplace.median(y));
+        median.set(Statistics.Destructive.median(x), Statistics.Destructive.median(y));
 
         for(Scan<?> scan : getScans()) {
             Coordinate2D coords = scan.getReferenceCoordinates().copy();

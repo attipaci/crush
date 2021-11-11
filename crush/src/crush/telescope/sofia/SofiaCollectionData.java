@@ -53,7 +53,7 @@ public class SofiaCollectionData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Collection Keywords ------>", false));
+        c.add(HeaderCard.createCommentCard("<------ SOFIA Data Collection Keywords ------>"));
         c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));   
         c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));   
         c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));    
