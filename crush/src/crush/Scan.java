@@ -46,11 +46,11 @@ import jnum.data.image.region.GaussianSource;
 import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.math.CoordinateSystem;
-import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.*;
@@ -868,7 +868,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         clear();
 
         int nT = merged.framesFor(segmentTime);
-        int N = ExtraMath.roundupRatio(merged.size(), nT);
+        int N = ExtraMath.roundedRatio(merged.size(), nT);
 
         if(N <= 1) return;
 

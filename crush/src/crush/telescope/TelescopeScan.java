@@ -39,9 +39,9 @@ import jnum.astro.JulianEpoch;
 import jnum.astro.SuperGalacticCoordinates;
 import jnum.data.image.region.GaussianSource;
 import jnum.fits.FitsToolkit;
-import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 import jnum.util.DataTable;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -180,8 +180,6 @@ public abstract class TelescopeScan<IntegrationType extends Integration<? extend
         SphericalCoordinates reference = (SphericalCoordinates) sourceModel.getReference();
         
         if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
-            System.err.println("### src " + sourceCoords);
-            System.err.println("### ref " + reference);
             return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference));
         }
         else if(sourceCoords instanceof EquatorialCoordinates)

@@ -1565,7 +1565,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         instrument.new Fork<Void>() {
             @Override
             protected void process(final Channel channel) {    
-                for(int T=ExtraMath.roundupRatio(size(), blockSize); --T >= 0; ) process(channel, T * blockSize);
+                for(int T=ExtraMath.roundedRatio(size(), blockSize); --T >= 0; ) process(channel, T * blockSize);
             }
 
             private final void process(final Channel channel, final int from) {
@@ -2143,7 +2143,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         final int centerOffset = windowSize/2 + 1;
         final double[] w = WindowFunction.get("Hann", windowSize);
 
-        final int N = ExtraMath.roundupRatio(size()-windowSize, n);
+        final int N = ExtraMath.roundedRatio(size()-windowSize, n);
 
         if(N <= 0) {
             warning("Time stream too short to downsample by specified amount.");
@@ -3647,7 +3647,7 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
         private int blocksize;
 
         public BlockFork(int blocksize) { 
-            super(ExtraMath.roundupRatio(size(), Math.max(1, blocksize)), getThreadCount());
+            super(ExtraMath.roundedRatio(size(), Math.max(1, blocksize)), getThreadCount());
             this.blocksize = Math.max(1, blocksize); 
         }
 

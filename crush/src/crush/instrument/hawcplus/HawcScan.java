@@ -41,8 +41,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.fits.FitsToolkit;
-import jnum.math.Offset2D;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 
 class HawcScan extends SofiaScan<HawcIntegration> {	
     /**

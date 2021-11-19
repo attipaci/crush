@@ -99,11 +99,6 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	}
 	
 	@Override
-    public Dependents copy() {
-	    return copy(true);
-	}
-	
-	@Override
     public Dependents copy(boolean withContents) {
 	    Dependents copy = clone();
 	    if(withContents) {

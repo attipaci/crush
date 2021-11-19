@@ -35,7 +35,7 @@ import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 import jnum.data.samples.Gaussian1D;
-import jnum.data.samples.Offset1D;
+import jnum.data.samples.Position;
 import jnum.data.samples.Samples1D;
 import jnum.data.samples.overlay.Referenced1D;
 import jnum.parallel.ParallelTask;
@@ -77,7 +77,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
     public Signal(Mode mode, Integration<?> integration, float[] values, boolean isFloating) {
         this(mode, integration);
-        resolution = ExtraMath.roundupRatio(integration.size(), values.length);
+        resolution = ExtraMath.roundedRatio(integration.size(), values.length);
         this.value = values;
         driftN = values.length;
     }
@@ -175,11 +175,11 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
 
     public final void removeDrifts(int nFrames, boolean isReconstructible) {		
-        int N = ExtraMath.roundupRatio(nFrames, resolution);
+        int N = ExtraMath.roundedRatio(nFrames, resolution);
 
         if(drifts == null || N != driftN) {
             addDrifts();
-            if(isReconstructible) drifts = new float[ExtraMath.roundupRatio(value.length, N)];
+            if(isReconstructible) drifts = new float[ExtraMath.roundedRatio(value.length, N)];
             driftN = N;
         }
 
@@ -194,7 +194,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
     public double level(int from, int to) {
         from = from / resolution;
-        to = ExtraMath.roundupRatio(to, resolution);
+        to = ExtraMath.roundedRatio(to, resolution);
 
         final double ave = IntStream.range(from, to).parallel().mapToDouble(t -> value[t])
                 .filter(x -> !Double.isNaN(x)).average().orElse(0.0);
@@ -341,7 +341,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
     }
     
     public void smooth(double[] beam, double centerIndex) {
-        Samples1D smoothed = (Samples1D) new Samples1D.Float1D(value).getSmoothed(new Samples1D.Double1D(beam), new Offset1D(centerIndex), null, null);
+        Samples1D smoothed = (Samples1D) new Samples1D.Float1D(value).getSmoothed(new Samples1D.Double1D(beam), new Position(centerIndex), null, null);
         value = (float[]) smoothed.getCore();
     }
 

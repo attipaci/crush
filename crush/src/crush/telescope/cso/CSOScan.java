@@ -34,8 +34,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
 import jnum.fits.FitsToolkit;
-import jnum.math.Offset2D;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 import jnum.util.DataTable;
 
 public abstract class CSOScan<IntegrationType extends CSOIntegration<? extends HorizontalFrame>> extends GroundBasedScan<IntegrationType> implements Weather {

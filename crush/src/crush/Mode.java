@@ -239,7 +239,7 @@ public class Mode implements Serializable {
     }
 
     public int signalLength(Integration<?> integration) {
-        return ExtraMath.roundupRatio(integration.size(), getFrameResolution(integration));
+        return ExtraMath.roundedRatio(integration.size(), getFrameResolution(integration));
     }
 
     @Override

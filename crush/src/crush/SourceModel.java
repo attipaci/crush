@@ -149,11 +149,6 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public Configurator sourceOption(String name) { return option("source." + name); }
 
-
-
-    @Override
-    public final SourceModel copy() { return copy(true); }
-
     @Override
     public SourceModel copy(boolean withContents) {
         SourceModel copy = clone();

@@ -32,7 +32,7 @@ import jnum.ExtraMath;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
-import jnum.data.samples.Offset1D;
+import jnum.data.samples.Position;
 import jnum.data.samples.Samples1D;
 import jnum.parallel.ParallelTask;
 
@@ -117,7 +117,7 @@ public class CorrelatedSignal extends Signal {
     @Override
     public double level(int from, int to) {
         from = from / resolution;
-        to = ExtraMath.roundupRatio(to, resolution);
+        to = ExtraMath.roundedRatio(to, resolution);
 
         final double ave = Statistics.mean(value, weight, from, to).value();
         if(Double.isNaN(ave)) return 0.0;
@@ -282,7 +282,7 @@ public class CorrelatedSignal extends Signal {
     public void smooth(double[] beam, double centerIndex) {
         Samples1D w = new Samples1D.Float1D(weight);
         Samples1D smoothedw = w.copy(false);
-        Samples1D smoothed = (Samples1D) new Samples1D.Float1D(value).getSmoothed(new Samples1D.Double1D(beam), new Offset1D(centerIndex), w, smoothedw);
+        Samples1D smoothed = (Samples1D) new Samples1D.Float1D(value).getSmoothed(new Samples1D.Double1D(beam), new Position(centerIndex), w, smoothedw);
         value = (float[]) smoothed.getCore();
         weight = (float[]) smoothedw.getCore();
     }

@@ -1,6 +1,6 @@
 >>> GISMO pixel positions upside down???...
 >>> HAWC+ check chop/scan data...
->>> profile source filter. 
+>>> profile source filter is SLOW. 
 >>> check thumbnail orientation and adjust as necessary... 
     (Celestial & horizontal coordinates looking out, i.e. reversed)
 >>> see if DUT1 (and wobble?) is present in FITS files and use as appropriate 
@@ -9,7 +9,7 @@
 
 
 
-2.60-a1 (devel.16)
+2.60-a1 (devel.18)
 
 	Overview
 	----------------------------------------------------------------------
@@ -68,6 +68,7 @@
 
 	[TWEAK] {HIRMES} Replace loops with streams wherever appropriate.
 
+	[UPDATE] nom.tam.fits library dependence bumped to 1.16.0.
 
 
 2.50-3 (3 January 2020)

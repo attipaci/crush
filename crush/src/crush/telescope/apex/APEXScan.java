@@ -36,8 +36,8 @@ import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
-import jnum.math.Offset2D;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 

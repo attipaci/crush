@@ -87,13 +87,14 @@ public class APEXCalibrationTable extends LocalAverage<ScalarLocality, Scalar> {
 				CRUSH.info(this, "... expanding scaling lookup window to 6 hours.");
 				mean = getLocalAverage(new ScalarLocality(MJD), timeWindow / Unit.day);
 			}
-			else {
-				CRUSH.warning(this, "Local calibration scaling is unknown.");
+			
+			if (mean.weight() == 0.0) {
+				CRUSH.warning(this, "Local calibration scaling is unknown. Will use 1.0...");
 				return 1.0;
 			}
 		}
-		else if(Double.isInfinite(mean.getData().value())) {
-			CRUSH.warning(this, "Inifinite local calibration scaling.");
+		else if(!Double.isFinite(mean.getData().value())) {
+			CRUSH.warning(this, "Non-finite local calibration scaling. Will use 1.0...");
 			return 1.0;
 		}
 		

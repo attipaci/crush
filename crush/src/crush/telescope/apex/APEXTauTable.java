@@ -86,13 +86,14 @@ public class APEXTauTable extends LocalAverage<ScalarLocality, Scalar> {
 				CRUSH.info(this, "... expanding tau lookup window to 6 hours.");
 				mean = getLocalAverage(new ScalarLocality(MJD), (6.0 * Unit.hour) / Unit.day);
 			}
-			else {
-				CRUSH.warning(this, "Local tau is unknown.");
+			
+			if (mean.weight() == 0.0) {
+				CRUSH.warning(this, "Local tau is unknown. Will use 0.0...");
 				return 0.0;
 			}
 		}
-		else if(Double.isInfinite(mean.getData().value())) {
-			CRUSH.warning(this, "Inifinite local tau.");
+		else if(!Double.isFinite(mean.getData().value())) {
+			CRUSH.warning(this, "Non-finite local tau. Will use 0.0...");
 			return 0.0;
 		}
 		

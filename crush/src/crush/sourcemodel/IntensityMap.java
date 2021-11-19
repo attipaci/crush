@@ -32,7 +32,6 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.*;
 import jnum.data.image.Data2D;
-import jnum.data.image.Flag2D;
 import jnum.data.image.Gaussian2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Map2D;

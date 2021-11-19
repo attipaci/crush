@@ -40,8 +40,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.data.SimpleInterpolator;
-import jnum.math.Offset2D;
 import jnum.math.Vector2D;
+import jnum.projection.Offset2D;
 
 class HirmesScan extends SofiaScan<HirmesIntegration> {    
     /**

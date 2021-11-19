@@ -132,12 +132,7 @@ public abstract class Frame implements Serializable, Cloneable, CopiableContent<
 		try { return (Frame) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
-	
-    @Override
-    public Frame copy() {
-        return copy(true);
-    }
-    
+
 	@Override
     public Frame copy(boolean withContents) {
 		Frame copy = clone();

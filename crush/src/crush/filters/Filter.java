@@ -84,9 +84,6 @@ public abstract class Filter implements Serializable, Cloneable, CopiableContent
     }
 
     @Override
-    public Filter copy() { return copy(true); }
-
-    @Override
     public Filter copy(boolean withContents) {
         Filter copy = clone();
         if(data != null) {
