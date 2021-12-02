@@ -63,7 +63,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static final String version = "2.60-a1";
-    private static final String revision = "devel.18";
+    private static final String revision = "devel.20";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -655,7 +655,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         for(Scan<?> scan : scans) scan.writeProducts();   
     }
 
-    public void iterate() throws Exception {
+    public void iterate() throws Exception {        
         List<String> ordering = option("ordering").getLowerCaseList();
         ArrayList<String> tasks = new ArrayList<>(ordering.size());
 
@@ -751,8 +751,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private boolean solveSource() {
         if(source == null) return false;
         return hasOption("source");
-    }
-
+    }    
 
     public static void setIteration(Configurator config, int i, int rounds) {	
         if(!config.getBranches().containsKey("iteration")) return;

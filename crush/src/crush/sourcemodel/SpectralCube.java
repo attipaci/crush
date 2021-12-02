@@ -376,7 +376,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
     @Override
     public void setBase() {
-        base.paste(cube, false);
+        base.copyOf(cube, false);
     }
 
     @Override
@@ -421,13 +421,11 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
 
     @Override
-    public void filter(double filterScale, double filterBlanking, boolean useFFT) {
+    public void filter(double filterScale, double filterBlanking) {
         for(Observation2D plane : cube.getPlanes()) {
             Validating2D filterBlank = new RangeRestricted2D(plane.getSignificance(), new Range(-filterBlanking, filterBlanking));
 
-            if(useFFT) plane.fftFilterAbove(filterScale, filterBlank);
-            else plane.filterAbove(filterScale, filterBlank);
-
+            plane.filterAbove(filterScale, filterBlank);
             plane.setFilterBlanking(filterBlanking);
         }
     }
@@ -457,6 +455,7 @@ public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
 
     @Override
     public void smoothTo(double FWHM) {
+        updateSmoothingPolicy();
         cube.smoothXYTo(FWHM);
     }
 

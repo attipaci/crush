@@ -36,6 +36,8 @@ import jnum.LockedException;
 import jnum.Util;
 import jnum.data.Data;
 import jnum.data.Observations;
+import jnum.data.RegularData;
+import jnum.data.SmoothingPolicy;
 import jnum.data.index.Index;
 import jnum.fits.FitsToolkit;
 import jnum.math.Range;
@@ -67,7 +69,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
 
     public abstract void smoothTo(double FWHM);
 
-    public abstract void filter(double filterFWHM, double filterBlanking, boolean useFFT);
+    public abstract void filter(double filterFWHM, double filterBlanking);
 
     public abstract void setFiltering(double FWHM);
     
@@ -118,14 +120,20 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
     @Override
     public final int countPoints() { return getData().countPoints(); }
 
-   
-    
     
     public final double getChi2(boolean isRobust) {
         return isRobust ? getSignificance().getRobustVariance() : getSignificance().getVariance();
     }
     
-   
+    private SmoothingPolicy getSmoothingPolicy() {
+        if(!hasOption("smooth.method")) return SmoothingPolicy.FASTEST;
+        return SmoothingPolicy.forName(option("smooth.method").getValue(), SmoothingPolicy.FASTEST);
+    }
+    
+    public void updateSmoothingPolicy() {
+        RegularData.DEFAULT_SMOOTHING_POLICY = getSmoothingPolicy();
+    }
+    
 
     public void smooth() {
         smoothTo(getSmoothing());
@@ -138,11 +146,9 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
         }
 
         Configurator filter = sourceOption("filter");
-        String mode = filter.hasOption("type") ? filter.option("type").getValue() : "convolution";
-
         double filterBlanking = (allowBlanking && filter.hasOption("blank")) ? filter.option("blank").getDouble() : Double.NaN;
 
-        filter(getFilterScale(filter), filterBlanking, mode.equalsIgnoreCase("fft"));  
+        filter(getFilterScale(filter), filterBlanking);  
     }
 
     public double getFilterScale(Configurator filter) {
@@ -154,7 +160,6 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
         if(filter.hasOption("fwhm")) directive = filter.option("fwhm").getValue().toLowerCase();
 
         return directive.equals("auto") ? 5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
-
     }
 
 
@@ -164,9 +169,9 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
         
         endAccumulation();          
         addBase();
-
+        
         if(enableLevel) level(true);
-
+        
         if(hasSourceOption("despike")) {
             Configurator despike = sourceOption("despike");
             double level = 10.0;
@@ -179,7 +184,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
         }
         
         filter(NO_BLANKING);   
-        
+           
         //data.validate();
         
         scan.weight = 1.0;              
@@ -194,14 +199,11 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
             scan.weight = 1.0 / getChi2(method.equals("robust"));
             if(Double.isNaN(scan.weight)) scan.weight = 0.0;
         }
-
-
+        
         if(hasOption("scanmaps")) {
             try { writeFits(getOutputPath() + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
             catch(Exception e) { error(e); }
         }
-
-
     }
     
     
@@ -211,12 +213,13 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
 
     @Override
     public void process() throws Exception {
+        
         endAccumulation();
         
         nextGeneration(); // Increment the map generation...
 
         getInstrument().setResolution(getAverageResolution());
-
+        
         if(enableLevel) addProcessBrief("{level} ");
 
         if(hasSourceOption("despike")) addProcessBrief("{despike} ");
@@ -231,13 +234,12 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
             double minIntTime = getInstrument().integrationTime * sourceOption("redundancy").getInt();
             getExposures().restrictRange(new Range(minIntTime, Double.POSITIVE_INFINITY));
         }
-
+        
         if(hasOption("smooth") && !hasOption("smooth.external")) {
             addProcessBrief("(smooth) ");
             smooth();        
         }
-
-
+        
         // Apply the filtering to the final map, to reflect the correct blanking
         // level...
         if(hasSourceOption("filter")) {
@@ -246,7 +248,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
             filter(ENABLE_BLANKING);
             filterBeamCorrect();
         }
-        
+
 
         // Noise and exposure clip after smoothing for evened-out coverage...
         // Eposure clip
@@ -263,7 +265,6 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
             rms.restrictRange(new Range(0, rms.select(0.05) * option("noiseclip").getDouble()));
         }
 
-
         if(enableBias) if(hasOption("clip")) {  
             double clipLevel = option("clip").getDouble();
             addProcessBrief("(clip:" + clipLevel + ") ");
@@ -276,6 +277,8 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
 
             getSignificance().discardRange(s2nReject);
         }
+        
+
 
         // discard any invalid data...
         //getData().validate();
@@ -291,7 +294,7 @@ public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType 
             try { writeFits(getOutputPath() + File.separator + "intermediate.fits"); }
             catch(Exception e) { error(e); }
         }
-
+        
         // Coupled with blanking...
         if(!hasSourceOption("nosync")) {
             if(enableBias && hasOption("blank")) {

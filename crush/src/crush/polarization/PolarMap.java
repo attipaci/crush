@@ -28,7 +28,9 @@ import crush.*;
 import crush.sourcemodel.IntensityMap;
 import jnum.Unit;
 import jnum.data.image.Observation2D;
+import jnum.data.index.Index2D;
 import jnum.math.Coordinate2D;
+import jnum.parallel.ParallelPointOp;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -222,33 +224,33 @@ public class PolarMap extends SourceModel {
 		final Observation2D f = F.map;
 		final Observation2D a = A.map;
 		
-		a.new Fork<Void>() {
+		a.smartFork(new ParallelPointOp.Simple<Index2D>() {
 			@Override
-			public void process(int i, int j) {
+			public void process(Index2D index) {
 			  
-				if(!f.isValid(i,j)) {
-				    a.flag(i, j);
+				if(!f.isValid(index)) {
+				    a.flag(index);
 				    return;
 				}
-				a.unflag(i, j);
+				a.unflag(index);
 				
-				final double p0 = p.get(i, j).doubleValue();
+				final double p0 = p.get(index).doubleValue();
 				
 				if(p0 == 0.0) {
-					a.flag(i, j);
+					a.flag(index);
 					return;
 				}
 				
-				final double q0 = q.get(i, j).doubleValue();
-				final double u0 = u.get(i, j).doubleValue();
+				final double q0 = q.get(index).doubleValue();
+				final double u0 = u.get(index).doubleValue();
 				
-				final double sigma2Q = 1.0 / q.weightAt(i,j);
-				final double sigma2U = 1.0 / u.weightAt(i,j);
+				final double sigma2Q = 1.0 / q.weightAt(index);
+				final double sigma2U = 1.0 / u.weightAt(index);
 				
-				a.set(i, j, 0.5 * Math.atan2(u0, q0) / Unit.deg);
-				a.setWeightAt(i, j, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
+				a.set(index, 0.5 * Math.atan2(u0, q0) / Unit.deg);
+				a.setWeightAt(index, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
 			}
-		}.process();
+		});
 		
 		A.setID("A");
 		a.validate();
@@ -270,20 +272,20 @@ public class PolarMap extends SourceModel {
 		final Observation2D u = U.map;
 		final Observation2D p = P.map;
 		
-		p.new Fork<Void>() {
+		p.smartFork(new ParallelPointOp.Simple<Index2D>() {
 			@Override
-			public void process(int i, int j) {
-				if(!q.isValid(i, j) || !u.isValid(i, j)) {
-					p.flag(i, j);
+			public void process(Index2D index) {
+				if(!q.isValid(index) || !u.isValid(index)) {
+					p.flag(index);
 					return;
 				}
 				
-				double q2 = q.get(i, j).doubleValue();
-				double u2 = u.get(i, j).doubleValue();
+				double q2 = q.get(index).doubleValue();
+				double u2 = u.get(index).doubleValue();
 				q2 *= q2; u2 *= u2;
 				
-				double sigma2Q = 1.0 / q.weightAt(i,j);
-				double sigma2U = 1.0 / u.weightAt(i,j);
+				double sigma2Q = 1.0 / q.weightAt(index);
+				double sigma2U = 1.0 / u.weightAt(index);
 				
 				// De-bias the Rice distribution
 				// The following approximation is approximately correct
@@ -294,11 +296,11 @@ public class PolarMap extends SourceModel {
 				if(pol2 < 0.0) pol2 = 0.0;
 				
 				// Propagate errors properly...
-				p.set(i, j, Math.sqrt(pol2));
-				p.setWeightAt(i, j, 1.0 / psigma2);
-				p.unflag(i, j);
+				p.set(index, Math.sqrt(pol2));
+				p.setWeightAt(index, 1.0 / psigma2);
+				p.unflag(index);
 			}
-		}.process();
+		});
 		
 		P.setID("P");
 		p.validate();
@@ -315,19 +317,19 @@ public class PolarMap extends SourceModel {
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
 		
-		t.new Fork<Void>() {
+		t.smartFork(new ParallelPointOp.Simple<Index2D>() {
 			@Override
-			public void process(int i, int j) {
-				if(n.isValid(i, j) && p.isValid(i, j)) {
-					t.set(i, j, n.get(i, j).doubleValue() + p.get(i, j).doubleValue());
-					t.setWeightAt(i, j, n.weightAt(i, j));
-					t.unflag(i, j);
+			public void process(Index2D index) {
+				if(n.isValid(index) && p.isValid(index)) {
+					t.set(index, n.get(index).doubleValue() + p.get(index).doubleValue());
+					t.setWeightAt(index, n.weightAt(index));
+					t.unflag(index);
 					// TODO check on what's the proper uncertainty on I (same as N or N+P from independent N,P)...
 					//t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
 				}
-				else t.flag(i, j);				
+				else t.flag(index);				
 			}
-		}.process();
+		});
 
 		I.setID("I");
 		t.validate();
@@ -344,39 +346,39 @@ public class PolarMap extends SourceModel {
 		
 		final double minw = 1.0 / (accuracy * accuracy);
 		
-		f.new Fork<Void>() {
+		f.smartFork(new ParallelPointOp.Simple<Index2D>() {
 			@Override
-			public void process(int i, int j) {
+			public void process(Index2D index) {
 			     
-				if(!t.isValid(i, j) || !p.isValid(i, j)) {
-					f.flag(i, j);	
+				if(!t.isValid(index) || !p.isValid(index)) {
+					f.flag(index);	
 					return;
 				}
 				
-				f.set(i, j, p.get(i, j).doubleValue() / t.get(i, j).doubleValue());
+				f.set(index, p.get(index).doubleValue() / t.get(index).doubleValue());
 
 				// f = a/b --> df/db = -a/b^2 * db
 				// df2 = (da / b)^2 + (a db / b2)^2 = a/b * ((da/a)^2 + (db/b)^2)
 				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
 				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
-				double p2 = p.get(i, j).doubleValue();
+				double p2 = p.get(index).doubleValue();
 				
 				if(p2 == 0.0) {
-					f.flag(i, j);	
+					f.flag(index);	
 					return;
 				}
 				
 				
-				double t2 = t.get(i, j).doubleValue();
+				double t2 = t.get(index).doubleValue();
 				p2 *= p2; t2 *= t2;
 				
-				f.setWeightAt(i, j, t2 / p2 / (1.0 / (p2 * p.weightAt(i, j)) + 1.0 / (t2 * t.weightAt(i, j))));
+				f.setWeightAt(index, t2 / p2 / (1.0 / (p2 * p.weightAt(index)) + 1.0 / (t2 * t.weightAt(index))));
 
 				// if sigma_f > accuracy than flag the datum
-				if(f.weightAt(i, j) < minw) f.flag(i, j);	
-				else f.unflag(i, j);
+				if(f.weightAt(index) < minw) f.flag(index);	
+				else f.unflag(index);
 			}
-		}.process();
+		});
 		
 		F.setID("F");
 		F.enableLevel = false;

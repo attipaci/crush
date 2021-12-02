@@ -1,3 +1,4 @@
+>>> + 'smooth.policy'
 >>> GISMO pixel positions upside down???...
 >>> HAWC+ check chop/scan data...
 >>> profile source filter is SLOW. 
@@ -25,12 +26,29 @@
 	[BUG] Reductions in ecliptic, galactic, supergalactic coordinate
 	systems had the wrong coordinate transformations to/from equatorial.
 
+	[NEW] New option 'smooth.method' can be used to control the tradeoff
+	between speed and accuracy when smoothing data. Generally, performing
+	the convolution in configuration space is more accurate because we can 
+	rely on a location-specific integral normalization -- essentially
+	introducing a slightly variable smoothing kernel. For large datasets
+	or smoothing kernels, however, this can get very slow, and FFT-based
+	smoothing with a fixed kernel can be orders of magnitude faster.
+	The more even the coverage (or weights) over the data to be smoothed,
+	the smaller the differences between the two fundamentally different
+	approaches. The option also allows to dynamically choose a method,
+	which best befits the data and smoothing kernel sizes. The following
+	values are available: 'fft', 'fastest', 'balanced', 'integral', and
+	'precise'. See the GLOSSARY for details. 
+
 	[NEW] Accounting for small field rotation due to precession (since
 	instrument orientation is defined in horizontal, and propagated to
 	apparent coordinate system, which itself slowly rotates in ICRS, 
 	where the mapping actually happens. New option 'rotepoch' can be
 	used to specify the epoch (e.g. 2021.3) at which the instrument
 	rotation was determined.
+
+	[DEPRECTATE] Removed the option 'source.filter.type'. Instead, we will 
+	use the setting of 'smooth.method' for the filtering.
 
 	[CHANGE] Updated for jnum 0.40, in which CoordinateEpochs are
 	replaced by EquatorialSystem for high-precision astrometry. As a result

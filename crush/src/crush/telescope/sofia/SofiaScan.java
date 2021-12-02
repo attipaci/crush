@@ -131,10 +131,10 @@ extends GroundBasedScan<IntegrationType> implements Weather {
     /** 
      * E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits or  2016-10-04_HA_F334_0105_CAL_0_HAWE_HWPE_RAW.fits
      * 
-     * @param flightNo
-     * @param scanNo
-     * @return
-     * @throws FileNotFoundException
+     * @param flightNo  the SOFIA flight number of the observation.
+     * @param scanNo    the scan number in the given flight.
+     * @return          the File containing the recorded data.
+     * @throws FileNotFoundException    if the corresponding file cannot be found at the expected location.
      */
     public File getFileByIDs(int flightNo, int scanNo) throws FileNotFoundException {
 

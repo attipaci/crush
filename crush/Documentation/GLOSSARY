@@ -3007,6 +3007,40 @@
 			correlations.
 			@See: 'smooth'
 
+:: smooth.method=<pol>	@Expert
+			@Since: 2.60
+			Define what method is used for smoothing data, trading
+			speed vs accuracy. 
+			Generally, performing the convolution in configuration 
+			space is more accurate because we can rely on a 
+			location-specific integral normalization -- essentially
+        		introducing a slightly variable smoothing kernel. For 
+			large datasets and/or smoothing kernels, however, this 
+			can get very slow, and FFT-based smoothing with a fixed
+			kernel can be orders of magnitude faster.
+       			The more even the coverage (or weights) over the data 
+			to be smoothed, the smaller the differences between the
+			two fundamentally different approaches.
+			The following policies are available:
+
+			  fft		Always smooth via FFT
+			  fastest	Use whatever is deemed the fastest
+			  balanced	Similar to fastest, but prefer
+					smoothing in configuration space unless
+					it is more than an order of magnitude
+					slower than FFT
+			  integral	Always smooth in configuration space
+					by calculating overlap integrals, but 
+					allow coarse smooth with interpolation 
+					when appropriate.
+			  precise	Always smooth in configuration space,
+					meticulously calculating the 
+					convolution product at every point
+					location. Slowest, but most accurate
+
+			The default policy is 'fastest'.
+			@See: 'smooth'
+
 :: source		Solve for the source model, or set options for it.
 
 :: source.correct	@Advanced
@@ -3085,12 +3119,6 @@
 			to avoid the unnecessary filtering of compact or point
 			sources.
 			@See: 'source.filter.blank'
-
-:: source.filter.type=<type>	@Advanced
-				Specify the type ('convolution' or 'fft') of 
-				the large-scale structure filter. Convolution 
-			is more accurate but may be slower than FFT, especially
- 			for very large maps.
 
 :: source.fixedgains	@Advanced
 			Specifies to use the fixed source gains (e.g. from an 

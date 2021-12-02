@@ -32,8 +32,8 @@ import jnum.ExtraMath;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
-import jnum.data.samples.Position;
 import jnum.data.samples.Samples1D;
+import jnum.math.Position;
 import jnum.parallel.ParallelTask;
 
 

@@ -92,7 +92,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
 
     @Override
-    public void addModelData(SourceModel model, double weight) {  
+    public void addModelData(SourceModel model, double weight) { 
         map.accumulate(((IntensityMap) model).map, 1.0, weight);
     }
 
@@ -323,7 +323,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
         if(hasOption("pointing.suggest")) {
             double optimal = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * scan.getInstrument().getSizeUnit().value() : scan.getInstrument().getPointSize();
 
-            map.smoothTo(optimal);
+            smoothTo(optimal);
                
             if(hasOption("pointing.exposureclip")) {
                 Data2D exposure = map.getExposures();     
@@ -336,7 +336,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
             if(hasOption("pointing.radius")) {
                 final double r = option("pointing.radius").getDouble() * Unit.arcsec;
 
-                map.new Fork<Void>() {
+                map.smartFork(new ParallelPointOp.Simple<Index2D>() {
                     private Vector2D offset;
                     @Override
                     protected void init() {
@@ -345,12 +345,12 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
                     }
                     
                     @Override
-                    protected void process(int i, int j) {
-                        offset.set(i, j);
+                    public void process(Index2D index) {
+                        offset.set(index.i(), index.j());
                         map.getGrid().toOffset(offset);
-                        if(offset.length() > r) map.discard(i, j);
+                        if(offset.length() > r) map.discard(index);
                     }
-                }.process();
+                });
             }
 
             scan.pointing = getPeakSource();     
@@ -668,7 +668,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
     @Override
     public void setBase() { 
-        base.paste(map, false);
+        base.copyOf(map, false);
     }
 
     @Override
@@ -712,18 +712,17 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
 
     @Override
     public void smoothTo(double FWHM) {
+        updateSmoothingPolicy();
         map.smoothTo(FWHM);
     }
 
 
     @Override
-    public void filter(double filterScale, double filterBlanking, boolean useFFT) {
+    public void filter(double filterScale, double filterBlanking) {
         Validating2D filterBlank = Double.isNaN(filterBlanking) || Double.isInfinite(filterBlanking) ?
                 null : new RangeRestricted2D(map.getSignificance(), new Range(-filterBlanking, filterBlanking));
 
-        if(useFFT) map.fftFilterAbove(filterScale, filterBlank);
-        else map.filterAbove(filterScale, filterBlank);
-
+        map.filterAbove(filterScale, filterBlank);
         map.setFilterBlanking(filterBlanking);
     }
     
