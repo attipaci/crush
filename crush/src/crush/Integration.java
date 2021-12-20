@@ -44,6 +44,7 @@ import jnum.PointOp;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.*;
+import jnum.data.index.Index1D;
 import jnum.data.samples.Data1D;
 import jnum.fft.FloatFFT;
 import jnum.fits.FitsToolkit;
@@ -3558,6 +3559,12 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             return data;
         }
 
+        @Override
+        public Data1D newInstance(Index1D size) {
+            if(size.i() != channels.size()) throw new IllegalArgumentException("Size (" + size.i() + ") does not match instrument's channels (" + channels.size() + ")");
+            return new FrameView();
+        }
+
     }
 
 
@@ -3627,6 +3634,11 @@ implements Comparable<Integration<FrameType>>, TableFormatter.Entries, BasicMess
             float[] data = new float[size()];
             IntStream.range(0, size()).parallel().forEach(i -> data[i] = Integration.this.get(from + i).data[channel.index]);
             return data;
+        }
+
+        @Override
+        public Data1D newInstance(Index1D size) {
+            return new TimeStreamView(0, size.i());
         }
     }
 

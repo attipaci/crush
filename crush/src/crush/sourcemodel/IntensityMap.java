@@ -317,7 +317,7 @@ public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     @Override
     public void postProcess(Scan<?> scan) {
         super.postProcess(scan);
-
+        
         if(isEmpty()) return;
         
         if(hasOption("pointing.suggest")) {
