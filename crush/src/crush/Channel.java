@@ -206,7 +206,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public final int getIndex() { return index; }
 	
 	/**
-     * Returns the universal 0-based index of this channel. The universal index of a channel ought to be smaller than the
+     * Returns the universal zero-based index of this channel. The universal index of a channel ought to be smaller than the
      * the total number of channels possible in the instrument.
      * 
      * @return     the current index of this channel in the parent instrument.
@@ -216,7 +216,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	/**
 	 * Returns the standard string ID of this channel. If the channel was constructed without an explicit string ID, 
 	 * then it will be the automatic string ID that is equals to the decimal represenation of 1+{@link #getFixedIndex()}. I.e.
-	 * the implicit string ID of channels is 1-based, so that channel with fixed index 0 will have an implicit ID of "1".
+	 * the implicit string ID of channels is one-based, so that channel with fixed index 0 will have an implicit ID of "1".
 	 * 
 	 * @return     The explicit or implicit string ID of this channel.
 	 */

@@ -170,9 +170,9 @@ public class Pixel extends ChannelGroup<Channel> implements Metric<Pixel> {
     }
 
     /**
-     * Returns the 0-based fixed index of this pixel.
+     * Returns the zero-based fixed index of this pixel.
      * 
-     * @return  the 0-based fixed index of this pixel. 
+     * @return  the zero-based fixed index of this pixel. 
      */
     public final int getFixedIndex() {
         return fixedIndex;

@@ -868,7 +868,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?>>, TableFormatter.E
         clear();
 
         int nT = merged.framesFor(segmentTime);
-        int N = ExtraMath.roundedRatio(merged.size(), nT);
+        int N = ExtraMath.ceilRatio(merged.size(), nT);
 
         if(N <= 1) return;
 

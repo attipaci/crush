@@ -77,7 +77,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
     public Signal(Mode mode, Integration<?> integration, float[] values, boolean isFloating) {
         this(mode, integration);
-        resolution = ExtraMath.roundedRatio(integration.size(), values.length);
+        resolution = ExtraMath.ceilRatio(integration.size(), values.length);
         this.value = values;
         driftN = values.length;
     }
@@ -175,11 +175,11 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
 
     public final void removeDrifts(int nFrames, boolean isReconstructible) {		
-        int N = ExtraMath.roundedRatio(nFrames, resolution);
+        int N = ExtraMath.ceilRatio(nFrames, resolution);
 
         if(drifts == null || N != driftN) {
             addDrifts();
-            if(isReconstructible) drifts = new float[ExtraMath.roundedRatio(value.length, N)];
+            if(isReconstructible) drifts = new float[ExtraMath.ceilRatio(value.length, N)];
             driftN = N;
         }
 
@@ -194,7 +194,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
     public double level(int from, int to) {
         from = from / resolution;
-        to = ExtraMath.roundedRatio(to, resolution);
+        to = ExtraMath.ceilRatio(to, resolution);
 
         final double ave = IntStream.range(from, to).parallel().mapToDouble(t -> value[t])
                 .filter(x -> !Double.isNaN(x)).average().orElse(0.0);

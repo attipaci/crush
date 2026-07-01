@@ -117,7 +117,7 @@ public class CorrelatedSignal extends Signal {
     @Override
     public double level(int from, int to) {
         from = from / resolution;
-        to = ExtraMath.roundedRatio(to, resolution);
+        to = ExtraMath.ceilRatio(to, resolution);
 
         final double ave = Statistics.mean(value, weight, from, to).value();
         if(Double.isNaN(ave)) return 0.0;

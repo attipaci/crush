@@ -26,7 +26,7 @@ package crush;
 import java.util.HashMap;
 
 /**
- * A class that facilitates the lookup of {@link Channel}s in a group by their unique {@link String} IDs, or integer (0-based)
+ * A class that facilitates the lookup of {@link Channel}s in a group by their unique {@link String} IDs, or integer (zero-based)
  * fixed indices. Its implementation is based on two internal {@link HashMap}s for efficient access.
  * 
  * 
@@ -62,7 +62,7 @@ public class ChannelLookup<ChannelType extends Channel> {
      * Checks if a {@link Channel} by the given fixed index is in the lookup.
      * 
      * 
-     * @param fixedIndex    The 0-based integer fixed index of the channel. 
+     * @param fixedIndex    The zero-based integer fixed index of the channel. 
      * @return              <code>true</code> id the lookup contains the channel by that index, otherwise <code>false</code>
      */
     public boolean contains(int fixedIndex) {
@@ -71,7 +71,7 @@ public class ChannelLookup<ChannelType extends Channel> {
     
     /**
      * Checks if a {@link Channel} by the given {@link String} ID is in the lookup. Channels are also always understood
-     * to have an automatic 1-based String ID equals to 1+{@link Channel#getFixedIndex()}, i.e. channel 0 will always have an
+     * to have an automatic one-based String ID equals to 1+{@link Channel#getFixedIndex()}, i.e. channel 0 will always have an
      * automatically associated ID of "1" etc.
      * 
      * 
@@ -81,7 +81,7 @@ public class ChannelLookup<ChannelType extends Channel> {
     public boolean contains(String id) {
         if(ids.containsKey(id)) return true;
         
-        // If the automatic id is a number, we can try to interpret is as an automatic 1-based index.
+        // If the automatic id is a number, we can try to interpret is as an automatic one-based index.
         try { return fixedIndices.containsKey(Integer.parseInt(id) - 1); }
         catch(NumberFormatException e) {}
         
@@ -93,7 +93,7 @@ public class ChannelLookup<ChannelType extends Channel> {
      * channel by the specified ID.
      * 
      * 
-     * @param fixedIndex    The 0-based integer fixed index of the channel. 
+     * @param fixedIndex    The zero-based integer fixed index of the channel. 
      * @return              <code>true</code> id the lookup contains the channel by that index, otherwise <code>false</code>
      */
     public ChannelType get(int fixedIndex) {
@@ -102,7 +102,7 @@ public class ChannelLookup<ChannelType extends Channel> {
     
     /**
      * Returns the {@link Channel} by the given {@link String}, or <code>null</code> if the lookup contains no
-     * channel by the specified ID. Channels are also always understood to have an automatic 1-based String ID equals to 
+     * channel by the specified ID. Channels are also always understood to have an automatic one-based String ID equals to 
      * 1+{@link Channel#getFixedIndex()}, i.e. channel 0 will always have an associated ID of "1" etc.
      * 
      * 
@@ -113,7 +113,7 @@ public class ChannelLookup<ChannelType extends Channel> {
         ChannelType channel = ids.get(id);
         
         if(channel == null) {
-            // If the id is a number, we can try to interpret is as an automatic 1-based index.
+            // If the id is a number, we can try to interpret is as an automatic one-based index.
             try { return fixedIndices.get(Integer.parseInt(id) - 1); }
             catch(NumberFormatException e) {}
         }

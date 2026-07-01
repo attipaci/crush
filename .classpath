@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="crush/src"/>
+	<classpathentry kind="lib" path="crush/archive/crush-src.jar"/>
+	<classpathentry kind="lib" path="crush/lib/crush.jar"/>
+	<classpathentry kind="lib" path="crush/lib/fits.jar"/>
+	<classpathentry kind="lib" path="crush/lib/jnum.jar"/>
+	<classpathentry kind="lib" path="crush/lib/tools.jar"/>
+	<classpathentry kind="output" path="crush/bin"/>
+</classpath>
